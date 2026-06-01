@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProjectGuid>{747CE5B6-4FE5-4452-80CB-D9C1A922DF46}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Spectra</RootNamespace>
+    <AssemblyName>Spectra</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>535f6299</NuGetPackageImportStamp>
+    <ApplicationIcon>spectra.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AMD\AmdDynamicVibranceProxy.cs" />
+    <Compile Include="AMD\vendor\adl32\ADL.cs" />
+    <Compile Include="AMD\vendor\adl32\ADLAdapterInfo.cs" />
+    <Compile Include="AMD\vendor\adl32\ADLAdapterInfoArray.cs" />
+    <Compile Include="AMD\vendor\adl32\ADLCheckLibrary.cs" />
+    <Compile Include="AMD\vendor\adl32\ADLDisplayID.cs" />
+    <Compile Include="AMD\vendor\adl32\ADLDisplayInfo.cs" />
+    <Compile Include="AMD\vendor\adl32\ADLImport.cs" />
+    <Compile Include="AMD\vendor\adl32\Delegates.cs" />
+    <Compile Include="AMD\vendor\adl64\ADL.cs" />
+    <Compile Include="AMD\vendor\adl64\ADLAdapterInfo.cs" />
+    <Compile Include="AMD\vendor\adl64\ADLAdapterInfoArray.cs" />
+    <Compile Include="AMD\vendor\adl64\ADLCheckLibrary.cs" />
+    <Compile Include="AMD\vendor\adl64\ADLDisplayID.cs" />
+    <Compile Include="AMD\vendor\adl64\ADLDisplayInfo.cs" />
+    <Compile Include="AMD\vendor\adl64\ADLImport.cs" />
+    <Compile Include="AMD\vendor\adl64\Delegates.cs" />
+    <Compile Include="AMD\vendor\AmdAdapter32.cs" />
+    <Compile Include="AMD\vendor\AmdAdapter64.cs" />
+    <Compile Include="AMD\vendor\IAmdAdapter.cs" />
+    <Compile Include="AMD\vendor\utils\CommonUtils.cs" />
+    <Compile Include="AMD\vendor\utils\NativeMethods.cs" />
+    <Compile Include="common\ApplicationSetting.cs" />
+    <Compile Include="common\Definitions.cs" />
+    <Compile Include="common\GameSettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="common\GameSettingsForm.Designer.cs">
+      <DependentUpon>GameSettingsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="common\SettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="common\SettingsForm.Designer.cs">
+      <DependentUpon>SettingsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="common\GraphicsAdapter.cs" />
+    <Compile Include="common\HotkeyManager.cs" />
+    <Compile Include="common\IconFactory.cs" />
+    <Compile Include="common\IRegistryController.cs" />
+    <Compile Include="common\ISettingsController.cs" />
+    <Compile Include="common\IVibranceProxy.cs" />
+    <Compile Include="common\MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="common\MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="common\ProcessExplorer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="common\ProcessExplorer.Designer.cs">
+      <DependentUpon>ProcessExplorer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="common\ProcessExplorerEntry.cs" />
+    <Compile Include="common\RegistryController.cs" />
+    <Compile Include="common\ResolutionHelper.cs" />
+    <Compile Include="common\ResolutionModeWrapper.cs" />
+    <Compile Include="common\SettingsController.cs" />
+    <Compile Include="common\WinEventHook.cs" />
+    <Compile Include="common\WinEventHookEventArgs.cs" />
+    <Compile Include="Localization\LocalizationManager.cs" />
+    <Compile Include="NVIDIA\NvidiaDynamicVibranceProxy.cs" />
+    <Compile Include="NVIDIA\NvidiaTypes.cs" />
+    <Compile Include="NVIDIA\NvidiaVibranceValueWrapper.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UI\ThemeManager.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="common\SettingsForm.resx">
+      <DependentUpon>SettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="common\GameSettingsForm.resx">
+      <DependentUpon>GameSettingsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="common\MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="common\ProcessExplorer.resx">
+      <DependentUpon>ProcessExplorer.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <EmbeddedResource Include="NVIDIA\vibranceDLL.dll" />
+    <Content Include="spectra.ico" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
