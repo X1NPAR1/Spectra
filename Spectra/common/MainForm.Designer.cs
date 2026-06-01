@@ -91,7 +91,7 @@ namespace Spectra.common
             // ── FORM ─────────────────────────────────────────────────────
             AutoScaleDimensions = new SizeF(6f, 13f);
             AutoScaleMode       = AutoScaleMode.Font;
-            ClientSize          = new Size(480, 656);
+            ClientSize          = new Size(480, 670);
             FormBorderStyle     = FormBorderStyle.FixedSingle;
             MaximizeBox         = false;
             Text                = "Spectra";
@@ -118,7 +118,7 @@ namespace Spectra.common
             labelAppName.Location  = new Point(70, 10);
             labelAppName.AutoSize  = true;
 
-            labelVersion.Text      = "v1.9.0";
+            labelVersion.Text      = "v1.9.1";
             labelVersion.Font      = new Font("Segoe UI", 7.5f);
             labelVersion.ForeColor = Color.FromArgb(180, 215, 255);
             labelVersion.BackColor = Color.Transparent;
@@ -152,7 +152,7 @@ namespace Spectra.common
 
             // ── DESKTOP VIBRANCE ─────────────────────────────────────────
             panelVibrance.Location  = new Point(14, 90);
-            panelVibrance.Size      = new Size(452, 108);
+            panelVibrance.Size      = new Size(452, 122);   // +14px: prevents trackbar thumb from overlapping presets
             panelVibrance.BackColor = ThemeManager.Surface;
             panelVibrance.Paint    += CardPanel_Paint;
 
@@ -177,8 +177,9 @@ namespace Spectra.common
             labelVibranceValue.Size      = new Size(52, 26);
             labelVibranceValue.TextAlign = ContentAlignment.MiddleLeft;
 
-            // Presets sub-panel
-            panelPresets.Location  = new Point(14, 70);
+            // Presets sub-panel — Y=84 leaves ≥22px gap below trackbar (which ends at ~62) so the
+            // Windows thumb control never visually overlaps the buttons at any DPI setting
+            panelPresets.Location  = new Point(14, 84);
             panelPresets.Size      = new Size(430, 28);
             panelPresets.BackColor = Color.Transparent;
 
@@ -214,7 +215,7 @@ namespace Spectra.common
             panelVibrance.Controls.Add(panelPresets);
 
             // ── SETTINGS ─────────────────────────────────────────────────
-            panelSettings.Location  = new Point(14, 210);
+            panelSettings.Location  = new Point(14, 224);
             panelSettings.Size      = new Size(452, 152);
             panelSettings.BackColor = ThemeManager.Surface;
             panelSettings.Paint    += CardPanel_Paint;
@@ -307,7 +308,7 @@ namespace Spectra.common
             panelSettings.Controls.Add(panelQuickRow);
 
             // ── GAME PROFILES ─────────────────────────────────────────────
-            panelProfiles.Location  = new Point(14, 374);
+            panelProfiles.Location  = new Point(14, 388);
             panelProfiles.Size      = new Size(452, 230);
             panelProfiles.BackColor = ThemeManager.Surface;
             panelProfiles.Paint    += CardPanel_Paint;
@@ -328,6 +329,8 @@ namespace Spectra.common
             listProfiles.BorderStyle   = BorderStyle.None;
             listProfiles.DoubleClick  += listProfiles_DoubleClick;
 
+            // Profile buttons — 3 equal columns aligned to listProfiles edges (X=10..442, W=432)
+            // Each button: (432 - 2*8 gap) / 3 = 138px. Fits longest translations (French ~120px + padding).
             btnAdd.Text      = "Add File";
             btnAdd.Font      = new Font("Segoe UI", 8.5f);
             btnAdd.ForeColor = ThemeManager.Text;
@@ -335,7 +338,7 @@ namespace Spectra.common
             btnAdd.FlatStyle = FlatStyle.Flat;
             btnAdd.FlatAppearance.BorderColor = ThemeManager.Border;
             btnAdd.Location  = new Point(10, 198);
-            btnAdd.Size      = new Size(110, 26);
+            btnAdd.Size      = new Size(138, 26);
             btnAdd.Cursor    = Cursors.Hand;
             btnAdd.Click    += btnAdd_Click;
 
@@ -345,8 +348,8 @@ namespace Spectra.common
             btnBrowse.BackColor = ThemeManager.Surface2;
             btnBrowse.FlatStyle = FlatStyle.Flat;
             btnBrowse.FlatAppearance.BorderColor = ThemeManager.Border;
-            btnBrowse.Location  = new Point(128, 198);
-            btnBrowse.Size      = new Size(124, 26);
+            btnBrowse.Location  = new Point(156, 198);
+            btnBrowse.Size      = new Size(138, 26);
             btnBrowse.Cursor    = Cursors.Hand;
             btnBrowse.Click    += btnBrowse_Click;
 
@@ -356,8 +359,8 @@ namespace Spectra.common
             btnRemove.BackColor = ThemeManager.Surface2;
             btnRemove.FlatStyle = FlatStyle.Flat;
             btnRemove.FlatAppearance.BorderColor = ThemeManager.Danger;
-            btnRemove.Location  = new Point(260, 198);
-            btnRemove.Size      = new Size(86, 26);
+            btnRemove.Location  = new Point(302, 198);
+            btnRemove.Size      = new Size(138, 26);
             btnRemove.Cursor    = Cursors.Hand;
             btnRemove.Click    += btnRemove_Click;
 
@@ -368,7 +371,7 @@ namespace Spectra.common
             panelProfiles.Controls.Add(btnRemove);
 
             // ── STATUS BAR ────────────────────────────────────────────────
-            panelStatus.Location  = new Point(0, 616);
+            panelStatus.Location  = new Point(0, 630);
             panelStatus.Size      = new Size(480, 40);
             panelStatus.BackColor = Color.FromArgb(210, 222, 238);
 

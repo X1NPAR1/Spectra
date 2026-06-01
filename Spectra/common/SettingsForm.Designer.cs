@@ -84,9 +84,11 @@ namespace Spectra.common
             ((System.ComponentModel.ISupportInitialize)numDelay).BeginInit();
 
             // ── FORM ─────────────────────────────────────────────────────
+            // 540px wide: tabs get 520px → each tab content 488px (16px padding each side)
+            // Accommodates all translations without any text clipping.
             AutoScaleDimensions = new SizeF(6f, 13f);
             AutoScaleMode       = AutoScaleMode.Font;
-            ClientSize          = new Size(480, 520);
+            ClientSize          = new Size(540, 540);
             FormBorderStyle     = FormBorderStyle.FixedSingle;
             MaximizeBox         = false;
             StartPosition       = FormStartPosition.CenterParent;
@@ -96,7 +98,7 @@ namespace Spectra.common
 
             // ── HEADER ───────────────────────────────────────────────────
             panelHeader.Location = new Point(0, 0);
-            panelHeader.Size     = new Size(480, 52);
+            panelHeader.Size     = new Size(540, 52);
             panelHeader.Paint   += panelHeader_Paint;
 
             lblSettingsTitle.Text      = "⚙  SETTINGS";
@@ -108,15 +110,15 @@ namespace Spectra.common
             panelHeader.Controls.Add(lblSettingsTitle);
 
             // ── TAB CONTROL ──────────────────────────────────────────────
+            // 520px wide, 4 tabs → ItemSize.Width = 520/4 = 130px (fits all language tab labels)
             tabControl.Location  = new Point(10, 60);
-            tabControl.Size      = new Size(460, 406);
+            tabControl.Size      = new Size(520, 452);
             tabControl.DrawMode  = TabDrawMode.OwnerDrawFixed;
-            tabControl.ItemSize  = new Size(114, 28);
+            tabControl.ItemSize  = new Size(129, 30);
             tabControl.SizeMode  = TabSizeMode.Fixed;
             tabControl.DrawItem += tabControl_DrawItem;
             tabControl.TabPages.AddRange(new TabPage[] { tabBehavior, tabDisplay, tabData, tabAbout });
 
-            // Helper — page setup
             foreach (TabPage tp in tabControl.TabPages)
             {
                 tp.BackColor = ThemeManager.Surface;
@@ -130,6 +132,7 @@ namespace Spectra.common
             tabAbout.Text    = "About";
 
             // ── BEHAVIOR TAB ─────────────────────────────────────────────
+            // Content width = 520 - 2×16 = 488px. Checkboxes span full 488px so no text clips.
             lblStartupSection.Text      = "STARTUP & BEHAVIOR";
             lblStartupSection.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
             lblStartupSection.ForeColor = ThemeManager.Accent;
@@ -138,7 +141,7 @@ namespace Spectra.common
             lblStartupSection.AutoSize  = true;
 
             sepStartup.Location  = new Point(0, 20);
-            sepStartup.Size      = new Size(428, 1);
+            sepStartup.Size      = new Size(488, 1);
             sepStartup.BackColor = ThemeManager.Border;
 
             chkAutostart.Text     = "Launch on startup";
@@ -146,21 +149,21 @@ namespace Spectra.common
             chkAutostart.ForeColor= ThemeManager.Text;
             chkAutostart.BackColor= Color.Transparent;
             chkAutostart.Location = new Point(0, 30);
-            chkAutostart.Size     = new Size(260, 22);
+            chkAutostart.Size     = new Size(488, 22);
 
             chkMinToTray.Text     = "Minimize to tray when closed";
             chkMinToTray.Font     = new Font("Segoe UI", 9f);
             chkMinToTray.ForeColor= ThemeManager.Text;
             chkMinToTray.BackColor= Color.Transparent;
             chkMinToTray.Location = new Point(0, 58);
-            chkMinToTray.Size     = new Size(280, 22);
+            chkMinToTray.Size     = new Size(488, 22);
 
             chkNotifications.Text     = "Show tray notifications";
             chkNotifications.Font     = new Font("Segoe UI", 9f);
             chkNotifications.ForeColor= ThemeManager.Text;
             chkNotifications.BackColor= Color.Transparent;
             chkNotifications.Location = new Point(0, 86);
-            chkNotifications.Size     = new Size(260, 22);
+            chkNotifications.Size     = new Size(488, 22);
 
             lblDelaySection.Text      = "VIBRANCE APPLY DELAY";
             lblDelaySection.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
@@ -170,31 +173,33 @@ namespace Spectra.common
             lblDelaySection.AutoSize  = true;
 
             sepDelay.Location  = new Point(0, 146);
-            sepDelay.Size      = new Size(428, 1);
+            sepDelay.Size      = new Size(488, 1);
             sepDelay.BackColor = ThemeManager.Border;
 
-            lblDelayNote.Text      = "Wait before applying vibrance when a game launches (ms)";
-            lblDelayNote.Font      = new Font("Segoe UI", 8.5f, FontStyle.Italic);
-            lblDelayNote.ForeColor = ThemeManager.TextSub;
-            lblDelayNote.BackColor = Color.Transparent;
-            lblDelayNote.Location  = new Point(0, 154);
-            lblDelayNote.AutoSize  = true;
+            // lblDelayNote wraps to next line if the translation is long (MaximumSize constrains width)
+            lblDelayNote.Text           = "Wait before applying vibrance when a game launches (ms)";
+            lblDelayNote.Font           = new Font("Segoe UI", 8.5f, FontStyle.Italic);
+            lblDelayNote.ForeColor      = ThemeManager.TextSub;
+            lblDelayNote.BackColor      = Color.Transparent;
+            lblDelayNote.Location       = new Point(0, 154);
+            lblDelayNote.AutoSize       = true;
+            lblDelayNote.MaximumSize    = new Size(488, 0);
 
-            numDelay.Location     = new Point(0, 178);
-            numDelay.Size         = new Size(100, 24);
-            numDelay.Font         = new Font("Segoe UI", 9f);
-            numDelay.Minimum      = 0;
-            numDelay.Maximum      = 5000;
-            numDelay.Value        = 500;
-            numDelay.Increment    = 100;
-            numDelay.BackColor    = ThemeManager.Surface2;
-            numDelay.ForeColor    = ThemeManager.Text;
+            numDelay.Location  = new Point(0, 188);
+            numDelay.Size      = new Size(110, 24);
+            numDelay.Font      = new Font("Segoe UI", 9f);
+            numDelay.Minimum   = 0;
+            numDelay.Maximum   = 5000;
+            numDelay.Value     = 500;
+            numDelay.Increment = 100;
+            numDelay.BackColor = ThemeManager.Surface2;
+            numDelay.ForeColor = ThemeManager.Text;
 
             lblDelayMs.Text      = "ms";
             lblDelayMs.Font      = new Font("Segoe UI", 9f);
             lblDelayMs.ForeColor = ThemeManager.TextSub;
             lblDelayMs.BackColor = Color.Transparent;
-            lblDelayMs.Location  = new Point(108, 182);
+            lblDelayMs.Location  = new Point(118, 192);
             lblDelayMs.AutoSize  = true;
 
             tabBehavior.Controls.Add(lblStartupSection);
@@ -217,18 +222,19 @@ namespace Spectra.common
             lblMonitorSection.AutoSize  = true;
 
             sepMonitor.Location  = new Point(0, 20);
-            sepMonitor.Size      = new Size(428, 1);
+            sepMonitor.Size      = new Size(488, 1);
             sepMonitor.BackColor = ThemeManager.Border;
 
+            // Label is AutoSize; combo starts at X=160 to give enough room for longest label translations
             lblMonitorTarget.Text      = "Apply vibrance to:";
             lblMonitorTarget.Font      = new Font("Segoe UI", 9f);
             lblMonitorTarget.ForeColor = ThemeManager.Text;
             lblMonitorTarget.BackColor = Color.Transparent;
-            lblMonitorTarget.Location  = new Point(0, 30);
+            lblMonitorTarget.Location  = new Point(0, 32);
             lblMonitorTarget.AutoSize  = true;
 
-            cboMonitorTarget.Location      = new Point(128, 28);
-            cboMonitorTarget.Size          = new Size(200, 22);
+            cboMonitorTarget.Location      = new Point(160, 30);
+            cboMonitorTarget.Size          = new Size(280, 22);
             cboMonitorTarget.DropDownStyle = ComboBoxStyle.DropDownList;
             cboMonitorTarget.FlatStyle     = FlatStyle.Flat;
             cboMonitorTarget.Font          = new Font("Segoe UI", 9f);
@@ -243,7 +249,7 @@ namespace Spectra.common
             lblResSection.AutoSize  = true;
 
             sepRes.Location  = new Point(0, 90);
-            sepRes.Size      = new Size(428, 1);
+            sepRes.Size      = new Size(488, 1);
             sepRes.BackColor = ThemeManager.Border;
 
             chkNeverResize.Text     = "Never change resolution automatically";
@@ -251,14 +257,14 @@ namespace Spectra.common
             chkNeverResize.ForeColor= ThemeManager.Text;
             chkNeverResize.BackColor= Color.Transparent;
             chkNeverResize.Location = new Point(0, 100);
-            chkNeverResize.Size     = new Size(320, 22);
+            chkNeverResize.Size     = new Size(488, 22);
 
             chkResetOnExit.Text     = "Reset vibrance to default on exit";
             chkResetOnExit.Font     = new Font("Segoe UI", 9f);
             chkResetOnExit.ForeColor= ThemeManager.Text;
             chkResetOnExit.BackColor= Color.Transparent;
             chkResetOnExit.Location = new Point(0, 128);
-            chkResetOnExit.Size     = new Size(300, 22);
+            chkResetOnExit.Size     = new Size(488, 22);
 
             tabDisplay.Controls.Add(lblMonitorSection);
             tabDisplay.Controls.Add(sepMonitor);
@@ -270,6 +276,12 @@ namespace Spectra.common
             tabDisplay.Controls.Add(chkResetOnExit);
 
             // ── DATA TAB ──────────────────────────────────────────────────
+            // Layout strategy: buttons in two-column grid (239px each, 10px gap).
+            // "Clear all profiles" spans full width on its own row — always readable in any language.
+            // "Open log folder" and "Reset all settings" also side-by-side on equal columns.
+            const int ColW = 239;  // (488 - 10gap) / 2
+            const int ColR = 249;  // ColW + 10
+
             lblProfileSection.Text      = "PROFILE MANAGEMENT";
             lblProfileSection.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
             lblProfileSection.ForeColor = ThemeManager.Accent;
@@ -278,7 +290,7 @@ namespace Spectra.common
             lblProfileSection.AutoSize  = true;
 
             sepProfile.Location  = new Point(0, 20);
-            sepProfile.Size      = new Size(428, 1);
+            sepProfile.Size      = new Size(488, 1);
             sepProfile.BackColor = ThemeManager.Border;
 
             lblProfileCount.Text      = "Saved profiles:";
@@ -292,9 +304,10 @@ namespace Spectra.common
             lblProfileCountVal.Font      = new Font("Segoe UI", 9f, FontStyle.Bold);
             lblProfileCountVal.ForeColor = ThemeManager.Accent;
             lblProfileCountVal.BackColor = Color.Transparent;
-            lblProfileCountVal.Location  = new Point(110, 30);
+            lblProfileCountVal.Location  = new Point(120, 30);
             lblProfileCountVal.AutoSize  = true;
 
+            // Row 1: Export | Import
             btnExport.Text      = "Export to file";
             btnExport.Font      = new Font("Segoe UI", 9f);
             btnExport.ForeColor = ThemeManager.Text;
@@ -302,7 +315,7 @@ namespace Spectra.common
             btnExport.FlatStyle = FlatStyle.Flat;
             btnExport.FlatAppearance.BorderColor = ThemeManager.Border;
             btnExport.Location  = new Point(0, 58);
-            btnExport.Size      = new Size(130, 28);
+            btnExport.Size      = new Size(ColW, 28);
             btnExport.Cursor    = Cursors.Hand;
             btnExport.Click    += btnExport_Click;
 
@@ -312,19 +325,20 @@ namespace Spectra.common
             btnImport.BackColor = ThemeManager.Surface2;
             btnImport.FlatStyle = FlatStyle.Flat;
             btnImport.FlatAppearance.BorderColor = ThemeManager.Border;
-            btnImport.Location  = new Point(138, 58);
-            btnImport.Size      = new Size(130, 28);
+            btnImport.Location  = new Point(ColR, 58);
+            btnImport.Size      = new Size(ColW, 28);
             btnImport.Cursor    = Cursors.Hand;
             btnImport.Click    += btnImport_Click;
 
-            btnClearProfiles.Text      = "Clear all";
+            // Row 2: Clear all profiles — full width, danger, always visible in any language
+            btnClearProfiles.Text      = "Clear all profiles";
             btnClearProfiles.Font      = new Font("Segoe UI", 9f);
             btnClearProfiles.ForeColor = ThemeManager.Danger;
             btnClearProfiles.BackColor = ThemeManager.Surface2;
             btnClearProfiles.FlatStyle = FlatStyle.Flat;
             btnClearProfiles.FlatAppearance.BorderColor = ThemeManager.Danger;
-            btnClearProfiles.Location  = new Point(276, 58);
-            btnClearProfiles.Size      = new Size(100, 28);
+            btnClearProfiles.Location  = new Point(0, 94);
+            btnClearProfiles.Size      = new Size(488, 28);
             btnClearProfiles.Cursor    = Cursors.Hand;
             btnClearProfiles.Click    += btnClearProfiles_Click;
 
@@ -332,28 +346,30 @@ namespace Spectra.common
             lblDataSection.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
             lblDataSection.ForeColor = ThemeManager.Accent;
             lblDataSection.BackColor = Color.Transparent;
-            lblDataSection.Location  = new Point(0, 106);
+            lblDataSection.Location  = new Point(0, 140);
             lblDataSection.AutoSize  = true;
 
-            sepData.Location  = new Point(0, 126);
-            sepData.Size      = new Size(428, 1);
+            sepData.Location  = new Point(0, 160);
+            sepData.Size      = new Size(488, 1);
             sepData.BackColor = ThemeManager.Border;
 
-            lblDataNote.Text      = "Data stored in: %APPDATA%\\Spectra";
-            lblDataNote.Font      = new Font("Segoe UI", 8.5f, FontStyle.Italic);
-            lblDataNote.ForeColor = ThemeManager.TextSub;
-            lblDataNote.BackColor = Color.Transparent;
-            lblDataNote.Location  = new Point(0, 134);
-            lblDataNote.AutoSize  = true;
+            lblDataNote.Text        = "Data stored in: %APPDATA%\\Spectra";
+            lblDataNote.Font        = new Font("Segoe UI", 8.5f, FontStyle.Italic);
+            lblDataNote.ForeColor   = ThemeManager.TextSub;
+            lblDataNote.BackColor   = Color.Transparent;
+            lblDataNote.Location    = new Point(0, 168);
+            lblDataNote.AutoSize    = true;
+            lblDataNote.MaximumSize = new Size(488, 0);
 
+            // Row 3: Open log folder | Reset all settings — equal columns
             btnOpenLog.Text      = "Open log folder";
             btnOpenLog.Font      = new Font("Segoe UI", 9f);
             btnOpenLog.ForeColor = ThemeManager.Text;
             btnOpenLog.BackColor = ThemeManager.Surface2;
             btnOpenLog.FlatStyle = FlatStyle.Flat;
             btnOpenLog.FlatAppearance.BorderColor = ThemeManager.Border;
-            btnOpenLog.Location  = new Point(0, 158);
-            btnOpenLog.Size      = new Size(150, 28);
+            btnOpenLog.Location  = new Point(0, 200);
+            btnOpenLog.Size      = new Size(ColW, 28);
             btnOpenLog.Cursor    = Cursors.Hand;
             btnOpenLog.Click    += btnOpenLog_Click;
 
@@ -363,8 +379,8 @@ namespace Spectra.common
             btnResetAll.BackColor = ThemeManager.Surface2;
             btnResetAll.FlatStyle = FlatStyle.Flat;
             btnResetAll.FlatAppearance.BorderColor = ThemeManager.Danger;
-            btnResetAll.Location  = new Point(160, 158);
-            btnResetAll.Size      = new Size(150, 28);
+            btnResetAll.Location  = new Point(ColR, 200);
+            btnResetAll.Size      = new Size(ColW, 28);
             btnResetAll.Cursor    = Cursors.Hand;
             btnResetAll.Click    += btnResetAll_Click;
 
@@ -394,7 +410,7 @@ namespace Spectra.common
             lblAboutName.Location  = new Point(80, 2);
             lblAboutName.AutoSize  = true;
 
-            lblAboutVersion.Text      = "v1.9.0";
+            lblAboutVersion.Text      = "v1.9.1";
             lblAboutVersion.Font      = new Font("Segoe UI", 9f);
             lblAboutVersion.ForeColor = ThemeManager.TextSub;
             lblAboutVersion.BackColor = Color.Transparent;
@@ -409,7 +425,7 @@ namespace Spectra.common
             lblAboutDesc.AutoSize  = true;
 
             sepAbout.Location  = new Point(0, 76);
-            sepAbout.Size      = new Size(428, 1);
+            sepAbout.Size      = new Size(488, 1);
             sepAbout.BackColor = ThemeManager.Border;
 
             lblSupportTitle.Text      = "GPU SUPPORT";
@@ -434,7 +450,7 @@ namespace Spectra.common
             lblGpuLine2.AutoSize  = true;
 
             sepAbout2.Location  = new Point(0, 158);
-            sepAbout2.Size      = new Size(428, 1);
+            sepAbout2.Size      = new Size(488, 1);
             sepAbout2.BackColor = ThemeManager.Border;
 
             lblSysTitle.Text      = "SYSTEM";
@@ -451,14 +467,14 @@ namespace Spectra.common
             lblSysInfo.Location  = new Point(0, 188);
             lblSysInfo.AutoSize  = true;
 
-            btnGitHub.Text      = "★  GitHub";
+            btnGitHub.Text      = "★  View on GitHub";
             btnGitHub.Font      = new Font("Segoe UI", 9f);
             btnGitHub.ForeColor = Color.White;
             btnGitHub.BackColor = ThemeManager.Accent;
             btnGitHub.FlatStyle = FlatStyle.Flat;
             btnGitHub.FlatAppearance.BorderColor = ThemeManager.Accent;
             btnGitHub.Location  = new Point(0, 230);
-            btnGitHub.Size      = new Size(120, 30);
+            btnGitHub.Size      = new Size(160, 30);
             btnGitHub.Cursor    = Cursors.Hand;
             btnGitHub.Click    += btnGitHub_Click;
 
@@ -468,8 +484,8 @@ namespace Spectra.common
             btnOpenLogShort.BackColor = ThemeManager.Surface2;
             btnOpenLogShort.FlatStyle = FlatStyle.Flat;
             btnOpenLogShort.FlatAppearance.BorderColor = ThemeManager.Border;
-            btnOpenLogShort.Location  = new Point(130, 230);
-            btnOpenLogShort.Size      = new Size(110, 30);
+            btnOpenLogShort.Location  = new Point(170, 230);
+            btnOpenLogShort.Size      = new Size(120, 30);
             btnOpenLogShort.Cursor    = Cursors.Hand;
             btnOpenLogShort.Click    += btnOpenLog_Click;
 
@@ -488,13 +504,14 @@ namespace Spectra.common
             tabAbout.Controls.Add(btnOpenLogShort);
 
             // ── CLOSE BUTTON ──────────────────────────────────────────────
-            btnClose.Text      = "Close";
+            // X = 540 - 10 margin - 104 button width = 426
+            btnClose.Text      = "OK";
             btnClose.Font      = new Font("Segoe UI", 9.5f, FontStyle.Bold);
             btnClose.ForeColor = Color.White;
             btnClose.BackColor = ThemeManager.Accent;
             btnClose.FlatStyle = FlatStyle.Flat;
             btnClose.FlatAppearance.BorderSize = 0;
-            btnClose.Location  = new Point(366, 478);
+            btnClose.Location  = new Point(426, 498);
             btnClose.Size      = new Size(104, 34);
             btnClose.Cursor    = Cursors.Hand;
             btnClose.Click    += btnClose_Click;

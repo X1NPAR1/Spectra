@@ -1,19 +1,21 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/version-1.9.0-1E6EB4?style=for-the-badge" alt="Version">
-<img src="https://img.shields.io/badge/platform-Windows-0078D4?style=for-the-badge&logo=windows" alt="Platform">
-<img src="https://img.shields.io/badge/GPU-NVIDIA%20%7C%20AMD-76B900?style=for-the-badge" alt="GPU">
-<img src="https://img.shields.io/badge/.NET-4.8-512BD4?style=for-the-badge" alt=".NET">
+<img src="https://img.shields.io/badge/version-1.9.1-1E6EB4?style=for-the-badge" alt="Version">
+<img src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows" alt="Platform">
+<img src="https://img.shields.io/badge/GPU-NVIDIA%20%7C%20AMD-76B900?style=for-the-badge" alt="GPU Support">
+<img src="https://img.shields.io/badge/.NET%20Framework-4.8-512BD4?style=for-the-badge" alt=".NET 4.8">
 
 # Spectra
 
 **Professional Digital Vibrance Controller for NVIDIA & AMD**
 
+*Automate per-application color saturation on Windows with zero performance overhead.*
+
 </div>
 
 ---
 
-## Languages / Diller / Языки / Sprachen / Langues / Talen
+## Language / Dil / Язык / Sprache / Langue / Taal
 
 - [English](#english)
 - [Türkçe](#türkçe)
@@ -29,79 +31,85 @@
 
 ### Overview
 
-**Spectra** is a professional-grade digital vibrance management utility for Windows, designed for competitive gamers and visual professionals. It leverages native GPU driver APIs — NVIDIA's Digital Vibrance Control (DVC) and AMD's Display Library (ADL) — to automate per-application color saturation profiles with zero performance overhead.
+Spectra is a professional-grade digital vibrance management utility for Windows, built for competitive gamers and visual professionals. It communicates directly with GPU driver APIs — NVIDIA's Digital Vibrance Control (NVAPI) and AMD's Display Library (ADL) — to apply per-application color saturation profiles automatically, with no measurable performance impact.
 
-When you launch a configured game, Spectra instantly applies your custom vibrance settings. When you exit, it restores your desktop profile seamlessly.
+When a configured application launches, Spectra applies its vibrance profile instantly. When the application closes, the desktop profile is restored seamlessly.
 
 ### Features
 
 | Feature | Description |
 |---------|-------------|
-| **NVIDIA & AMD Support** | Full support via NVAPI and AMD ADL driver interfaces |
-| **Per-Game Profiles** | Individual vibrance levels for each game |
-| **Global Hotkey** | Toggle vibrance on/off with any key combo (default: F9). Supports Ctrl/Alt modifiers — safe on all keyboard layouts including Cyrillic |
-| **Quick Presets** | Default / Low / High / Max presets on main UI and in system tray |
-| **Tray Quick Presets** | Apply vibrance presets instantly from the system tray without opening the app |
-| **6-Language Interface** | English, Turkish, Russian, German, French, Dutch |
-| **Resolution Switching** | Auto-switch resolution per game (borderless/windowed) |
-| **System Tray** | Runs silently in background with full tray menu control |
-| **Startup Integration** | Optional Windows startup registration |
-| **Primary Monitor Control** | Optionally limit vibrance to primary display only |
-| **Profile Import/Export** | Back up and restore your game profiles |
-| **Vibrance Apply Delay** | Configurable delay before applying vibrance when a game launches |
+| **NVIDIA & AMD** | Native support via NVAPI (NVIDIA) and ADL 32/64-bit (AMD) |
+| **Per-Game Profiles** | Individual vibrance settings per executable |
+| **Global Hotkey** | Toggle vibrance with any key or modifier combination (Ctrl/Alt+key). Safe on all keyboard layouts including Cyrillic |
+| **Tray Quick Presets** | Apply Default / Low / High / Max vibrance instantly from the system tray, without opening the application |
+| **6-Language UI** | English, Turkish, Russian, German, French, Dutch — all labels and buttons sized correctly for every language |
+| **Vibrance Apply Delay** | Configurable delay (ms) before applying vibrance when a game launches |
+| **Resolution Switching** | Automatic per-game resolution change for borderless/windowed modes |
+| **System Tray** | Full tray integration: open, toggle, presets, exit |
+| **Startup Integration** | Optional Windows startup entry via Registry |
+| **Primary Monitor Control** | Optionally restrict vibrance to the primary display |
+| **Profile Import / Export** | Back up and restore game profiles in XML format |
+| **Persistent Hotkey** | Custom hotkey is saved and restored across restarts |
 
-### Requirements
+### System Requirements
 
 - Windows 10 / 11
-- NVIDIA GPU with official driver **OR** AMD GPU with official driver
-- .NET Framework 4.8 (included in Windows 10/11)
+- NVIDIA GPU with official driver, **or** AMD GPU with official driver
+- .NET Framework 4.8 *(pre-installed on Windows 10 v1903+ and Windows 11)*
 
 ### Installation
 
 1. Download `Spectra.exe` from the [Releases](../../releases) page
-2. Run `Spectra.exe` — no installation required
-3. Configure your game profiles and preferred vibrance levels
-4. Optionally enable **Launch on startup** for automatic background operation
+2. Run `Spectra.exe` — no installation or administrator rights required
+3. The application detects your GPU automatically at startup
 
 ### Usage
 
-1. **Desktop Vibrance** — Set your preferred desktop color level using the slider or quick presets
-2. **Add Game** — Click *Add File* to browse for an executable, or *Browse Running* to pick from active processes
-3. **Profile Settings** — Double-click any game to configure its vibrance level and optional resolution
-4. **Hotkey** — Click the hotkey button and press any key (or key combination with Ctrl/Alt) to set a global vibrance toggle
-5. **Tray Quick Presets** — Right-click the tray icon → Quick Presets for instant vibrance changes
-6. **Settings** — Open the Settings panel (⚙) for advanced options: behavior, display, profile management, and about
+1. **Desktop Vibrance** — Adjust the slider or click Default / Low / High / Max
+2. **Add a Game** — Click *Add File* to browse for an `.exe`, or *Browse Running* to select from active processes
+3. **Edit a Profile** — Double-click any game entry to configure its vibrance level and optional resolution override
+4. **Hotkey** — Click the hotkey button and press any key (with optional Ctrl/Alt modifier) to register a global toggle
+5. **Tray Presets** — Right-click the tray icon → *Quick Presets* to switch vibrance levels without opening the window
+6. **Settings** — Click ⚙ to access Behavior, Display, Profile management, and About tabs
 
 ### Build from Source
 
 ```
 git clone https://github.com/X1NPAR1/Spectra.git
 cd Spectra
-msbuild Spectra/Spectra.csproj /p:Configuration=Release /p:Platform=x86
+dotnet build Spectra/Spectra.csproj /p:Configuration=Release /p:Platform=x86
 ```
+
+Output: `Spectra/bin/x86/Release/Spectra.exe`
 
 ### Changelog
 
-#### v1.9.0
-- **New:** Tray Quick Presets — apply Default/Low/High/Max vibrance directly from tray menu
-- **New:** Hotkey modifier key support (Ctrl+key, Alt+key) — eliminates accidental triggers on Russian/Cyrillic and other non-Latin keyboard layouts
-- **New:** Hotkey is now persisted across restarts
-- **Fix:** Russian keyboard layout no longer triggers hotkey accidentally during typing
-- **Fix:** About panel now shows the application icon (setting.ico) instead of a placeholder
-- **Removed:** Old legacy icon (spectra.ico) deleted
-- **Updated:** Version bumped to 1.9.0
+#### v1.9.1 — Layout & Localization Polish
+- **Fix:** Preset buttons (Default/Low/High/Max) no longer overlap with the vibrance trackbar thumb at any DPI setting
+- **Fix:** Settings window widened to 540 px — all tab content has room to breathe
+- **Fix:** Profile action buttons (Add / Browse / Remove) are now equal-width columns, no clipping in any language
+- **Fix:** Data tab buttons (Export / Import / Clear / Open Log / Reset) use a two-column grid layout — all translations always fully visible
+- **Fix:** Behavior & Display tab checkboxes span full content width — no text truncation in any supported language
+- **Fix:** Delay description label wraps correctly instead of overflowing the tab
 
-#### v1.8.0
-- Single professional navy-blue theme matching application icon
+#### v1.9.0 — Hotkey Modifiers & Tray Presets
+- Hotkey modifier key support (Ctrl/Alt/Shift+key) — eliminates accidental triggers on non-Latin keyboard layouts
+- Tray Quick Presets submenu (Default / Low / High / Max without opening the app)
+- Hotkey persisted across restarts
+- Settings About panel displays the real application icon
+- Removed legacy `spectra.ico`
+
+#### v1.8.0 — New Theme & Dutch Support
+- Single professional navy-blue theme matching the application icon
 - Card-based UI panels with accent borders
-- Dutch language support added
-- New Settings dialog with Behavior/Display/Profiles/About tabs
+- Dutch (Nederlands) added as the sixth interface language
+- Settings dialog redesigned with Behavior / Display / Profiles / About tabs
 
-#### v1.7.1
-- Complete UI/UX overhaul
+#### v1.7.1 — UI/UX Overhaul
+- Complete visual redesign
 
-#### v1.7.0
-- Initial release
+#### v1.7.0 — Initial Release
 
 ---
 
@@ -110,27 +118,25 @@ msbuild Spectra/Spectra.csproj /p:Configuration=Release /p:Platform=x86
 
 ### Genel Bakış
 
-**Spectra**, rekabetçi oyuncular ve görsel profesyoneller için tasarlanmış Windows platformunda çalışan profesyonel bir dijital canlılık (vibrance) yönetim aracıdır. NVIDIA'nın Dijital Canlılık Kontrolü (DVC) ve AMD'nin Görüntü Kütüphanesi (ADL) sürücü API'lerini kullanarak uygulama başına renk doygunluğu profillerini sıfır performans kaybıyla otomatikleştirir.
+Spectra, rekabetçi oyuncular ve görsel profesyoneller için tasarlanmış, Windows platformunda çalışan profesyonel bir dijital canlılık (vibrance) yönetim aracıdır. NVIDIA NVAPI ve AMD ADL sürücü arayüzleri üzerinden doğrudan GPU ile iletişim kurarak, uygulama başına renk doygunluğu profillerini sıfır performans kaybıyla otomatik olarak uygular.
 
 ### Özellikler
 
 | Özellik | Açıklama |
 |---------|----------|
-| **NVIDIA & AMD Desteği** | NVAPI ve AMD ADL arayüzleri üzerinden tam destek |
-| **Oyun Başına Profil** | Her oyun için ayrı vibrance seviyesi |
+| **NVIDIA & AMD Desteği** | NVAPI ve AMD ADL 32/64-bit arayüzleri üzerinden tam destek |
+| **Oyun Başına Profil** | Her oyun yürütülebiliri için ayrı vibrance ayarı |
 | **Global Kısayol Tuşu** | Ctrl/Alt modifier destekli — Kiril klavyelerde güvenli |
-| **Hızlı Ön Ayarlar** | Ana ekran ve tepsi menüsünden Default/Low/High/Max |
-| **Tepsi Hızlı Ön Ayarlar** | Uygulamayı açmadan tepsiden vibrance seviyesi değiştir |
-| **6 Dil Desteği** | Türkçe dahil 6 dil |
+| **Tepsi Hızlı Ön Ayarları** | Uygulamayı açmadan tepsi menüsünden Default/Low/High/Max |
+| **6 Dil Desteği** | Türkçe dahil tüm dillerde buton ve etiketler eksiksiz görünür |
 | **Çözünürlük Değişimi** | Oyun başına otomatik çözünürlük geçişi |
-| **Sistem Tepsisi** | Arka planda sessiz çalışma, tam tepsi menü kontrolü |
-| **Başlangıç Entegrasyonu** | İsteğe bağlı Windows başlangıcına kayıt |
+| **Sistem Tepsisi** | Açma, geçiş, ön ayar ve çıkış işlemleri tepsi üzerinden |
+| **Başlangıç Entegrasyonu** | İsteğe bağlı Windows başlangıç kaydı |
 
 ### Kurulum
 
 1. [Releases](../../releases) sayfasından `Spectra.exe` dosyasını indirin
-2. `Spectra.exe` dosyasını çalıştırın — kurulum gerekmez
-3. Oyun profillerinizi ve vibrance seviyelerinizi yapılandırın
+2. `Spectra.exe` dosyasını çalıştırın — kurulum veya yönetici hakkı gerekmez
 
 ---
 
@@ -139,24 +145,23 @@ msbuild Spectra/Spectra.csproj /p:Configuration=Release /p:Platform=x86
 
 ### Обзор
 
-**Spectra** — профессиональный инструмент управления цифровой яркостью (Digital Vibrance) для Windows. Использует нативные API драйверов — NVIDIA DVC и AMD ADL — для автоматического применения профилей насыщенности цветов для каждого приложения без нагрузки на производительность.
+Spectra — профессиональная утилита управления цифровой яркостью для Windows. Взаимодействует напрямую с API драйверов GPU — NVIDIA NVAPI и AMD ADL — для автоматического применения профилей насыщенности цветов к каждому приложению без нагрузки на производительность.
 
 ### Возможности
 
 | Функция | Описание |
 |---------|----------|
-| **NVIDIA и AMD** | Полная поддержка через NVAPI и AMD ADL |
-| **Профили для игр** | Индивидуальные уровни яркости для каждой игры |
-| **Горячая клавиша** | Поддержка Ctrl/Alt+клавиша — нет случайных срабатываний на кириллической раскладке |
-| **Быстрые пресеты в трее** | Смена уровня яркости прямо из системного трея |
-| **6 языков** | Русский интерфейс включён |
-| **Системный трей** | Тихая фоновая работа с полным управлением из трея |
+| **NVIDIA и AMD** | Нативная поддержка через NVAPI и AMD ADL 32/64-bit |
+| **Профили для игр** | Индивидуальные настройки яркости для каждого исполняемого файла |
+| **Горячая клавиша** | Ctrl/Alt+клавиша — нет случайных срабатываний на кириллической раскладке |
+| **Быстрые пресеты в трее** | Default / Low / High / Max без открытия приложения |
+| **6 языков интерфейса** | Все тексты и кнопки отображаются полностью на каждом языке |
+| **Системный трей** | Полное управление через контекстное меню трея |
 
 ### Установка
 
 1. Скачайте `Spectra.exe` со страницы [Releases](../../releases)
-2. Запустите — установка не требуется
-3. Настройте профили игр и уровни яркости
+2. Запустите — установка не требуется, права администратора не нужны
 
 ---
 
@@ -165,24 +170,23 @@ msbuild Spectra/Spectra.csproj /p:Configuration=Release /p:Platform=x86
 
 ### Überblick
 
-**Spectra** ist ein professionelles Digital-Vibrance-Management-Werkzeug für Windows. Es nutzt native GPU-Treiber-APIs — NVIDIA DVC und AMD ADL — um Farbsättigungsprofile pro Anwendung ohne Leistungseinbußen zu automatisieren.
+Spectra ist ein professionelles Digital-Vibrance-Management-Werkzeug für Windows. Es kommuniziert direkt mit den GPU-Treiber-APIs — NVIDIA NVAPI und AMD ADL — und wendet Farbsättigungsprofile automatisch pro Anwendung an, ohne messbare Leistungseinbußen.
 
 ### Funktionen
 
 | Funktion | Beschreibung |
 |----------|--------------|
-| **NVIDIA & AMD** | Volle Unterstützung über NVAPI und AMD ADL |
-| **Spielprofile** | Individuelle Vibrance-Level pro Spiel |
-| **Schnelltaste** | Ctrl/Alt+Taste Unterstützung — sicher bei nichtlateinischen Tastaturen |
-| **Tray-Schnellpresets** | Vibrance direkt aus dem Systemtray ändern |
-| **6 Sprachen** | Deutsch inklusive |
-| **Systemtray** | Stiller Hintergrundbetrieb mit vollständiger Traykontrolle |
+| **NVIDIA & AMD** | Native Unterstützung über NVAPI und AMD ADL 32/64-bit |
+| **Spielprofile** | Individuelle Vibrance-Einstellungen pro Programm |
+| **Schnelltaste** | Ctrl/Alt+Taste — sicher auf allen Tastaturlayouts |
+| **Tray-Schnellpresets** | Default / Low / High / Max direkt aus dem Systemtray |
+| **6 Sprachen** | Alle Beschriftungen vollständig in jeder Sprache |
+| **Systemtray** | Vollständige Steuerung über das Tray-Kontextmenü |
 
 ### Installation
 
 1. `Spectra.exe` von der [Releases](../../releases) Seite herunterladen
-2. Ausführen — keine Installation erforderlich
-3. Spielprofile und Vibrance-Level konfigurieren
+2. Ausführen — keine Installation, keine Administratorrechte erforderlich
 
 ---
 
@@ -191,24 +195,23 @@ msbuild Spectra/Spectra.csproj /p:Configuration=Release /p:Platform=x86
 
 ### Aperçu
 
-**Spectra** est un outil professionnel de gestion de la vibrance numérique pour Windows. Il utilise les API natives des pilotes GPU — NVIDIA DVC et AMD ADL — pour automatiser les profils de saturation des couleurs par application, sans aucune perte de performance.
+Spectra est un outil professionnel de gestion de la vibrance numérique pour Windows. Il communique directement avec les API des pilotes GPU — NVIDIA NVAPI et AMD ADL — pour appliquer automatiquement des profils de saturation couleur par application, sans impact mesurable sur les performances.
 
 ### Fonctionnalités
 
 | Fonctionnalité | Description |
 |----------------|-------------|
-| **NVIDIA & AMD** | Support complet via NVAPI et AMD ADL |
-| **Profils par jeu** | Niveaux de vibrance individuels par jeu |
-| **Raccourci global** | Support Ctrl/Alt+touche — sûr sur les claviers cyrilliques |
-| **Préréglages rapides dans le tray** | Changer la vibrance directement depuis la barre système |
-| **6 langues** | Français inclus |
-| **Barre système** | Fonctionnement silencieux en arrière-plan |
+| **NVIDIA & AMD** | Support natif via NVAPI et AMD ADL 32/64-bit |
+| **Profils par jeu** | Paramètres de vibrance individuels par exécutable |
+| **Raccourci global** | Ctrl/Alt+touche — sûr sur tous les agencements de clavier |
+| **Préréglages rapides** | Default / Low / High / Max directement depuis le tray système |
+| **6 langues** | Tous les libellés et boutons s'affichent entièrement dans chaque langue |
+| **Barre système** | Contrôle complet via le menu contextuel du tray |
 
 ### Installation
 
 1. Téléchargez `Spectra.exe` depuis la page [Releases](../../releases)
-2. Exécutez — aucune installation requise
-3. Configurez vos profils de jeu et niveaux de vibrance
+2. Exécutez — aucune installation ni droits administrateur requis
 
 ---
 
@@ -217,29 +220,29 @@ msbuild Spectra/Spectra.csproj /p:Configuration=Release /p:Platform=x86
 
 ### Overzicht
 
-**Spectra** is een professionele digitale vibrance-beheerder voor Windows, ontworpen voor competitieve gamers en visuele professionals. Het maakt gebruik van native GPU-stuurprogramma-API's — NVIDIA DVC en AMD ADL — om automatisch kleurverzadigingsprofielen per applicatie toe te passen zonder prestatieverlies.
+Spectra is een professionele digitale vibrance-beheertool voor Windows. Het communiceert rechtstreeks met GPU-stuurprogramma-API's — NVIDIA NVAPI en AMD ADL — om per applicatie automatisch kleurverzadigingsprofielen toe te passen, zonder meetbaar prestatieverlies.
 
 ### Functies
 
 | Functie | Beschrijving |
 |---------|-------------|
-| **NVIDIA & AMD** | Volledige ondersteuning via NVAPI en AMD ADL |
-| **Per-game profielen** | Individuele vibrance-niveaus per game |
-| **Globale sneltoets** | Ctrl/Alt+toets ondersteuning — veilig op Cyrillische toetsenborden |
-| **Snelle presets in tray** | Vibrance wijzigen direct vanuit de systeembalk |
-| **6 talen** | Nederlands inbegrepen |
-| **Systeembalk** | Stille achtergrondwerking met volledig traybeheer |
+| **NVIDIA & AMD** | Native ondersteuning via NVAPI en AMD ADL 32/64-bit |
+| **Per-game profielen** | Individuele vibrance-instellingen per uitvoerbaar bestand |
+| **Globale sneltoets** | Ctrl/Alt+toets — veilig op alle toetsenbordindelingen |
+| **Snelle presets in tray** | Default / Low / High / Max direct vanuit de systeembalk |
+| **6 talen** | Alle labels en knoppen volledig zichtbaar in elke taal |
+| **Systeembalk** | Volledige bediening via het contextmenu van de systeembalk |
 
 ### Installatie
 
 1. Download `Spectra.exe` van de [Releases](../../releases) pagina
-2. Uitvoeren — geen installatie vereist
-3. Configureer je game-profielen en vibrance-niveaus
+2. Uitvoeren — geen installatie of beheerdersrechten vereist
 
 ---
 
 <div align="center">
 
-**Spectra v1.9.0** — Professional Digital Vibrance Control
+**Spectra v1.9.1** — Professional Digital Vibrance Control  
+[GitHub](https://github.com/X1NPAR1/Spectra) · [Releases](https://github.com/X1NPAR1/Spectra/releases)
 
 </div>
