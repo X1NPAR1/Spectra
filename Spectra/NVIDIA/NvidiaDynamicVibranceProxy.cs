@@ -250,20 +250,8 @@ namespace Spectra.NVIDIA
                         PerformResolutionChange(currentScreen, _windowsResolutionSettings[currentScreen.DeviceName].Item1);
                     }
 
-                    //test if changing the vibrance value is needed
-                    if (_vibranceInfo.affectPrimaryMonitorOnly && !equalsDVCLevel(_vibranceInfo.defaultHandle, _vibranceInfo.userVibranceSettingDefault))
-                    {
-                        if(_gameScreen != null && !_gameScreen.DeviceName.Equals(currentScreen.DeviceName))
-                        {
-                            return;
-                        }
-
-                        setDVCLevel(_vibranceInfo.defaultHandle, _vibranceInfo.userVibranceSettingDefault);
-                    }
-                    else if (!_vibranceInfo.affectPrimaryMonitorOnly && !_vibranceInfo.displayHandles.TrueForAll(handle => equalsDVCLevel(handle, _vibranceInfo.userVibranceSettingDefault)))
-                    {
-                        _vibranceInfo.displayHandles.ForEach(handle => setDVCLevel(handle, _vibranceInfo.userVibranceSettingDefault));
-                    }
+                    // Restore desktop vibrance to the user-selected monitor target
+                    ApplyDesktopVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
                 }
             }
         }
@@ -350,6 +338,13 @@ namespace Spectra.NVIDIA
         public void SetAffectPrimaryMonitorOnly(bool affectPrimaryMonitorOnly)
         {
             _vibranceInfo.affectPrimaryMonitorOnly = affectPrimaryMonitorOnly;
+            _vibranceInfo.targetMonitorDeviceName  = affectPrimaryMonitorOnly ? "PRIMARY" : null;
+        }
+
+        public void SetTargetMonitorDeviceName(string deviceName)
+        {
+            _vibranceInfo.targetMonitorDeviceName  = deviceName;
+            _vibranceInfo.affectPrimaryMonitorOnly = (deviceName == "PRIMARY");
         }
 
         public VibranceInfo GetVibranceInfo()
@@ -367,12 +362,30 @@ namespace Spectra.NVIDIA
 
         public void HandleDvcExit()
         {
-            if (_vibranceInfo.affectPrimaryMonitorOnly)
+            ApplyDesktopVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
+        }
+
+        // Applies desktop vibrance to the user-selected monitor target.
+        private static void ApplyDesktopVibranceToTarget(int level)
+        {
+            string target = _vibranceInfo.targetMonitorDeviceName;
+            if (target == null)
             {
-                setDVCLevel(_vibranceInfo.defaultHandle, _vibranceInfo.userVibranceSettingDefault);
+                // All monitors
+                if (_vibranceInfo.displayHandles != null)
+                    _vibranceInfo.displayHandles.ForEach(h => { if (!equalsDVCLevel(h, level)) setDVCLevel(h, level); });
             }
-            else if (!_vibranceInfo.displayHandles.TrueForAll(handle => equalsDVCLevel(handle, _vibranceInfo.userVibranceSettingDefault)))
-                _vibranceInfo.displayHandles.ForEach(handle => setDVCLevel(handle, _vibranceInfo.userVibranceSettingDefault));
+            else if (target == "PRIMARY")
+            {
+                if (!equalsDVCLevel(_vibranceInfo.defaultHandle, level))
+                    setDVCLevel(_vibranceInfo.defaultHandle, level);
+            }
+            else
+            {
+                int h = getAssociatedNvidiaDisplayHandle(target, target.Length);
+                if (h != -1 && !equalsDVCLevel(h, level))
+                    setDVCLevel(h, level);
+            }
         }
     }
 }

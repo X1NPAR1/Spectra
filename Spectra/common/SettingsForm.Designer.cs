@@ -214,6 +214,8 @@ namespace Spectra.common
             tabBehavior.Controls.Add(lblDelayMs);
 
             // ── DISPLAY TAB ───────────────────────────────────────────────
+            // Monitor section: label stacked above full-width combo —
+            // avoids any overlap regardless of translation length.
             lblMonitorSection.Text      = "MONITOR TARGET";
             lblMonitorSection.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
             lblMonitorSection.ForeColor = ThemeManager.Accent;
@@ -225,19 +227,19 @@ namespace Spectra.common
             sepMonitor.Size      = new Size(488, 1);
             sepMonitor.BackColor = ThemeManager.Border;
 
-            // Label is AutoSize; combo starts at X=160 to give enough room for longest label translations
             lblMonitorTarget.Text      = "Apply vibrance to:";
             lblMonitorTarget.Font      = new Font("Segoe UI", 9f);
-            lblMonitorTarget.ForeColor = ThemeManager.Text;
+            lblMonitorTarget.ForeColor = ThemeManager.TextSub;
             lblMonitorTarget.BackColor = Color.Transparent;
-            lblMonitorTarget.Location  = new Point(0, 32);
+            lblMonitorTarget.Location  = new Point(0, 30);
             lblMonitorTarget.AutoSize  = true;
 
-            cboMonitorTarget.Location      = new Point(160, 30);
-            cboMonitorTarget.Size          = new Size(280, 22);
+            // Full-width combo — stacked under its label, no side-by-side gap
+            cboMonitorTarget.Location      = new Point(0, 50);
+            cboMonitorTarget.Size          = new Size(488, 24);
             cboMonitorTarget.DropDownStyle = ComboBoxStyle.DropDownList;
             cboMonitorTarget.FlatStyle     = FlatStyle.Flat;
-            cboMonitorTarget.Font          = new Font("Segoe UI", 9f);
+            cboMonitorTarget.Font          = new Font("Segoe UI", 9.5f);
             cboMonitorTarget.BackColor     = ThemeManager.Surface2;
             cboMonitorTarget.ForeColor     = ThemeManager.Text;
 
@@ -245,10 +247,10 @@ namespace Spectra.common
             lblResSection.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
             lblResSection.ForeColor = ThemeManager.Accent;
             lblResSection.BackColor = Color.Transparent;
-            lblResSection.Location  = new Point(0, 70);
+            lblResSection.Location  = new Point(0, 96);
             lblResSection.AutoSize  = true;
 
-            sepRes.Location  = new Point(0, 90);
+            sepRes.Location  = new Point(0, 116);
             sepRes.Size      = new Size(488, 1);
             sepRes.BackColor = ThemeManager.Border;
 
@@ -256,14 +258,14 @@ namespace Spectra.common
             chkNeverResize.Font     = new Font("Segoe UI", 9f);
             chkNeverResize.ForeColor= ThemeManager.Text;
             chkNeverResize.BackColor= Color.Transparent;
-            chkNeverResize.Location = new Point(0, 100);
+            chkNeverResize.Location = new Point(0, 126);
             chkNeverResize.Size     = new Size(488, 22);
 
             chkResetOnExit.Text     = "Reset vibrance to default on exit";
             chkResetOnExit.Font     = new Font("Segoe UI", 9f);
             chkResetOnExit.ForeColor= ThemeManager.Text;
             chkResetOnExit.BackColor= Color.Transparent;
-            chkResetOnExit.Location = new Point(0, 128);
+            chkResetOnExit.Location = new Point(0, 154);
             chkResetOnExit.Size     = new Size(488, 22);
 
             tabDisplay.Controls.Add(lblMonitorSection);
@@ -410,7 +412,7 @@ namespace Spectra.common
             lblAboutName.Location  = new Point(80, 2);
             lblAboutName.AutoSize  = true;
 
-            lblAboutVersion.Text      = "v1.9.1";
+            lblAboutVersion.Text      = "v1.9.2";
             lblAboutVersion.Font      = new Font("Segoe UI", 9f);
             lblAboutVersion.ForeColor = ThemeManager.TextSub;
             lblAboutVersion.BackColor = Color.Transparent;

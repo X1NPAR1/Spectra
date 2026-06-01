@@ -12,6 +12,8 @@ namespace Spectra.common
         bool UnloadLibraryEx();
         void HandleDvcExit();
         void SetAffectPrimaryMonitorOnly(bool affectPrimaryMonitorOnly);
+        // deviceName: null=all, "PRIMARY"=primary only, device path=specific monitor
+        void SetTargetMonitorDeviceName(string deviceName);
         VibranceInfo GetVibranceInfo();
         GraphicsAdapter GraphicsAdapter { get; }
         void SetNeverSwitchResolution(bool neverSwitchResolution);

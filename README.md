@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/version-1.9.1-1E6EB4?style=for-the-badge" alt="Version">
+<img src="https://img.shields.io/badge/version-1.9.2-1E6EB4?style=for-the-badge" alt="Version">
 <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows" alt="Platform">
 <img src="https://img.shields.io/badge/GPU-NVIDIA%20%7C%20AMD-76B900?style=for-the-badge" alt="GPU Support">
 <img src="https://img.shields.io/badge/.NET%20Framework-4.8-512BD4?style=for-the-badge" alt=".NET 4.8">
@@ -84,6 +84,12 @@ dotnet build Spectra/Spectra.csproj /p:Configuration=Release /p:Platform=x86
 Output: `Spectra/bin/x86/Release/Spectra.exe`
 
 ### Changelog
+
+#### v1.9.2 — Monitor Selection Fix & Full Localization
+- **Fix:** Monitor selection in Settings now actually works — choosing "Primary Monitor Only" or a specific secondary monitor correctly restricts vibrance application to that display only (both NVIDIA and AMD)
+- **Fix:** Vibrance preset buttons (Default / Low / High / Max) now change text with the selected language
+- **Fix:** Tray Quick Presets menu items also change language
+- **Fix:** Display tab monitor combo is now full-width and stacked (label above combo) — no awkward side-by-side gap with variable-length translations
 
 #### v1.9.1 — Layout & Localization Polish
 - **Fix:** Preset buttons (Default/Low/High/Max) no longer overlap with the vibrance trackbar thumb at any DPI setting

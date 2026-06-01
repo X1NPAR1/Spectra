@@ -35,7 +35,27 @@ namespace Spectra.common
                 if (!s.Primary)
                     cboMonitorTarget.Items.Add(s.DeviceName);
             }
-            cboMonitorTarget.SelectedIndex = 0;
+
+            // Sync combo to the proxy's current monitor target selection
+            string currentTarget = _proxy.GetVibranceInfo().targetMonitorDeviceName;
+            cboMonitorTarget.SelectedIndex = 0;          // default: all monitors
+            if (currentTarget == "PRIMARY")
+            {
+                cboMonitorTarget.SelectedIndex = 1;
+            }
+            else if (currentTarget != null)
+            {
+                for (int i = 2; i < cboMonitorTarget.Items.Count; i++)
+                {
+                    if (cboMonitorTarget.Items[i].ToString() == currentTarget)
+                    {
+                        cboMonitorTarget.SelectedIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            cboMonitorTarget.SelectedIndexChanged += cboMonitorTarget_SelectedIndexChanged;
 
             // Profile count
             UpdateProfileCount();
@@ -171,6 +191,18 @@ namespace Spectra.common
                     g.DrawImage(bmp, 2, 2, 60, 60);
             }
             catch { }
+        }
+
+        // ── Display tab handlers ──────────────────────────────────────────
+        private void cboMonitorTarget_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int idx = cboMonitorTarget.SelectedIndex;
+            if (idx == 0)
+                _proxy.SetTargetMonitorDeviceName(null);          // all monitors
+            else if (idx == 1)
+                _proxy.SetTargetMonitorDeviceName("PRIMARY");     // primary only
+            else if (idx >= 2 && idx < cboMonitorTarget.Items.Count)
+                _proxy.SetTargetMonitorDeviceName(cboMonitorTarget.Items[idx].ToString());
         }
 
         // ── Behavior tab handlers ─────────────────────────────────────────

@@ -139,10 +139,23 @@ namespace Spectra.common
             btnAdd.Text                = LocalizationManager.Get("AddFile");
             btnBrowse.Text             = LocalizationManager.Get("BrowseRunning");
             btnRemove.Text             = LocalizationManager.Get("Remove");
-            menuOpenSpectra.Text       = LocalizationManager.Get("OpenSpectra");
-            menuTrayToggle.Text        = LocalizationManager.Get("TrayToggle");
-            menuExit.Text              = LocalizationManager.Get("Exit");
-            notifyIcon.Text            = AppName;
+
+            // Vibrance preset buttons — localized in every language
+            btnPresetDef.Text  = LocalizationManager.Get("PresetDefault");
+            btnPresetLow.Text  = LocalizationManager.Get("PresetLow");
+            btnPresetHigh.Text = LocalizationManager.Get("PresetHigh");
+            btnPresetMax.Text  = LocalizationManager.Get("PresetMax");
+
+            // Tray menu — all items localized
+            menuOpenSpectra.Text    = LocalizationManager.Get("OpenSpectra");
+            menuTrayToggle.Text     = LocalizationManager.Get("TrayToggle");
+            menuTrayPresets.Text    = LocalizationManager.Get("QuickPresets");
+            menuTrayPresetDef.Text  = LocalizationManager.Get("PresetDefault");
+            menuTrayPresetLow.Text  = LocalizationManager.Get("PresetLow");
+            menuTrayPresetHigh.Text = LocalizationManager.Get("PresetHigh");
+            menuTrayPresetMax.Text  = LocalizationManager.Get("PresetMax");
+            menuExit.Text           = LocalizationManager.Get("Exit");
+            notifyIcon.Text         = AppName;
 
             // Sync combo without firing change event
             comboLanguage.SelectedIndexChanged -= comboLanguage_SelectedIndexChanged;

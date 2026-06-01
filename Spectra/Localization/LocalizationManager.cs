@@ -38,9 +38,16 @@ namespace Spectra.Localization
             ["StatusStopped"]    = new[]{"● Stopped","● Durdu","● Остановлен","● Gestoppt","● Arrêté","● Gestopt"},
             ["StatusInit"]       = new[]{"Initializing...","Başlatılıyor...","Инициализация...","Initialisierung...","Initialisation...","Initialiseren..."},
 
+            // ── Vibrance presets (main UI buttons + tray menu) ────────────
+            ["PresetDefault"]    = new[]{"Default","Varsayılan","По умолч.","Standard","Défaut","Standaard"},
+            ["PresetLow"]        = new[]{"Low","Düşük","Низкий","Niedrig","Bas","Laag"},
+            ["PresetHigh"]       = new[]{"High","Yüksek","Высокий","Hoch","Élevé","Hoog"},
+            ["PresetMax"]        = new[]{"Max","Max","Макс","Max","Max","Max"},
+
             // ── Tray ─────────────────────────────────────────────────────
             ["OpenSpectra"]      = new[]{"Open Spectra","Spectra'yı Aç","Открыть Spectra","Spectra öffnen","Ouvrir Spectra","Spectra openen"},
             ["TrayToggle"]       = new[]{"Toggle Vibrance","Canlılığı Değiştir","Переключить яркость","Vibrance umschalten","Basculer la vibrance","Vibrance wisselen"},
+            ["QuickPresets"]     = new[]{"Quick Presets","Hızlı Ön Ayarlar","Быстрые пресеты","Schnellpresets","Préréglages rapides","Snelle presets"},
             ["Exit"]             = new[]{"Exit","Çıkış","Выход","Beenden","Quitter","Afsluiten"},
 
             // ── HotkeyManager ─────────────────────────────────────────────

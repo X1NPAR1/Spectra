@@ -18,6 +18,8 @@ namespace Spectra.common
         public List<int> displayHandles;
         public bool affectPrimaryMonitorOnly;
         public bool neverChangeResolution;
+        // null=all monitors, "PRIMARY"=primary only, device name (e.g. "\\.\DISPLAY2")=specific monitor
+        public string targetMonitorDeviceName;
     }
 }
 

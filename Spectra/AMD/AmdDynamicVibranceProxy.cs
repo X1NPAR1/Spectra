@@ -93,6 +93,13 @@ namespace Spectra.AMD
         public void SetAffectPrimaryMonitorOnly(bool affectPrimaryMonitorOnly)
         {
             _vibranceInfo.affectPrimaryMonitorOnly = affectPrimaryMonitorOnly;
+            _vibranceInfo.targetMonitorDeviceName  = affectPrimaryMonitorOnly ? "PRIMARY" : null;
+        }
+
+        public void SetTargetMonitorDeviceName(string deviceName)
+        {
+            _vibranceInfo.targetMonitorDeviceName  = deviceName;
+            _vibranceInfo.affectPrimaryMonitorOnly = (deviceName == "PRIMARY");
         }
 
         public VibranceInfo GetVibranceInfo()
@@ -101,6 +108,25 @@ namespace Spectra.AMD
         }
 
         public GraphicsAdapter GraphicsAdapter { get; } = GraphicsAdapter.Amd;
+
+        // Applies the given saturation level to the user-selected monitor target.
+        private void ApplyVibranceToTarget(int level)
+        {
+            string target = _vibranceInfo.targetMonitorDeviceName;
+            if (target == null)
+            {
+                _amdAdapter.SetSaturationOnAllDisplays(level);
+            }
+            else if (target == "PRIMARY")
+            {
+                string primary = System.Windows.Forms.Screen.PrimaryScreen?.DeviceName;
+                if (primary != null) _amdAdapter.SetSaturationOnDisplay(level, primary);
+            }
+            else
+            {
+                _amdAdapter.SetSaturationOnDisplay(level, target);
+            }
+        }
 
         [DllImport("user32.dll")]
         public static extern IntPtr GetForegroundWindow();
@@ -124,15 +150,9 @@ namespace Spectra.AMD
                         PerformResolutionChange(screen, applicationSetting.ResolutionSettings);
                     }
 
+                    // Reset all to desktop level, then apply ingame level to target monitor(s)
                     _amdAdapter.SetSaturationOnAllDisplays(_vibranceInfo.userVibranceSettingDefault);
-                    if (_vibranceInfo.affectPrimaryMonitorOnly)
-                    {
-                        _amdAdapter.SetSaturationOnDisplay(applicationSetting.IngameLevel, screen.DeviceName);
-                    }
-                    else
-                    {
-                        _amdAdapter.SetSaturationOnAllDisplays(applicationSetting.IngameLevel);
-                    }
+                    ApplyVibranceToTarget(applicationSetting.IngameLevel);
                 }
                 else
                 {
@@ -142,15 +162,16 @@ namespace Spectra.AMD
 
                     //test if a resolution change is needed
                     Screen screen = Screen.FromHandle(processHandle);
-                    if (_vibranceInfo.neverChangeResolution == false && 
-                        _gameScreen != null && _gameScreen.Equals(screen) && 
+                    if (_vibranceInfo.neverChangeResolution == false &&
+                        _gameScreen != null && _gameScreen.Equals(screen) &&
                         _windowsResolutionSettings.ContainsKey(screen.DeviceName) &&
                         IsResolutionChangeNeeded(screen, _windowsResolutionSettings[screen.DeviceName].Item1))
                     {
                         PerformResolutionChange(screen, _windowsResolutionSettings[screen.DeviceName].Item1);
                     }
 
-                    _amdAdapter.SetSaturationOnAllDisplays(_vibranceInfo.userVibranceSettingDefault);
+                    // Restore desktop vibrance to the selected target monitor(s)
+                    ApplyVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
                 }
             }
         }
