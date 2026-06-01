@@ -72,6 +72,10 @@ namespace Spectra.AMD
         public void SetVibranceWindowsLevel(int vibranceWindowsLevel)
         {
             _vibranceInfo.userVibranceSettingDefault = vibranceWindowsLevel;
+            // Apply immediately so the slider/presets give instant on-screen feedback,
+            // instead of waiting for the next window-focus event.
+            if (_vibranceInfo.isInitialized)
+                ApplyVibranceToTarget(vibranceWindowsLevel);
         }
 
         public void SetVibranceIngameLevel(int vibranceIngameLevel)
@@ -90,16 +94,24 @@ namespace Spectra.AMD
             _amdAdapter.SetSaturationOnAllDisplays(_vibranceInfo.userVibranceSettingDefault);
         }
 
+        // AMD ADL neutral (no extra saturation) level. Displays outside the
+        // selected target are reset to this so they aren't left saturated.
+        private const int AmdNeutralSaturation = 100;
+
         public void SetAffectPrimaryMonitorOnly(bool affectPrimaryMonitorOnly)
         {
             _vibranceInfo.affectPrimaryMonitorOnly = affectPrimaryMonitorOnly;
             _vibranceInfo.targetMonitorDeviceName  = affectPrimaryMonitorOnly ? "PRIMARY" : null;
+            if (_vibranceInfo.isInitialized)
+                ApplyVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
         }
 
         public void SetTargetMonitorDeviceName(string deviceName)
         {
             _vibranceInfo.targetMonitorDeviceName  = deviceName;
             _vibranceInfo.affectPrimaryMonitorOnly = (deviceName == "PRIMARY");
+            if (_vibranceInfo.isInitialized)
+                ApplyVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
         }
 
         public VibranceInfo GetVibranceInfo()
@@ -109,7 +121,8 @@ namespace Spectra.AMD
 
         public GraphicsAdapter GraphicsAdapter { get; } = GraphicsAdapter.Amd;
 
-        // Applies the given saturation level to the user-selected monitor target.
+        // Applies the desktop vibrance level to the selected monitor target,
+        // resetting all other displays to neutral so only the chosen one is affected.
         private void ApplyVibranceToTarget(int level)
         {
             string target = _vibranceInfo.targetMonitorDeviceName;
@@ -119,11 +132,13 @@ namespace Spectra.AMD
             }
             else if (target == "PRIMARY")
             {
+                _amdAdapter.SetSaturationOnAllDisplays(AmdNeutralSaturation);
                 string primary = System.Windows.Forms.Screen.PrimaryScreen?.DeviceName;
                 if (primary != null) _amdAdapter.SetSaturationOnDisplay(level, primary);
             }
             else
             {
+                _amdAdapter.SetSaturationOnAllDisplays(AmdNeutralSaturation);
                 _amdAdapter.SetSaturationOnDisplay(level, target);
             }
         }

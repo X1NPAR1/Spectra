@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -18,9 +20,13 @@ namespace Spectra.common
         private readonly int _defaultWindowsLevel;
         private readonly int _minLevel;
         private readonly int _maxLevel;
+        private readonly int _defaultIngameLevel;
         private readonly Func<int, string> _resolveLevelLabel;
         private readonly IVibranceProxy _proxy;
         private IRegistryController _registry;
+        private List<ApplicationSetting> _profiles;
+        private readonly List<ResolutionModeWrapper> _primaryResolutions;
+        private readonly Dictionary<string, Tuple<ResolutionModeWrapper, List<ResolutionModeWrapper>>> _resolutionMap;
 
         // ── State ─────────────────────────────────────────────────────────
         private bool _allowVisible    = true;
@@ -30,7 +36,8 @@ namespace Spectra.common
         private bool _capturingHotkey;
         private const string AppName = "Spectra";
 
-        // Preset levels computed once from range at startup
+        // Preset level fractions indexed to [def, low, high, max]
+        // Calculated at initialization based on min/max range
         private int _presetDef, _presetLow, _presetHigh, _presetMax;
 
         public MainForm(
@@ -43,36 +50,38 @@ namespace Spectra.common
             _defaultWindowsLevel = defaultWindowsLevel;
             _minLevel            = minLevel;
             _maxLevel            = maxLevel;
+            _defaultIngameLevel  = defaultIngameLevel;
             _resolveLevelLabel   = resolveLevelLabel;
+            _profiles            = new List<ApplicationSetting>();
+            _resolutionMap       = new Dictionary<string, Tuple<ResolutionModeWrapper, List<ResolutionModeWrapper>>>();
+            _primaryResolutions  = new List<ResolutionModeWrapper>();
 
+            // Preset levels: def=default, low=25%, high=75%, max=100%
             int range   = maxLevel - minLevel;
             _presetDef  = defaultWindowsLevel;
             _presetLow  = minLevel + (int)(range * 0.25);
             _presetHigh = minLevel + (int)(range * 0.75);
             _presetMax  = maxLevel;
 
-            // Proxy requires these; pass empty collections — no per-game profiles UI
-            var emptyProfiles   = new List<ApplicationSetting>();
-            var emptyResMap     = new Dictionary<string, Tuple<ResolutionModeWrapper, List<ResolutionModeWrapper>>>();
+            InitializeComponent();
+
+            Icon              = IconFactory.GetAppIcon(32);
+            notifyIcon.Icon   = IconFactory.GetAppIcon(16);
+
+            trackBarVibrance.Minimum = minLevel;
+            trackBarVibrance.Maximum = maxLevel;
 
             foreach (Screen screen in Screen.AllScreens)
             {
                 if (ResolutionHelper.GetCurrentResolutionSettings(out Devmode dm, screen.DeviceName))
                 {
                     var avail = ResolutionHelper.EnumerateSupportedResolutionModes(screen.DeviceName);
-                    emptyResMap[screen.DeviceName] = Tuple.Create(new ResolutionModeWrapper(dm), avail);
+                    if (screen.Primary) _primaryResolutions.AddRange(avail);
+                    _resolutionMap[screen.DeviceName] = Tuple.Create(new ResolutionModeWrapper(dm), avail);
                 }
             }
 
-            InitializeComponent();
-
-            Icon            = IconFactory.GetAppIcon(32);
-            notifyIcon.Icon = IconFactory.GetAppIcon(16);
-
-            trackBarVibrance.Minimum = minLevel;
-            trackBarVibrance.Maximum = maxLevel;
-
-            _proxy = getProxy(emptyProfiles, emptyResMap);
+            _proxy = getProxy(_profiles, _resolutionMap);
 
             backgroundWorker.WorkerReportsProgress = true;
             settingsWorker.WorkerReportsProgress   = true;
@@ -112,6 +121,7 @@ namespace Spectra.common
         }
 
         public HotkeyManager GetHotkeyManager() => _hotkey;
+        public List<ApplicationSetting> GetProfiles() => _profiles;
 
         // ── Localization ──────────────────────────────────────────────────
         private void ApplyLocalization()
@@ -120,17 +130,23 @@ namespace Spectra.common
 
             labelSectionVibrance.Text  = LocalizationManager.Get("DesktopVibrance");
             labelSectionSettings.Text  = LocalizationManager.Get("Settings");
+            labelSectionProfiles.Text  = LocalizationManager.Get("GameProfiles");
             chkAutostart.Text          = LocalizationManager.Get("Autostart");
             chkPrimaryMonitor.Text     = LocalizationManager.Get("PrimaryMonitor");
             chkNeverResize.Text        = LocalizationManager.Get("NeverResize");
             labelLang.Text             = LocalizationManager.Get("LangLabel");
             labelHotkeyTitle.Text      = LocalizationManager.Get("HotkeyLabel");
+            btnAdd.Text                = LocalizationManager.Get("AddFile");
+            btnBrowse.Text             = LocalizationManager.Get("BrowseRunning");
+            btnRemove.Text             = LocalizationManager.Get("Remove");
 
+            // Vibrance preset buttons — localized in every language
             btnPresetDef.Text  = LocalizationManager.Get("PresetDefault");
             btnPresetLow.Text  = LocalizationManager.Get("PresetLow");
             btnPresetHigh.Text = LocalizationManager.Get("PresetHigh");
             btnPresetMax.Text  = LocalizationManager.Get("PresetMax");
 
+            // Tray menu — all items localized
             menuOpenSpectra.Text    = LocalizationManager.Get("OpenSpectra");
             menuTrayToggle.Text     = LocalizationManager.Get("TrayToggle");
             menuTrayPresets.Text    = LocalizationManager.Get("QuickPresets");
@@ -141,34 +157,42 @@ namespace Spectra.common
             menuExit.Text           = LocalizationManager.Get("Exit");
             notifyIcon.Text         = AppName;
 
+            // Sync combo without firing change event
             comboLanguage.SelectedIndexChanged -= comboLanguage_SelectedIndexChanged;
             if (comboLanguage.Items.Count > 0)
                 comboLanguage.SelectedIndex = (int)LocalizationManager.Current;
             comboLanguage.SelectedIndexChanged += comboLanguage_SelectedIndexChanged;
 
+            // Re-apply status (language-aware)
             UpdateStatusIndicator();
         }
 
-        // ── Header painting ───────────────────────────────────────────────
+        // ── Header painting — real icon + gradient ────────────────────────
         private void panelHeader_Paint(object sender, PaintEventArgs e)
         {
             var g    = e.Graphics;
             var rect = panelHeader.ClientRectangle;
-            g.SmoothingMode     = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            g.SmoothingMode     = SmoothingMode.AntiAlias;
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
+            // Navy gradient background
             using (var grad = new LinearGradientBrush(rect,
                 ThemeManager.GradStart, ThemeManager.GradEnd,
                 LinearGradientMode.Horizontal))
                 g.FillRectangle(grad, rect);
 
+            // Draw the actual application icon (setting.ico embedded in exe)
             const int iconSize = 44;
             int iconY = (rect.Height - iconSize) / 2;
-            try { using (var bmp = IconFactory.GetAppBitmap(iconSize)) g.DrawImage(bmp, 14, iconY, iconSize, iconSize); }
-            catch { }
+            try
+            {
+                using (var bmp = IconFactory.GetAppBitmap(iconSize))
+                    g.DrawImage(bmp, 14, iconY, iconSize, iconSize);
+            }
+            catch { /* icon not yet available */ }
         }
 
-        // ── Card panel ───────────────────────────────────────────────────
+        // ── Card panel (white card + 3px navy left border) ────────────────
         private void CardPanel_Paint(object sender, PaintEventArgs e)
         {
             var p = (Panel)sender;
@@ -219,6 +243,7 @@ namespace Spectra.common
             {
                 backgroundWorker.ReportProgress(1);
                 SetControlsEnabled(true);
+                _proxy.SetApplicationSettings(_profiles);
                 _proxy.SetShouldRun(true);
                 _proxy.SetVibranceWindowsLevel(level);
                 _proxy.SetAffectPrimaryMonitorOnly(pOnly);
@@ -263,21 +288,32 @@ namespace Spectra.common
                 case "low":  level = _presetLow;  break;
                 case "high": level = _presetHigh; break;
                 case "max":  level = _presetMax;  break;
-                default: return;
+                default:     return;
             }
-            ApplyPresetLevel(Math.Max(_minLevel, Math.Min(_maxLevel, level)));
+            level = Math.Max(_minLevel, Math.Min(_maxLevel, level));
+            trackBarVibrance.Value  = level;
+            labelVibranceValue.Text = _resolveLevelLabel(level);
+            _proxy?.SetVibranceWindowsLevel(level);
+            _savedLevel = level;
+            HighlightActivePreset();
+            TriggerSettingsSave();
         }
 
         private void HighlightActivePreset()
         {
-            int cur = trackBarVibrance.Value;
-            foreach (var (Btn, Level) in new[] {
-                (btnPresetDef, _presetDef), (btnPresetLow, _presetLow),
-                (btnPresetHigh, _presetHigh), (btnPresetMax, _presetMax) })
+            var presets = new (Button Btn, int Level)[]
             {
-                bool active = Level == cur;
-                Btn.BackColor = active ? ThemeManager.Accent  : ThemeManager.Surface2;
-                Btn.ForeColor = active ? Color.White          : ThemeManager.TextSub;
+                (btnPresetDef,  _presetDef),
+                (btnPresetLow,  _presetLow),
+                (btnPresetHigh, _presetHigh),
+                (btnPresetMax,  _presetMax),
+            };
+            int cur = trackBarVibrance.Value;
+            foreach (var p in presets)
+            {
+                bool active = p.Level == cur;
+                p.Btn.BackColor = active ? ThemeManager.Accent  : ThemeManager.Surface2;
+                p.Btn.ForeColor = active ? Color.White           : ThemeManager.TextSub;
             }
         }
 
@@ -368,7 +404,7 @@ namespace Spectra.common
             UpdateStatusIndicator();
         }
 
-        // ── Toggle button ─────────────────────────────────────────────────
+        // ── Toggle button (status bar) ────────────────────────────────────
         private void btnToggleVibrance_Click(object sender, EventArgs e) => OnHotkeyToggle(sender, e);
 
         // ── Tray ─────────────────────────────────────────────────────────
@@ -385,7 +421,7 @@ namespace Spectra.common
 
         private void menuTrayPreset_Click(object sender, EventArgs e)
         {
-            var item = (ToolStripMenuItem)sender;
+            var item = (System.Windows.Forms.ToolStripMenuItem)sender;
             int level;
             switch (item.Tag?.ToString())
             {
@@ -419,6 +455,111 @@ namespace Spectra.common
             Activate();
         }
 
+        // ── Profile management ────────────────────────────────────────────
+        private void btnAdd_Click(object sender, EventArgs e)
+        {
+            EnsureProfileList();
+            using (var dlg = new OpenFileDialog { Filter = "Executable Files (*.exe)|*.exe" })
+            {
+                if (dlg.ShowDialog() != DialogResult.OK) return;
+                if (!File.Exists(dlg.FileName)) return;
+                if (_profiles.Any(p => p.FileName.Equals(dlg.FileName, StringComparison.OrdinalIgnoreCase))) return;
+                AddProfileIntern(new ProcessExplorerEntry(dlg.FileName,
+                    Icon.ExtractAssociatedIcon(dlg.FileName),
+                    Path.GetFileNameWithoutExtension(dlg.FileName)));
+            }
+        }
+
+        private void btnBrowse_Click(object sender, EventArgs e) => new ProcessExplorer(this).Show();
+
+        private void btnRemove_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listProfiles.SelectedItems)
+            {
+                for (int i = item.Index + 1; i < listProfiles.Items.Count; i++)
+                    listProfiles.Items[i].ImageIndex--;
+                var s = _profiles.FirstOrDefault(
+                    p => p.FileName.Equals(item.Tag?.ToString(), StringComparison.OrdinalIgnoreCase));
+                if (s != null) _profiles.Remove(s);
+                RemoveProfileItem(item);
+            }
+            ForceSaveSettings();
+        }
+
+        private void listProfiles_DoubleClick(object sender, EventArgs e)
+        {
+            if (listProfiles.SelectedItems.Count == 0) return;
+            var sel      = listProfiles.SelectedItems[0];
+            var existing = _profiles.FirstOrDefault(p => p.FileName == sel.Tag?.ToString());
+
+            using (var dlg = new GameSettingsForm(_proxy, _minLevel, _maxLevel, _defaultIngameLevel,
+                sel, existing, _primaryResolutions, _resolveLevelLabel))
+            {
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    var ns  = dlg.GetApplicationSetting();
+                    var old = _profiles.FirstOrDefault(p => p.FileName == ns.FileName);
+                    if (old != null) _profiles.Remove(old);
+                    _profiles.Add(ns);
+                    ForceSaveSettings();
+                }
+                else if (existing == null) RemoveProfileItem(sel);
+            }
+        }
+
+        public void AddProgramExtern(ProcessExplorerEntry entry)
+        {
+            if (InvokeRequired) Invoke((MethodInvoker)(() => AddProfileIntern(entry)));
+            else AddProfileIntern(entry);
+        }
+
+        private void AddProfileIntern(ProcessExplorerEntry entry)
+        {
+            EnsureProfileList();
+            if (!File.Exists(entry.Path)) return;
+            if (_profiles.Any(p => p.FileName.Equals(entry.Path, StringComparison.OrdinalIgnoreCase))) return;
+
+            listProfiles.LargeImageList.Images.Add(entry.Icon);
+            var item = new ListViewItem(Path.GetFileNameWithoutExtension(entry.Path))
+            {
+                ImageIndex = listProfiles.Items.Count,
+                Tag        = entry.Path
+            };
+            listProfiles.Items.Add(item);
+            listProfiles.SelectedIndices.Clear();
+            item.Selected = true;
+            listProfiles_DoubleClick(this, EventArgs.Empty);
+        }
+
+        private void RemoveProfileItem(ListViewItem item)
+        {
+            var img = listProfiles.LargeImageList?.Images[item.ImageIndex];
+            listProfiles.LargeImageList?.Images.RemoveAt(item.ImageIndex);
+            img?.Dispose();
+            listProfiles.Items.Remove(item);
+        }
+
+        private void EnsureProfileList()
+        {
+            if (listProfiles.LargeImageList != null) return;
+            listProfiles.LargeImageList = new ImageList
+            {
+                ImageSize  = new Size(48, 48),
+                ColorDepth = ColorDepth.Depth32Bit
+            };
+            ListViewItem_SetSpacing(listProfiles, 48 + 24, 48 + 6 + 16);
+        }
+
+        [DllImport("user32.dll")]
+        private static extern int SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+        private void ListViewItem_SetSpacing(ListView lv, short lp, short tp)
+        {
+            const int LVM_SETICONSPACING = 0x1000 + 53;
+            SendMessage(lv.Handle, LVM_SETICONSPACING, IntPtr.Zero,
+                (IntPtr)(int)(((ushort)lp) | (uint)(tp << 16)));
+        }
+
         // ── Settings persistence ──────────────────────────────────────────
         private void ReadSettings(out int level, out bool primaryOnly, out bool neverResize)
         {
@@ -427,13 +568,13 @@ namespace Spectra.common
 
             bool po = false, nr = false;
             Keys hotkey = Keys.F9, hotkeyMods = Keys.None;
-            var emptyProfiles = new List<ApplicationSetting>();
             new SettingsController().ReadVibranceSettings(
-                _proxy.GraphicsAdapter, out level, out po, out nr, out emptyProfiles,
+                _proxy.GraphicsAdapter, out level, out po, out nr, out _profiles,
                 out hotkey, out hotkeyMods);
             primaryOnly = po;
             neverResize = nr;
 
+            // Restore saved hotkey
             _hotkey?.Register(hotkey, hotkeyMods);
             UpdateHotkeyLabel();
 
@@ -444,6 +585,20 @@ namespace Spectra.common
             chkNeverResize.Checked    = nr;
             _savedLevel               = safe;
             HighlightActivePreset();
+
+            foreach (var s in _profiles.ToList())
+            {
+                if (!File.Exists(s.FileName)) { _profiles.Remove(s); continue; }
+                EnsureProfileList();
+                var icon = Icon.ExtractAssociatedIcon(s.FileName);
+                if (icon == null) continue;
+                listProfiles.LargeImageList.Images.Add(icon);
+                listProfiles.Items.Add(new ListViewItem(s.Name)
+                {
+                    ImageIndex = listProfiles.Items.Count,
+                    Tag        = s.FileName
+                });
+            }
         }
 
         private void ForceSaveSettings()
@@ -471,9 +626,7 @@ namespace Spectra.common
                     hkMods = _hotkey?.CurrentModifiers ?? Keys.None;
                 }
             }
-            new SettingsController().SetVibranceSettings(
-                level.ToString(), po.ToString(), nr.ToString(),
-                new List<ApplicationSetting>(), hk, hkMods);
+            new SettingsController().SetVibranceSettings(level.ToString(), po.ToString(), nr.ToString(), _profiles, hk, hkMods);
         }
 
         private void TriggerSettingsSave()
@@ -487,6 +640,9 @@ namespace Spectra.common
             trackBarVibrance.Enabled  = flag;
             chkAutostart.Enabled      = flag;
             chkPrimaryMonitor.Enabled = flag;
+            btnAdd.Enabled            = flag;
+            btnBrowse.Enabled         = flag;
+            btnRemove.Enabled         = flag;
         }
 
         private void UpdateStatusIndicator()
@@ -499,6 +655,7 @@ namespace Spectra.common
             labelStatus.Text      = LocalizationManager.Get(running ? "StatusRunning" : "StatusStopped");
             labelStatus.ForeColor = running ? ThemeManager.Success : ThemeManager.TextSub;
 
+            // Toggle button reflects state
             btnToggleVibrance.Text      = _vibranceEnabled ? "ON" : "OFF";
             btnToggleVibrance.BackColor = _vibranceEnabled ? ThemeManager.Success : ThemeManager.Danger;
         }

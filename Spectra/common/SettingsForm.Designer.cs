@@ -91,7 +91,7 @@ namespace Spectra.common
             // Accommodates all translations without any text clipping.
             AutoScaleDimensions = new SizeF(6f, 13f);
             AutoScaleMode       = AutoScaleMode.Font;
-            ClientSize          = new Size(540, 600);
+            ClientSize          = new Size(540, 470);
             FormBorderStyle     = FormBorderStyle.FixedSingle;
             MaximizeBox         = false;
             StartPosition       = FormStartPosition.CenterParent;
@@ -114,10 +114,11 @@ namespace Spectra.common
 
             // ── TAB CONTROL ──────────────────────────────────────────────
             // 520px wide, 4 tabs → ItemSize.Width = 520/4 = 130px (fits all language tab labels)
-            tabControl.Location  = new Point(10, 60);
-            tabControl.Size      = new Size(520, 490);
+            tabControl.Location  = new Point(10, 58);
+            tabControl.Size      = new Size(520, 360);
             tabControl.DrawMode  = TabDrawMode.OwnerDrawFixed;
-            tabControl.ItemSize  = new Size(173, 30);  // 520/3 tabs
+            // 3 tabs × 165 = 495 < 520 → no overflow scroll arrows appear
+            tabControl.ItemSize  = new Size(165, 30);
             tabControl.SizeMode  = TabSizeMode.Fixed;
             tabControl.DrawItem += tabControl_DrawItem;
             tabControl.TabPages.AddRange(new TabPage[] { tabBehavior, tabDisplay, tabAbout });
@@ -539,7 +540,7 @@ namespace Spectra.common
             btnClose.BackColor = ThemeManager.Accent;
             btnClose.FlatStyle = FlatStyle.Flat;
             btnClose.FlatAppearance.BorderSize = 0;
-            btnClose.Location  = new Point(426, 558);
+            btnClose.Location  = new Point(426, 428);
             btnClose.Size      = new Size(104, 34);
             btnClose.Cursor    = Cursors.Hand;
             btnClose.Click    += btnClose_Click;

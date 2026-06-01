@@ -319,6 +319,10 @@ namespace Spectra.NVIDIA
         public void SetVibranceWindowsLevel(int vibranceWindowsLevel)
         {
             _vibranceInfo.userVibranceSettingDefault = vibranceWindowsLevel;
+            // Apply immediately for instant slider/preset feedback, rather than
+            // waiting for the next window-focus event.
+            if (_vibranceInfo.isInitialized)
+                ApplyDesktopVibranceToTarget(vibranceWindowsLevel);
         }
 
         public void SetVibranceIngameLevel(int vibranceIngameLevel)
@@ -339,12 +343,16 @@ namespace Spectra.NVIDIA
         {
             _vibranceInfo.affectPrimaryMonitorOnly = affectPrimaryMonitorOnly;
             _vibranceInfo.targetMonitorDeviceName  = affectPrimaryMonitorOnly ? "PRIMARY" : null;
+            if (_vibranceInfo.isInitialized)
+                ApplyDesktopVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
         }
 
         public void SetTargetMonitorDeviceName(string deviceName)
         {
             _vibranceInfo.targetMonitorDeviceName  = deviceName;
             _vibranceInfo.affectPrimaryMonitorOnly = (deviceName == "PRIMARY");
+            if (_vibranceInfo.isInitialized)
+                ApplyDesktopVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
         }
 
         public VibranceInfo GetVibranceInfo()
@@ -365,7 +373,8 @@ namespace Spectra.NVIDIA
             ApplyDesktopVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
         }
 
-        // Applies desktop vibrance to the user-selected monitor target.
+        // Applies desktop vibrance to the user-selected monitor target, resetting
+        // all other displays to the neutral DVC level so only the chosen one is affected.
         private static void ApplyDesktopVibranceToTarget(int level)
         {
             string target = _vibranceInfo.targetMonitorDeviceName;
@@ -374,17 +383,25 @@ namespace Spectra.NVIDIA
                 // All monitors
                 if (_vibranceInfo.displayHandles != null)
                     _vibranceInfo.displayHandles.ForEach(h => { if (!equalsDVCLevel(h, level)) setDVCLevel(h, level); });
+                return;
             }
-            else if (target == "PRIMARY")
+
+            int targetHandle = (target == "PRIMARY")
+                ? _vibranceInfo.defaultHandle
+                : getAssociatedNvidiaDisplayHandle(target, target.Length);
+
+            // Reset every display to neutral, then apply the level to the target only.
+            if (_vibranceInfo.displayHandles != null)
             {
-                if (!equalsDVCLevel(_vibranceInfo.defaultHandle, level))
-                    setDVCLevel(_vibranceInfo.defaultHandle, level);
+                _vibranceInfo.displayHandles.ForEach(h =>
+                {
+                    int desired = (h == targetHandle) ? level : NvapiDefaultLevel;
+                    if (!equalsDVCLevel(h, desired)) setDVCLevel(h, desired);
+                });
             }
-            else
+            else if (targetHandle != -1 && !equalsDVCLevel(targetHandle, level))
             {
-                int h = getAssociatedNvidiaDisplayHandle(target, target.Length);
-                if (h != -1 && !equalsDVCLevel(h, level))
-                    setDVCLevel(h, level);
+                setDVCLevel(targetHandle, level);
             }
         }
     }

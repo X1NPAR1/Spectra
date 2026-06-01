@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/version-1.9.4-1E6EB4?style=for-the-badge" alt="Version">
+<img src="https://img.shields.io/badge/version-1.9.5-1E6EB4?style=for-the-badge" alt="Version">
 <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows" alt="Platform">
 <img src="https://img.shields.io/badge/GPU-NVIDIA%20%7C%20AMD-76B900?style=for-the-badge" alt="GPU Support">
 <img src="https://img.shields.io/badge/.NET%20Framework-4.8-512BD4?style=for-the-badge" alt=".NET 4.8">
@@ -38,11 +38,12 @@ Spectra is a professional digital vibrance management tool for Windows. It commu
 | Feature | Description |
 |---------|-------------|
 | **NVIDIA & AMD** | Full native support via NVAPI and AMD ADL 32/64-bit |
-| **Vibrance Slider** | Real-time desktop vibrance control |
+| **Vibrance Slider** | Real-time desktop vibrance control — applied instantly to the display |
 | **Quick Presets** | Default / Low / High / Max one-click presets on the main screen |
 | **Tray Quick Presets** | Apply any preset directly from the system tray context menu — no window needed |
+| **Per-Game Profiles** | Add an executable (or pick from running processes) and assign a custom vibrance level that is applied automatically when the game is in focus, then restored on exit |
 | **Global Hotkey** | Toggle vibrance on/off with any key or Ctrl/Alt modifier combo. Persisted across restarts. Safe on Cyrillic and all non-Latin keyboard layouts |
-| **Monitor Selection** | Apply vibrance to all monitors, primary only, or a specific secondary display |
+| **Monitor Selection** | Apply vibrance to all monitors, primary only, or a specific secondary display — other displays stay neutral |
 | **6-Language UI** | English, Turkish, Russian, German, French, Dutch. All labels and buttons fully visible in every language |
 | **Vibrance Apply Delay** | Configurable delay (ms) before applying vibrance |
 | **Startup Integration** | Optional Windows startup via Registry |
@@ -63,10 +64,11 @@ Spectra is a professional digital vibrance management tool for Windows. It commu
 
 ### Usage
 
-1. **Desktop Vibrance** — Drag the slider or click a preset button (Default / Low / High / Max)
-2. **Hotkey** — Click the hotkey button and press any key combination to set a global vibrance toggle
-3. **Tray Presets** — Right-click the tray icon → *Quick Presets* to switch vibrance without opening the window
-4. **Settings** — Click ⚙ to access Behavior, Display, and About tabs
+1. **Desktop Vibrance** — Drag the slider or click a preset button (Default / Low / High / Max). Changes apply to the screen instantly.
+2. **Game Profiles** — Click *Add File* to choose an executable, or *Browse Running* to pick from active processes. Double-click an entry to set its in-game vibrance level. The profile applies automatically when the game gains focus.
+3. **Hotkey** — Click the hotkey button and press any key combination to set a global vibrance toggle
+4. **Tray Presets** — Right-click the tray icon → *Quick Presets* to switch vibrance without opening the window
+5. **Settings** — Click ⚙ to access Behavior, Display, and About tabs
 
 ### Build from Source
 
@@ -79,6 +81,12 @@ dotnet build Spectra/Spectra.csproj /p:Configuration=Release /p:Platform=x86
 Output: `Spectra/bin/x86/Release/Spectra.exe`
 
 ### Changelog
+
+#### v1.9.5 — Vibrance Engine Fix & Profiles Restored
+- **Fixed (critical):** Desktop vibrance now applies to the screen the moment you move the slider or click a preset. Previously the level was only stored and applied on the next window-focus event, so changes appeared to do nothing.
+- **Fixed:** Monitor selection now resets non-target displays to a neutral level, so vibrance truly affects only the chosen monitor (NVIDIA & AMD)
+- **Restored:** Per-game profiles — add an executable and assign a custom in-game vibrance level, applied automatically on focus
+- **Improved:** Settings window resized and the tab bar no longer shows overflow scroll arrows; all three tabs fit cleanly
 
 #### v1.9.4 — Simplified & Focused
 - **Removed:** Game profiles section — simplified the UI to focus on desktop vibrance control
@@ -246,7 +254,7 @@ Spectra is een professionele vibrance-beheertool voor Windows. Het gebruikt NVID
 
 <div align="center">
 
-**Spectra v1.9.4** — Professional Digital Vibrance Control  
+**Spectra v1.9.5** — Professional Digital Vibrance Control  
 [GitHub](https://github.com/X1NPAR1/Spectra) · [Releases](https://github.com/X1NPAR1/Spectra/releases)
 
 </div>
