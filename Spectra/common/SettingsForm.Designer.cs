@@ -15,79 +15,84 @@ namespace Spectra.common
 
         private void InitializeComponent()
         {
+            // Header
             panelSettingsHeader = new Panel();
             labelSettingsTitle  = new Label();
-            tabControl          = new TabControl();
-            tabGeneral          = new TabPage();
-            tabVibrance         = new TabPage();
-            tabHotkey           = new TabPage();
-            tabAbout            = new TabPage();
 
-            // ── General tab controls ──────────────────────────────────────
-            grpAppearance       = new GroupBox();
-            lblThemeTitle       = new Label();
-            radioDark           = new RadioButton();
-            radioLight          = new RadioButton();
-            sep1                = new Panel();
-            lblLangTitle        = new Label();
-            cboLanguage         = new ComboBox();
+            // TabControl
+            tabControl  = new TabControl();
+            tabGeneral  = new TabPage();
+            tabVibrance = new TabPage();
+            tabHotkey   = new TabPage();
+            tabAbout    = new TabPage();
 
-            grpBehavior            = new GroupBox();
-            chkSettingsAutostart   = new CheckBox();
-            chkSettingsMinToTray   = new CheckBox();
-            chkSettingsNotify      = new CheckBox();
+            // ── General tab ───────────────────────────────────────────────
+            lblAppearanceTitle    = new Label();
+            sepAppearance         = new Panel();
+            lblThemeTitle         = new Label();
+            radioDark             = new RadioButton();
+            radioLight            = new RadioButton();
+            lblLangTitle          = new Label();
+            cboLanguage           = new ComboBox();
+            lblBehaviorTitle      = new Label();
+            sepBehavior           = new Panel();
+            chkSettingsAutostart  = new CheckBox();
+            chkSettingsMinToTray  = new CheckBox();
+            chkSettingsNotify     = new CheckBox();
 
-            // ── Vibrance tab controls ─────────────────────────────────────
-            lblDesktopDefault   = new Label();
-            lblDesktopNote      = new Label();
-            trackDesktop        = new TrackBar();
-            labelDesktopVal     = new Label();
-            btnResetDesktop     = new Button();
-            sep2                = new Panel();
-            lblMonitorSection   = new Label();
-            chkPrimaryOnly      = new CheckBox();
-            chkNoResize         = new CheckBox();
+            // ── Vibrance tab ──────────────────────────────────────────────
+            lblVibDefault    = new Label();
+            sepVib1          = new Panel();
+            lblVibNote       = new Label();
+            trackDesktop     = new TrackBar();
+            labelDesktopVal  = new Label();
+            btnResetDesktop  = new Button();
+            lblMonitorTitle  = new Label();
+            sepVib2          = new Panel();
+            chkPrimaryOnly   = new CheckBox();
+            chkNoResize      = new CheckBox();
 
-            // ── Hotkey tab controls ───────────────────────────────────────
-            lblHotkeySection    = new Label();
-            lblHotkeyNote       = new Label();
-            btnHotkeyPicker     = new Button();
-            btnClearHotkey      = new Button();
-            sep3                = new Panel();
-            lblHotkeyBehavior   = new Label();
-            radioToggle         = new RadioButton();
-            radioHold           = new RadioButton();
+            // ── Hotkey tab ────────────────────────────────────────────────
+            lblHotkeyTitle   = new Label();
+            sepHotkey1       = new Panel();
+            lblHotkeyNote    = new Label();
+            btnHotkeyPicker  = new Button();
+            btnClearHotkey   = new Button();
+            lblHotkeyBehTitle= new Label();
+            sepHotkey2       = new Panel();
+            radioToggle      = new RadioButton();
+            radioHold        = new RadioButton();
 
-            // ── About tab controls ────────────────────────────────────────
-            panelAboutLogo      = new Panel();
-            lblAboutVersion     = new Label();
-            lblAboutDesc        = new Label();
-            sep4                = new Panel();
-            lblAboutGpu         = new Label();
-            btnGitHub           = new Button();
+            // ── About tab ─────────────────────────────────────────────────
+            panelAboutLogo    = new Panel();
+            lblAboutVersion   = new Label();
+            lblAboutDesc      = new Label();
+            sepAbout          = new Panel();
+            lblAboutGpu       = new Label();
+            btnGitHub         = new Button();
 
-            // ── Bottom buttons ────────────────────────────────────────────
-            btnApply            = new Button();
-            btnCancel           = new Button();
+            // Bottom buttons
+            btnApply  = new Button();
+            btnCancel = new Button();
 
             SuspendLayout();
             panelSettingsHeader.SuspendLayout();
             tabControl.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)trackDesktop).BeginInit();
 
-            // ── Form ──────────────────────────────────────────────────────
+            // ── FORM ─────────────────────────────────────────────────────
             AutoScaleDimensions = new SizeF(6f, 13f);
             AutoScaleMode       = AutoScaleMode.Font;
-            ClientSize          = new Size(470, 510);
+            ClientSize          = new Size(480, 530);
             FormBorderStyle     = FormBorderStyle.FixedSingle;
             MaximizeBox         = false;
             StartPosition       = FormStartPosition.CenterParent;
-            Text                = "Spectra Settings";
+            Text                = "Spectra — Settings";
             Name                = "SettingsForm";
 
-            // ── Header ────────────────────────────────────────────────────
+            // ── HEADER ───────────────────────────────────────────────────
             panelSettingsHeader.Location = new Point(0, 0);
-            panelSettingsHeader.Size     = new Size(470, 52);
+            panelSettingsHeader.Size     = new Size(480, 52);
             panelSettingsHeader.Paint   += panelSettingsHeader_Paint;
 
             labelSettingsTitle.Text      = "⚙  SETTINGS";
@@ -98,295 +103,288 @@ namespace Spectra.common
             labelSettingsTitle.AutoSize  = true;
             panelSettingsHeader.Controls.Add(labelSettingsTitle);
 
-            // ── TabControl ────────────────────────────────────────────────
-            tabControl.Location  = new Point(10, 60);
-            tabControl.Size      = new Size(450, 390);
+            // ── TAB CONTROL ──────────────────────────────────────────────
+            tabControl.Location    = new Point(10, 60);
+            tabControl.Size        = new Size(460, 418);
+            tabControl.DrawMode    = TabDrawMode.OwnerDrawFixed;
+            tabControl.ItemSize    = new Size(114, 28);
+            tabControl.SizeMode    = TabSizeMode.Fixed;
+            tabControl.DrawItem   += tabControl_DrawItem;
             tabControl.TabPages.AddRange(new TabPage[] { tabGeneral, tabVibrance, tabHotkey, tabAbout });
 
-            // ─── GENERAL TAB ──────────────────────────────────────────────
+            // ── GENERAL TAB ──────────────────────────────────────────────
             tabGeneral.Text    = "General";
-            tabGeneral.Padding = new Padding(10);
+            tabGeneral.Padding = new Padding(14, 12, 14, 12);
+            tabGeneral.UseVisualStyleBackColor = false;
 
-            grpAppearance.Text     = "Appearance";
-            grpAppearance.Location = new Point(8, 8);
-            grpAppearance.Size     = new Size(426, 130);
-            grpAppearance.Font     = new Font("Segoe UI", 8.5f, FontStyle.Bold);
+            // --- Appearance section ---
+            lblAppearanceTitle.Text      = "APPEARANCE";
+            lblAppearanceTitle.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
+            lblAppearanceTitle.Location  = new Point(0, 0);
+            lblAppearanceTitle.AutoSize  = true;
+
+            sepAppearance.Location = new Point(0, 20);
+            sepAppearance.Size     = new Size(430, 1);
 
             lblThemeTitle.Text      = "Theme";
-            lblThemeTitle.Font      = new Font("Segoe UI", 8.5f, FontStyle.Regular);
-            lblThemeTitle.Location  = new Point(12, 28);
+            lblThemeTitle.Font      = new Font("Segoe UI", 9f);
+            lblThemeTitle.Location  = new Point(0, 30);
             lblThemeTitle.AutoSize  = true;
 
-            radioDark.Text     = "Dark";
-            radioDark.Location = new Point(70, 26);
-            radioDark.Size     = new Size(70, 20);
-            radioDark.CheckedChanged += radioDark_CheckedChanged;
+            radioDark.Text             = "Dark";
+            radioDark.Font             = new Font("Segoe UI", 9f);
+            radioDark.Location         = new Point(90, 28);
+            radioDark.Size             = new Size(70, 22);
+            radioDark.CheckedChanged  += radioDark_CheckedChanged;
 
-            radioLight.Text     = "Light";
-            radioLight.Location = new Point(145, 26);
-            radioLight.Size     = new Size(70, 20);
-            radioLight.CheckedChanged += radioLight_CheckedChanged;
-
-            sep1.Location  = new Point(12, 56);
-            sep1.Size      = new Size(400, 1);
-            sep1.Tag       = "separator";
+            radioLight.Text             = "Light";
+            radioLight.Font             = new Font("Segoe UI", 9f);
+            radioLight.Location         = new Point(164, 28);
+            radioLight.Size             = new Size(70, 22);
+            radioLight.CheckedChanged  += radioLight_CheckedChanged;
 
             lblLangTitle.Text      = "Language";
-            lblLangTitle.Font      = new Font("Segoe UI", 8.5f, FontStyle.Regular);
-            lblLangTitle.Location  = new Point(12, 70);
+            lblLangTitle.Font      = new Font("Segoe UI", 9f);
+            lblLangTitle.Location  = new Point(0, 60);
             lblLangTitle.AutoSize  = true;
 
-            cboLanguage.Location      = new Point(85, 68);
-            cboLanguage.Size          = new Size(160, 22);
-            cboLanguage.DropDownStyle = ComboBoxStyle.DropDownList;
-            cboLanguage.FlatStyle     = FlatStyle.Flat;
+            cboLanguage.Location          = new Point(90, 58);
+            cboLanguage.Size              = new Size(170, 24);
+            cboLanguage.DropDownStyle     = ComboBoxStyle.DropDownList;
+            cboLanguage.FlatStyle         = FlatStyle.Flat;
             cboLanguage.SelectedIndexChanged += cboLanguage_SelectedIndexChanged;
 
-            grpAppearance.Controls.Add(lblThemeTitle);
-            grpAppearance.Controls.Add(radioDark);
-            grpAppearance.Controls.Add(radioLight);
-            grpAppearance.Controls.Add(sep1);
-            grpAppearance.Controls.Add(lblLangTitle);
-            grpAppearance.Controls.Add(cboLanguage);
+            // --- Behavior section ---
+            lblBehaviorTitle.Text      = "BEHAVIOR";
+            lblBehaviorTitle.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
+            lblBehaviorTitle.Location  = new Point(0, 100);
+            lblBehaviorTitle.AutoSize  = true;
 
-            grpBehavior.Text     = "Behavior";
-            grpBehavior.Location = new Point(8, 148);
-            grpBehavior.Size     = new Size(426, 110);
-            grpBehavior.Font     = new Font("Segoe UI", 8.5f, FontStyle.Bold);
+            sepBehavior.Location = new Point(0, 120);
+            sepBehavior.Size     = new Size(430, 1);
 
             chkSettingsAutostart.Text     = "Launch on startup";
-            chkSettingsAutostart.Location = new Point(12, 28);
-            chkSettingsAutostart.Size     = new Size(200, 20);
-            chkSettingsAutostart.Font     = new Font("Segoe UI", 8.5f, FontStyle.Regular);
+            chkSettingsAutostart.Font     = new Font("Segoe UI", 9f);
+            chkSettingsAutostart.Location = new Point(0, 130);
+            chkSettingsAutostart.Size     = new Size(250, 22);
 
             chkSettingsMinToTray.Text     = "Minimize to tray on close";
-            chkSettingsMinToTray.Location = new Point(12, 54);
-            chkSettingsMinToTray.Size     = new Size(230, 20);
-            chkSettingsMinToTray.Font     = new Font("Segoe UI", 8.5f, FontStyle.Regular);
+            chkSettingsMinToTray.Font     = new Font("Segoe UI", 9f);
+            chkSettingsMinToTray.Location = new Point(0, 158);
+            chkSettingsMinToTray.Size     = new Size(270, 22);
 
             chkSettingsNotify.Text     = "Show tray notifications";
-            chkSettingsNotify.Location = new Point(12, 80);
-            chkSettingsNotify.Size     = new Size(200, 20);
-            chkSettingsNotify.Font     = new Font("Segoe UI", 8.5f, FontStyle.Regular);
+            chkSettingsNotify.Font     = new Font("Segoe UI", 9f);
+            chkSettingsNotify.Location = new Point(0, 186);
+            chkSettingsNotify.Size     = new Size(250, 22);
 
-            grpBehavior.Controls.Add(chkSettingsAutostart);
-            grpBehavior.Controls.Add(chkSettingsMinToTray);
-            grpBehavior.Controls.Add(chkSettingsNotify);
+            tabGeneral.Controls.Add(lblAppearanceTitle);
+            tabGeneral.Controls.Add(sepAppearance);
+            tabGeneral.Controls.Add(lblThemeTitle);
+            tabGeneral.Controls.Add(radioDark);
+            tabGeneral.Controls.Add(radioLight);
+            tabGeneral.Controls.Add(lblLangTitle);
+            tabGeneral.Controls.Add(cboLanguage);
+            tabGeneral.Controls.Add(lblBehaviorTitle);
+            tabGeneral.Controls.Add(sepBehavior);
+            tabGeneral.Controls.Add(chkSettingsAutostart);
+            tabGeneral.Controls.Add(chkSettingsMinToTray);
+            tabGeneral.Controls.Add(chkSettingsNotify);
 
-            tabGeneral.Controls.Add(grpAppearance);
-            tabGeneral.Controls.Add(grpBehavior);
-
-            // ─── VIBRANCE TAB ─────────────────────────────────────────────
+            // ── VIBRANCE TAB ─────────────────────────────────────────────
             tabVibrance.Text    = "Vibrance";
-            tabVibrance.Padding = new Padding(10);
+            tabVibrance.Padding = new Padding(14, 12, 14, 12);
+            tabVibrance.UseVisualStyleBackColor = false;
 
-            lblDesktopDefault.Text      = "DESKTOP VIBRANCE DEFAULT";
-            lblDesktopDefault.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
-            lblDesktopDefault.Location  = new Point(10, 14);
-            lblDesktopDefault.AutoSize  = true;
-            lblDesktopDefault.Tag       = "accent";
+            lblVibDefault.Text      = "DESKTOP VIBRANCE DEFAULT";
+            lblVibDefault.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
+            lblVibDefault.Location  = new Point(0, 0);
+            lblVibDefault.AutoSize  = true;
 
-            lblDesktopNote.Text      = "Applied when no game profile is active";
-            lblDesktopNote.Font      = new Font("Segoe UI", 8f, FontStyle.Italic);
-            lblDesktopNote.Location  = new Point(10, 34);
-            lblDesktopNote.AutoSize  = true;
-            lblDesktopNote.Tag       = "sub";
+            sepVib1.Location = new Point(0, 20);
+            sepVib1.Size     = new Size(430, 1);
 
-            trackDesktop.Location  = new Point(10, 58);
+            lblVibNote.Text      = "Applied when no game profile is active";
+            lblVibNote.Font      = new Font("Segoe UI", 8.5f, FontStyle.Italic);
+            lblVibNote.Location  = new Point(0, 28);
+            lblVibNote.AutoSize  = true;
+
+            trackDesktop.Location  = new Point(0, 50);
             trackDesktop.Size      = new Size(340, 32);
             trackDesktop.TickStyle = TickStyle.None;
             trackDesktop.Scroll   += trackDesktop_Scroll;
 
             labelDesktopVal.Text      = "—";
-            labelDesktopVal.Font      = new Font("Segoe UI", 12f, FontStyle.Bold);
-            labelDesktopVal.Location  = new Point(356, 60);
-            labelDesktopVal.Size      = new Size(56, 26);
+            labelDesktopVal.Font      = new Font("Segoe UI", 13f, FontStyle.Bold);
+            labelDesktopVal.Location  = new Point(346, 52);
+            labelDesktopVal.Size      = new Size(60, 26);
             labelDesktopVal.TextAlign = ContentAlignment.MiddleLeft;
-            labelDesktopVal.Tag       = "accent";
 
             btnResetDesktop.Text      = "Reset";
-            btnResetDesktop.Location  = new Point(10, 96);
+            btnResetDesktop.Font      = new Font("Segoe UI", 8.5f);
+            btnResetDesktop.Location  = new Point(0, 88);
             btnResetDesktop.Size      = new Size(80, 26);
             btnResetDesktop.FlatStyle = FlatStyle.Flat;
             btnResetDesktop.FlatAppearance.BorderSize = 1;
             btnResetDesktop.Click    += btnResetDesktop_Click;
 
-            sep2.Location = new Point(10, 132);
-            sep2.Size     = new Size(416, 1);
-            sep2.Tag      = "separator";
+            lblMonitorTitle.Text      = "MONITOR CONFIGURATION";
+            lblMonitorTitle.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
+            lblMonitorTitle.Location  = new Point(0, 130);
+            lblMonitorTitle.AutoSize  = true;
 
-            lblMonitorSection.Text      = "MONITOR CONFIGURATION";
-            lblMonitorSection.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
-            lblMonitorSection.Location  = new Point(10, 144);
-            lblMonitorSection.AutoSize  = true;
-            lblMonitorSection.Tag       = "accent";
+            sepVib2.Location = new Point(0, 150);
+            sepVib2.Size     = new Size(430, 1);
 
             chkPrimaryOnly.Text     = "Apply vibrance to primary monitor only";
-            chkPrimaryOnly.Location = new Point(10, 168);
-            chkPrimaryOnly.Size     = new Size(300, 20);
-            chkPrimaryOnly.Font     = new Font("Segoe UI", 8.5f, FontStyle.Regular);
+            chkPrimaryOnly.Font     = new Font("Segoe UI", 9f);
+            chkPrimaryOnly.Location = new Point(0, 160);
+            chkPrimaryOnly.Size     = new Size(320, 22);
 
             chkNoResize.Text     = "Never change resolution automatically";
-            chkNoResize.Location = new Point(10, 194);
-            chkNoResize.Size     = new Size(300, 20);
-            chkNoResize.Font     = new Font("Segoe UI", 8.5f, FontStyle.Regular);
+            chkNoResize.Font     = new Font("Segoe UI", 9f);
+            chkNoResize.Location = new Point(0, 188);
+            chkNoResize.Size     = new Size(320, 22);
 
-            tabVibrance.Controls.Add(lblDesktopDefault);
-            tabVibrance.Controls.Add(lblDesktopNote);
+            tabVibrance.Controls.Add(lblVibDefault);
+            tabVibrance.Controls.Add(sepVib1);
+            tabVibrance.Controls.Add(lblVibNote);
             tabVibrance.Controls.Add(trackDesktop);
             tabVibrance.Controls.Add(labelDesktopVal);
             tabVibrance.Controls.Add(btnResetDesktop);
-            tabVibrance.Controls.Add(sep2);
-            tabVibrance.Controls.Add(lblMonitorSection);
+            tabVibrance.Controls.Add(lblMonitorTitle);
+            tabVibrance.Controls.Add(sepVib2);
             tabVibrance.Controls.Add(chkPrimaryOnly);
             tabVibrance.Controls.Add(chkNoResize);
 
-            // ─── HOTKEY TAB ───────────────────────────────────────────────
+            // ── HOTKEY TAB ────────────────────────────────────────────────
             tabHotkey.Text    = "Hotkey";
-            tabHotkey.Padding = new Padding(10);
+            tabHotkey.Padding = new Padding(14, 12, 14, 12);
+            tabHotkey.UseVisualStyleBackColor = false;
 
-            lblHotkeySection.Text      = "GLOBAL VIBRANCE TOGGLE";
-            lblHotkeySection.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
-            lblHotkeySection.Location  = new Point(10, 14);
-            lblHotkeySection.AutoSize  = true;
-            lblHotkeySection.Tag       = "accent";
+            lblHotkeyTitle.Text      = "GLOBAL TOGGLE HOTKEY";
+            lblHotkeyTitle.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
+            lblHotkeyTitle.Location  = new Point(0, 0);
+            lblHotkeyTitle.AutoSize  = true;
 
-            lblHotkeyNote.Text      = "Press this key anywhere to toggle vibrance on/off";
-            lblHotkeyNote.Font      = new Font("Segoe UI", 8f, FontStyle.Italic);
-            lblHotkeyNote.Location  = new Point(10, 34);
+            sepHotkey1.Location = new Point(0, 20);
+            sepHotkey1.Size     = new Size(430, 1);
+
+            lblHotkeyNote.Text      = "Press this key anywhere to toggle vibrance on/off instantly";
+            lblHotkeyNote.Font      = new Font("Segoe UI", 8.5f, FontStyle.Italic);
+            lblHotkeyNote.Location  = new Point(0, 28);
             lblHotkeyNote.AutoSize  = true;
-            lblHotkeyNote.Tag       = "sub";
 
             btnHotkeyPicker.Text      = "F9";
-            btnHotkeyPicker.Font      = new Font("Segoe UI", 11f, FontStyle.Bold);
-            btnHotkeyPicker.Location  = new Point(10, 62);
-            btnHotkeyPicker.Size      = new Size(120, 40);
+            btnHotkeyPicker.Font      = new Font("Segoe UI", 13f, FontStyle.Bold);
+            btnHotkeyPicker.Location  = new Point(0, 56);
+            btnHotkeyPicker.Size      = new Size(130, 44);
             btnHotkeyPicker.FlatStyle = FlatStyle.Flat;
             btnHotkeyPicker.FlatAppearance.BorderSize = 2;
             btnHotkeyPicker.Cursor    = Cursors.Hand;
             btnHotkeyPicker.Click    += btnHotkeyPicker_Click;
 
             btnClearHotkey.Text      = "Clear";
-            btnClearHotkey.Location  = new Point(140, 72);
-            btnClearHotkey.Size      = new Size(70, 26);
+            btnClearHotkey.Font      = new Font("Segoe UI", 9f);
+            btnClearHotkey.Location  = new Point(142, 68);
+            btnClearHotkey.Size      = new Size(72, 28);
             btnClearHotkey.FlatStyle = FlatStyle.Flat;
             btnClearHotkey.FlatAppearance.BorderSize = 1;
-            btnClearHotkey.Tag       = "danger";
             btnClearHotkey.Click    += btnClearHotkey_Click;
 
-            sep3.Location = new Point(10, 116);
-            sep3.Size     = new Size(416, 1);
-            sep3.Tag      = "separator";
+            lblHotkeyBehTitle.Text      = "HOTKEY BEHAVIOR";
+            lblHotkeyBehTitle.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
+            lblHotkeyBehTitle.Location  = new Point(0, 120);
+            lblHotkeyBehTitle.AutoSize  = true;
 
-            lblHotkeyBehavior.Text      = "HOTKEY BEHAVIOR";
-            lblHotkeyBehavior.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
-            lblHotkeyBehavior.Location  = new Point(10, 128);
-            lblHotkeyBehavior.AutoSize  = true;
-            lblHotkeyBehavior.Tag       = "accent";
+            sepHotkey2.Location = new Point(0, 140);
+            sepHotkey2.Size     = new Size(430, 1);
 
-            radioToggle.Text     = "Toggle — Press once to enable, press again to disable";
-            radioToggle.Location = new Point(10, 152);
-            radioToggle.Size     = new Size(400, 20);
+            radioToggle.Text     = "Toggle — Press once to activate, press again to deactivate";
+            radioToggle.Font     = new Font("Segoe UI", 9f);
+            radioToggle.Location = new Point(0, 150);
+            radioToggle.Size     = new Size(420, 22);
             radioToggle.Checked  = true;
 
-            radioHold.Text     = "Hold — Vibrance active only while key is held";
-            radioHold.Location = new Point(10, 178);
-            radioHold.Size     = new Size(400, 20);
+            radioHold.Text     = "Hold — Active only while key is held (coming soon)";
+            radioHold.Font     = new Font("Segoe UI", 9f);
+            radioHold.Location = new Point(0, 178);
+            radioHold.Size     = new Size(420, 22);
             radioHold.Enabled  = false;
 
-            tabHotkey.Controls.Add(lblHotkeySection);
+            tabHotkey.Controls.Add(lblHotkeyTitle);
+            tabHotkey.Controls.Add(sepHotkey1);
             tabHotkey.Controls.Add(lblHotkeyNote);
             tabHotkey.Controls.Add(btnHotkeyPicker);
             tabHotkey.Controls.Add(btnClearHotkey);
-            tabHotkey.Controls.Add(sep3);
-            tabHotkey.Controls.Add(lblHotkeyBehavior);
+            tabHotkey.Controls.Add(lblHotkeyBehTitle);
+            tabHotkey.Controls.Add(sepHotkey2);
             tabHotkey.Controls.Add(radioToggle);
             tabHotkey.Controls.Add(radioHold);
 
-            // ─── ABOUT TAB ────────────────────────────────────────────────
+            // ── ABOUT TAB ─────────────────────────────────────────────────
             tabAbout.Text    = "About";
-            tabAbout.Padding = new Padding(10);
+            tabAbout.Padding = new Padding(14, 12, 14, 12);
+            tabAbout.UseVisualStyleBackColor = false;
 
-            panelAboutLogo.Location = new Point(10, 14);
-            panelAboutLogo.Size     = new Size(60, 60);
-            panelAboutLogo.Paint   += (s, e) =>
-            {
-                var g    = e.Graphics;
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                var rect = new Rectangle(0, 0, 58, 58);
-                var path = new System.Drawing.Drawing2D.GraphicsPath();
-                int r = 10, d = r * 2;
-                path.AddArc(rect.X, rect.Y, d, d, 180, 90);
-                path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
-                path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
-                path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
-                path.CloseFigure();
-                using (var grad = new System.Drawing.Drawing2D.LinearGradientBrush(rect,
-                    Color.FromArgb(100, 30, 220), Color.FromArgb(0, 175, 225),
-                    System.Drawing.Drawing2D.LinearGradientMode.ForwardDiagonal))
-                    g.FillPath(grad, path);
-                using (var font = new Font("Segoe UI", 28f, FontStyle.Bold))
-                using (var brush = new SolidBrush(Color.FromArgb(240, 248, 255)))
-                {
-                    var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString("S", font, brush, new RectangleF(0, 0, 60, 60), sf);
-                }
-            };
+            // Logo panel (painted in code)
+            panelAboutLogo.Location = new Point(0, 0);
+            panelAboutLogo.Size     = new Size(64, 64);
+            panelAboutLogo.Paint   += panelAboutLogo_Paint;
 
             lblAboutVersion.Text      = "Spectra v1.7.0";
-            lblAboutVersion.Font      = new Font("Segoe UI", 16f, FontStyle.Bold);
-            lblAboutVersion.Location  = new Point(82, 14);
+            lblAboutVersion.Font      = new Font("Segoe UI", 15f, FontStyle.Bold);
+            lblAboutVersion.Location  = new Point(80, 4);
             lblAboutVersion.AutoSize  = true;
 
             lblAboutDesc.Text      = "Professional Digital Vibrance Controller";
-            lblAboutDesc.Font      = new Font("Segoe UI", 9f, FontStyle.Regular);
-            lblAboutDesc.Location  = new Point(82, 44);
+            lblAboutDesc.Font      = new Font("Segoe UI", 9f);
+            lblAboutDesc.Location  = new Point(80, 38);
             lblAboutDesc.AutoSize  = true;
-            lblAboutDesc.Tag       = "sub";
 
-            sep4.Location = new Point(10, 88);
-            sep4.Size     = new Size(416, 1);
-            sep4.Tag      = "separator";
+            sepAbout.Location = new Point(0, 76);
+            sepAbout.Size     = new Size(430, 1);
 
-            lblAboutGpu.Text      = "✓ NVIDIA Digital Vibrance Control (NVAPI)\r\n✓ AMD Saturation Control (ADL)";
-            lblAboutGpu.Font      = new Font("Segoe UI", 8.5f, FontStyle.Regular);
-            lblAboutGpu.Location  = new Point(10, 102);
+            lblAboutGpu.Text      = "Supported GPUs:\r\n\r\n✓ NVIDIA — Digital Vibrance Control (NVAPI)\r\n✓ AMD — Saturation Control (ADL 32/64-bit)";
+            lblAboutGpu.Font      = new Font("Segoe UI", 9f);
+            lblAboutGpu.Location  = new Point(0, 86);
             lblAboutGpu.AutoSize  = true;
 
             btnGitHub.Text      = "★  View on GitHub";
-            btnGitHub.Font      = new Font("Segoe UI", 9f, FontStyle.Regular);
-            btnGitHub.Location  = new Point(10, 160);
-            btnGitHub.Size      = new Size(160, 32);
+            btnGitHub.Font      = new Font("Segoe UI", 9f);
+            btnGitHub.Location  = new Point(0, 176);
+            btnGitHub.Size      = new Size(170, 34);
             btnGitHub.FlatStyle = FlatStyle.Flat;
             btnGitHub.FlatAppearance.BorderSize = 1;
-            btnGitHub.Tag       = "accent";
+            btnGitHub.Cursor    = Cursors.Hand;
             btnGitHub.Click    += btnGitHub_Click;
 
             tabAbout.Controls.Add(panelAboutLogo);
             tabAbout.Controls.Add(lblAboutVersion);
             tabAbout.Controls.Add(lblAboutDesc);
-            tabAbout.Controls.Add(sep4);
+            tabAbout.Controls.Add(sepAbout);
             tabAbout.Controls.Add(lblAboutGpu);
             tabAbout.Controls.Add(btnGitHub);
 
-            // ── Bottom buttons ────────────────────────────────────────────
+            // ── BOTTOM BUTTONS ────────────────────────────────────────────
             btnApply.Text      = "Apply";
-            btnApply.Location  = new Point(256, 462);
+            btnApply.Font      = new Font("Segoe UI", 9.5f, FontStyle.Bold);
+            btnApply.Location  = new Point(264, 486);
             btnApply.Size      = new Size(100, 34);
             btnApply.FlatStyle = FlatStyle.Flat;
             btnApply.FlatAppearance.BorderSize = 0;
-            btnApply.Font      = new Font("Segoe UI", 9f, FontStyle.Bold);
+            btnApply.Cursor    = Cursors.Hand;
             btnApply.Click    += btnApply_Click;
 
             btnCancel.Text      = "Cancel";
-            btnCancel.Location  = new Point(362, 462);
-            btnCancel.Size      = new Size(96, 34);
+            btnCancel.Font      = new Font("Segoe UI", 9.5f);
+            btnCancel.Location  = new Point(370, 486);
+            btnCancel.Size      = new Size(100, 34);
             btnCancel.FlatStyle = FlatStyle.Flat;
             btnCancel.FlatAppearance.BorderSize = 1;
-            btnCancel.Font      = new Font("Segoe UI", 9f, FontStyle.Regular);
+            btnCancel.Cursor    = Cursors.Hand;
             btnCancel.Click    += btnCancel_Click;
 
-            // ── Assemble ──────────────────────────────────────────────────
             Controls.Add(panelSettingsHeader);
             Controls.Add(tabControl);
             Controls.Add(btnApply);
@@ -398,46 +396,48 @@ namespace Spectra.common
             ResumeLayout(false);
         }
 
-        // ── Fields ────────────────────────────────────────────────────────
+        // ── FIELD DECLARATIONS ─────────────────────────────────────────────
         private Panel      panelSettingsHeader;
         private Label      labelSettingsTitle;
         private TabControl tabControl;
         private TabPage    tabGeneral, tabVibrance, tabHotkey, tabAbout;
 
         // General
-        private GroupBox   grpAppearance;
-        private Label      lblThemeTitle;
+        private Label       lblAppearanceTitle;
+        private Panel       sepAppearance;
+        private Label       lblThemeTitle;
         private RadioButton radioDark, radioLight;
-        private Panel      sep1;
-        private Label      lblLangTitle;
-        private ComboBox   cboLanguage;
-        private GroupBox   grpBehavior;
-        private CheckBox   chkSettingsAutostart, chkSettingsMinToTray, chkSettingsNotify;
+        private Label       lblLangTitle;
+        private ComboBox    cboLanguage;
+        private Label       lblBehaviorTitle;
+        private Panel       sepBehavior;
+        private CheckBox    chkSettingsAutostart, chkSettingsMinToTray, chkSettingsNotify;
 
         // Vibrance
-        private Label      lblDesktopDefault, lblDesktopNote;
-        private TrackBar   trackDesktop;
-        private Label      labelDesktopVal;
-        private Button     btnResetDesktop;
-        private Panel      sep2;
-        private Label      lblMonitorSection;
-        private CheckBox   chkPrimaryOnly, chkNoResize;
+        private Label       lblVibDefault, lblVibNote;
+        private Panel       sepVib1;
+        private TrackBar    trackDesktop;
+        private Label       labelDesktopVal;
+        private Button      btnResetDesktop;
+        private Label       lblMonitorTitle;
+        private Panel       sepVib2;
+        private CheckBox    chkPrimaryOnly, chkNoResize;
 
         // Hotkey
-        private Label      lblHotkeySection, lblHotkeyNote;
-        private Button     btnHotkeyPicker;
-        private Button     btnClearHotkey;
-        private Panel      sep3;
-        private Label      lblHotkeyBehavior;
+        private Label       lblHotkeyTitle, lblHotkeyNote;
+        private Panel       sepHotkey1;
+        private Button      btnHotkeyPicker, btnClearHotkey;
+        private Label       lblHotkeyBehTitle;
+        private Panel       sepHotkey2;
         private RadioButton radioToggle, radioHold;
 
         // About
-        private Panel      panelAboutLogo;
-        private Label      lblAboutVersion, lblAboutDesc, lblAboutGpu;
-        private Panel      sep4;
-        private Button     btnGitHub;
+        private Panel  panelAboutLogo;
+        private Label  lblAboutVersion, lblAboutDesc, lblAboutGpu;
+        private Panel  sepAbout;
+        private Button btnGitHub;
 
         // Bottom
-        private Button     btnApply, btnCancel;
+        private Button btnApply, btnCancel;
     }
 }

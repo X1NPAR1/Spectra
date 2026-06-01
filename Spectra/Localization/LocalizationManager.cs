@@ -75,6 +75,10 @@ namespace Spectra.Localization
             ["AboutGpu"]         = new[]{ "✓ NVIDIA Digital Vibrance Control (NVAPI)\r\n✓ AMD Saturation Control (ADL)","✓ NVIDIA Dijital Canlılık Kontrolü (NVAPI)\r\n✓ AMD Doygunluk Kontrolü (ADL)","✓ Управление яркостью NVIDIA (NVAPI)\r\n✓ Управление насыщенностью AMD (ADL)","✓ NVIDIA Digital Vibrance Control (NVAPI)\r\n✓ AMD Sättigungssteuerung (ADL)","✓ Contrôle de vibrance numérique NVIDIA (NVAPI)\r\n✓ Contrôle de saturation AMD (ADL)" },
             ["Apply"]            = new[]{ "Apply","Uygula","Применить","Anwenden","Appliquer" },
             ["Cancel"]           = new[]{ "Cancel","İptal","Отмена","Abbrechen","Annuler" },
+            ["LangShort"]        = new[]{ "LANG","DİL","ЯЗЫК","LANG","LANGUE" },
+            ["HotkeyShort"]      = new[]{ "HOTKEY","KISA YOL","ГОРЯЧАЯ","TASTE","TOUCHE" },
+            ["TrayToggle"]       = new[]{ "Toggle Vibrance","Canlılığı Değiştir","Переключить яркость","Vibrance umschalten","Basculer la vibrance" },
+            ["AboutGpuFull"]     = new[]{ "Supported GPUs:\n\n✓ NVIDIA — Digital Vibrance Control (NVAPI)\n✓ AMD — Saturation Control (ADL 32/64-bit)","Desteklenen GPU'lar:\n\n✓ NVIDIA — Dijital Canlılık Kontrolü (NVAPI)\n✓ AMD — Doygunluk Kontrolü (ADL 32/64-bit)","Поддерживаемые GPU:\n\n✓ NVIDIA — Digital Vibrance Control (NVAPI)\n✓ AMD — Saturation Control (ADL 32/64-bit)","Unterstützte GPUs:\n\n✓ NVIDIA — Digital Vibrance Control (NVAPI)\n✓ AMD — Sättigungssteuerung (ADL 32/64-bit)","GPU pris en charge:\n\n✓ NVIDIA — Digital Vibrance Control (NVAPI)\n✓ AMD — Saturation Control (ADL 32/64-bit)" },
         };
 
         public static string Get(string key)
