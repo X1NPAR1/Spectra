@@ -84,6 +84,9 @@
     <Compile Include="common\SettingsForm.Designer.cs">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="common\DisplayGammaController.cs" />
+    <Compile Include="common\ScheduleManager.cs" />
+    <Compile Include="common\GameDetector.cs" />
     <Compile Include="common\GraphicsAdapter.cs" />
     <Compile Include="common\HotkeyManager.cs" />
     <Compile Include="common\IconFactory.cs" />

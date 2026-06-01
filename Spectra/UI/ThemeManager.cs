@@ -1,33 +1,47 @@
+using System;
 using System.Drawing;
 
 namespace Spectra.UI
 {
-    // Professional navy-blue theme tuned to match the setting.ico color palette.
-    // The icon is dominated by deep navy (#000020) with teal highlights.
+    // Central palette with runtime-switchable Light / Dark themes.
+    // Controls read these as properties, so InitializeComponent picks up the
+    // active theme; switching at runtime raises ThemeChanged so open forms repaint.
     public static class ThemeManager
     {
-        // ── Brand gradient (header, accent fills) ─────────────────────────
-        // Navy → medium blue — matches the deep-navy icon character
-        public static readonly Color GradStart = Color.FromArgb(18,  46,  96);  // deep navy
-        public static readonly Color GradEnd   = Color.FromArgb(30, 110, 180);  // medium blue
+        public static bool IsDark { get; private set; }
+
+        public static event EventHandler ThemeChanged;
+
+        public static void SetDarkMode(bool dark)
+        {
+            if (IsDark == dark) return;
+            IsDark = dark;
+            ThemeChanged?.Invoke(null, EventArgs.Empty);
+        }
+
+        public static void ToggleTheme() => SetDarkMode(!IsDark);
+
+        // ── Brand gradient (header) — same navy on both themes for brand identity
+        public static Color GradStart => Color.FromArgb(18,  46,  96);
+        public static Color GradEnd   => Color.FromArgb(30, 110, 180);
 
         // ── Surfaces ──────────────────────────────────────────────────────
-        public static readonly Color Bg       = Color.FromArgb(237, 242, 250);  // ice-blue-white
-        public static readonly Color Surface  = Color.FromArgb(255, 255, 255);  // white card
-        public static readonly Color Surface2 = Color.FromArgb(224, 234, 248);  // light navy-blue
-        public static readonly Color Border   = Color.FromArgb(196, 214, 236);  // blue-gray border
+        public static Color Bg       => IsDark ? Color.FromArgb(24,  27,  36)  : Color.FromArgb(237, 242, 250);
+        public static Color Surface  => IsDark ? Color.FromArgb(34,  38,  50)  : Color.FromArgb(255, 255, 255);
+        public static Color Surface2 => IsDark ? Color.FromArgb(46,  52,  68)  : Color.FromArgb(224, 234, 248);
+        public static Color Border   => IsDark ? Color.FromArgb(60,  68,  88)  : Color.FromArgb(196, 214, 236);
 
-        // ── Accent (navy blue — brand color) ──────────────────────────────
-        public static readonly Color Accent      = Color.FromArgb(22,  68, 148);  // navy blue
-        public static readonly Color AccentLight = Color.FromArgb(40, 100, 200);  // lighter navy
+        // ── Accent ─────────────────────────────────────────────────────────
+        public static Color Accent      => IsDark ? Color.FromArgb(74, 144, 226) : Color.FromArgb(22,  68, 148);
+        public static Color AccentLight => IsDark ? Color.FromArgb(96, 165, 245) : Color.FromArgb(40, 100, 200);
 
         // ── Text ──────────────────────────────────────────────────────────
-        public static readonly Color Text     = Color.FromArgb(14,  28,  54);  // dark navy
-        public static readonly Color TextSub  = Color.FromArgb(72,  96, 136);  // medium blue-gray
+        public static Color Text    => IsDark ? Color.FromArgb(228, 232, 240) : Color.FromArgb(14,  28,  54);
+        public static Color TextSub => IsDark ? Color.FromArgb(150, 160, 180) : Color.FromArgb(72,  96, 136);
 
-        // ── Status / feedback ─────────────────────────────────────────────
-        public static readonly Color Success  = Color.FromArgb(16, 162,  78);  // teal-green
-        public static readonly Color Danger   = Color.FromArgb(210,  45,  45);  // red
-        public static readonly Color Warning  = Color.FromArgb(200, 130,   0);  // amber
+        // ── Status / feedback (theme-independent) ──────────────────────────
+        public static Color Success => Color.FromArgb(16, 162,  78);
+        public static Color Danger  => Color.FromArgb(210,  45,  45);
+        public static Color Warning => Color.FromArgb(200, 130,   0);
     }
 }

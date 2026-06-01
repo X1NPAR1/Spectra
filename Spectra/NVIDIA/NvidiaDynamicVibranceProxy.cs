@@ -355,6 +355,13 @@ namespace Spectra.NVIDIA
                 ApplyDesktopVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
         }
 
+        public void SetVibranceForMonitor(string deviceName, int level)
+        {
+            if (!_vibranceInfo.isInitialized || string.IsNullOrEmpty(deviceName)) return;
+            int h = getAssociatedNvidiaDisplayHandle(deviceName, deviceName.Length);
+            if (h != -1 && !equalsDVCLevel(h, level)) setDVCLevel(h, level);
+        }
+
         public VibranceInfo GetVibranceInfo()
         {
             return _vibranceInfo;

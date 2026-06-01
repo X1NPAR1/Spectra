@@ -23,18 +23,29 @@ namespace Spectra.common
             labelAppName    = new Label();
             labelVersion    = new Label();
             labelGpuBadge   = new Label();
+            btnTheme        = new Button();
             btnOpenSettings = new Button();
 
-            // Vibrance section
+            // Vibrance section (per-monitor sliders are built at runtime)
             panelVibrance        = new Panel();
             labelSectionVibrance = new Label();
-            trackBarVibrance     = new TrackBar();
-            labelVibranceValue   = new Label();
+            panelMonitorSliders  = new Panel();
             panelPresets         = new Panel();
             btnPresetDef         = new Button();
             btnPresetLow         = new Button();
             btnPresetHigh        = new Button();
             btnPresetMax         = new Button();
+
+            // Display (brightness / contrast) section
+            panelDisplay         = new Panel();
+            labelSectionDisplay  = new Label();
+            labelBrightness      = new Label();
+            trackBrightness      = new TrackBar();
+            labelBrightnessVal   = new Label();
+            labelContrast        = new Label();
+            trackContrast        = new TrackBar();
+            labelContrastVal     = new Label();
+            btnResetDisplay      = new Button();
 
             // Settings section
             panelSettings        = new Panel();
@@ -55,11 +66,13 @@ namespace Spectra.common
             btnAdd               = new Button();
             btnBrowse            = new Button();
             btnRemove            = new Button();
+            btnDetectGame        = new Button();
 
             // Status bar
             panelStatus    = new Panel();
             labelStatus    = new Label();
             labelGpuInfo   = new Label();
+            btnGamingMode  = new Button();
             btnToggleVibrance = new Button();
 
             // Tray
@@ -75,7 +88,6 @@ namespace Spectra.common
             menuExit             = new ToolStripMenuItem();
             menuGitHub           = new ToolStripMenuItem();
 
-            // Workers
             backgroundWorker = new System.ComponentModel.BackgroundWorker();
             settingsWorker   = new System.ComponentModel.BackgroundWorker();
 
@@ -83,16 +95,18 @@ namespace Spectra.common
             panelHeader.SuspendLayout();
             panelVibrance.SuspendLayout();
             panelPresets.SuspendLayout();
+            panelDisplay.SuspendLayout();
             panelSettings.SuspendLayout();
             panelQuickRow.SuspendLayout();
             panelProfiles.SuspendLayout();
             panelStatus.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)trackBarVibrance).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)trackBrightness).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)trackContrast).BeginInit();
 
-            // ── FORM ─────────────────────────────────────────────────────
+            // ── FORM (height is finalised at runtime by LayoutCards) ──────
             AutoScaleDimensions = new SizeF(6f, 13f);
             AutoScaleMode       = AutoScaleMode.Font;
-            ClientSize          = new Size(480, 670);
+            ClientSize          = new Size(480, 760);
             FormBorderStyle     = FormBorderStyle.FixedSingle;
             MaximizeBox         = false;
             Text                = "Spectra";
@@ -105,13 +119,11 @@ namespace Spectra.common
             Resize             += MainForm_Resize;
 
             // ── HEADER ───────────────────────────────────────────────────
-            // Icon is drawn in panelHeader_Paint using IconFactory.GetAppBitmap
             panelHeader.Location = new Point(0, 0);
             panelHeader.Size     = new Size(480, 78);
             panelHeader.BackColor= Color.Transparent;
             panelHeader.Paint   += panelHeader_Paint;
 
-            // App name — positioned to leave room for 44px icon on left
             labelAppName.Text      = "SPECTRA";
             labelAppName.Font      = new Font("Segoe UI", 20f, FontStyle.Bold);
             labelAppName.ForeColor = Color.White;
@@ -119,7 +131,7 @@ namespace Spectra.common
             labelAppName.Location  = new Point(70, 10);
             labelAppName.AutoSize  = true;
 
-            labelVersion.Text      = "v1.9.5";
+            labelVersion.Text      = "v2.1.0";
             labelVersion.Font      = new Font("Segoe UI", 7.5f);
             labelVersion.ForeColor = Color.FromArgb(180, 215, 255);
             labelVersion.BackColor = Color.Transparent;
@@ -131,8 +143,20 @@ namespace Spectra.common
             labelGpuBadge.ForeColor = Color.FromArgb(200, 230, 255);
             labelGpuBadge.BackColor = Color.Transparent;
             labelGpuBadge.TextAlign = ContentAlignment.MiddleRight;
-            labelGpuBadge.Location  = new Point(190, 8);
-            labelGpuBadge.Size      = new Size(244, 36);
+            labelGpuBadge.Location  = new Point(180, 8);
+            labelGpuBadge.Size      = new Size(210, 36);
+
+            btnTheme.Text      = "🌙";
+            btnTheme.Font      = new Font("Segoe UI", 11f);
+            btnTheme.ForeColor = Color.White;
+            btnTheme.BackColor = Color.FromArgb(50, 255, 255, 255);
+            btnTheme.FlatStyle = FlatStyle.Flat;
+            btnTheme.FlatAppearance.BorderSize         = 0;
+            btnTheme.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 255, 255, 255);
+            btnTheme.Location  = new Point(398, 8);
+            btnTheme.Size      = new Size(36, 36);
+            btnTheme.Cursor    = Cursors.Hand;
+            btnTheme.Click    += btnTheme_Click;
 
             btnOpenSettings.Text      = "⚙";
             btnOpenSettings.Font      = new Font("Segoe UI", 12f);
@@ -149,11 +173,12 @@ namespace Spectra.common
             panelHeader.Controls.Add(labelAppName);
             panelHeader.Controls.Add(labelVersion);
             panelHeader.Controls.Add(labelGpuBadge);
+            panelHeader.Controls.Add(btnTheme);
             panelHeader.Controls.Add(btnOpenSettings);
 
-            // ── DESKTOP VIBRANCE ─────────────────────────────────────────
+            // ── DESKTOP VIBRANCE (size set at runtime) ────────────────────
             panelVibrance.Location  = new Point(14, 90);
-            panelVibrance.Size      = new Size(452, 122);   // +14px: prevents trackbar thumb from overlapping presets
+            panelVibrance.Size      = new Size(452, 120);
             panelVibrance.BackColor = ThemeManager.Surface;
             panelVibrance.Paint    += CardPanel_Paint;
 
@@ -164,27 +189,15 @@ namespace Spectra.common
             labelSectionVibrance.Location  = new Point(16, 10);
             labelSectionVibrance.AutoSize  = true;
 
-            trackBarVibrance.Location  = new Point(14, 32);
-            trackBarVibrance.Size      = new Size(374, 30);
-            trackBarVibrance.TickStyle = TickStyle.None;
-            trackBarVibrance.BackColor = ThemeManager.Surface;
-            trackBarVibrance.Scroll   += trackBarVibrance_Scroll;
+            // Container the per-monitor sliders are added into at runtime.
+            panelMonitorSliders.Location  = new Point(14, 30);
+            panelMonitorSliders.Size      = new Size(424, 40);
+            panelMonitorSliders.BackColor = Color.Transparent;
 
-            labelVibranceValue.Text      = "—";
-            labelVibranceValue.Font      = new Font("Segoe UI", 14f, FontStyle.Bold);
-            labelVibranceValue.ForeColor = ThemeManager.Accent;
-            labelVibranceValue.BackColor = Color.Transparent;
-            labelVibranceValue.Location  = new Point(392, 33);
-            labelVibranceValue.Size      = new Size(52, 26);
-            labelVibranceValue.TextAlign = ContentAlignment.MiddleLeft;
-
-            // Presets sub-panel — Y=84 leaves ≥22px gap below trackbar (which ends at ~62) so the
-            // Windows thumb control never visually overlaps the buttons at any DPI setting
-            panelPresets.Location  = new Point(14, 84);
+            panelPresets.Location  = new Point(14, 74);
             panelPresets.Size      = new Size(430, 28);
             panelPresets.BackColor = Color.Transparent;
 
-            // Helper to create preset button
             int bx = 0;
             foreach (var pair in new[]
             {
@@ -211,12 +224,92 @@ namespace Spectra.common
             }
 
             panelVibrance.Controls.Add(labelSectionVibrance);
-            panelVibrance.Controls.Add(trackBarVibrance);
-            panelVibrance.Controls.Add(labelVibranceValue);
+            panelVibrance.Controls.Add(panelMonitorSliders);
             panelVibrance.Controls.Add(panelPresets);
 
+            // ── DISPLAY (brightness / contrast) ───────────────────────────
+            panelDisplay.Location  = new Point(14, 220);
+            panelDisplay.Size      = new Size(452, 116);
+            panelDisplay.BackColor = ThemeManager.Surface;
+            panelDisplay.Paint    += CardPanel_Paint;
+
+            labelSectionDisplay.Text      = "BRIGHTNESS & CONTRAST";
+            labelSectionDisplay.Font      = new Font("Segoe UI", 7.5f, FontStyle.Bold);
+            labelSectionDisplay.ForeColor = ThemeManager.Accent;
+            labelSectionDisplay.BackColor = Color.Transparent;
+            labelSectionDisplay.Location  = new Point(16, 10);
+            labelSectionDisplay.AutoSize  = true;
+
+            labelBrightness.Text      = "Brightness";
+            labelBrightness.Font      = new Font("Segoe UI", 8.5f);
+            labelBrightness.ForeColor = ThemeManager.TextSub;
+            labelBrightness.BackColor = Color.Transparent;
+            labelBrightness.Location  = new Point(16, 34);
+            labelBrightness.Size      = new Size(90, 18);
+
+            trackBrightness.Location  = new Point(108, 30);
+            trackBrightness.Size      = new Size(280, 30);
+            trackBrightness.Minimum   = 0;
+            trackBrightness.Maximum   = 100;
+            trackBrightness.Value     = 50;
+            trackBrightness.TickStyle = TickStyle.None;
+            trackBrightness.BackColor = ThemeManager.Surface;
+            trackBrightness.Scroll   += trackBrightness_Scroll;
+
+            labelBrightnessVal.Text      = "50";
+            labelBrightnessVal.Font      = new Font("Segoe UI", 9f, FontStyle.Bold);
+            labelBrightnessVal.ForeColor = ThemeManager.Accent;
+            labelBrightnessVal.BackColor = Color.Transparent;
+            labelBrightnessVal.Location  = new Point(394, 34);
+            labelBrightnessVal.Size      = new Size(44, 20);
+            labelBrightnessVal.TextAlign = ContentAlignment.MiddleLeft;
+
+            labelContrast.Text      = "Contrast";
+            labelContrast.Font      = new Font("Segoe UI", 8.5f);
+            labelContrast.ForeColor = ThemeManager.TextSub;
+            labelContrast.BackColor = Color.Transparent;
+            labelContrast.Location  = new Point(16, 66);
+            labelContrast.Size      = new Size(90, 18);
+
+            trackContrast.Location  = new Point(108, 62);
+            trackContrast.Size      = new Size(280, 30);
+            trackContrast.Minimum   = 0;
+            trackContrast.Maximum   = 100;
+            trackContrast.Value     = 50;
+            trackContrast.TickStyle = TickStyle.None;
+            trackContrast.BackColor = ThemeManager.Surface;
+            trackContrast.Scroll   += trackContrast_Scroll;
+
+            labelContrastVal.Text      = "50";
+            labelContrastVal.Font      = new Font("Segoe UI", 9f, FontStyle.Bold);
+            labelContrastVal.ForeColor = ThemeManager.Accent;
+            labelContrastVal.BackColor = Color.Transparent;
+            labelContrastVal.Location  = new Point(394, 66);
+            labelContrastVal.Size      = new Size(44, 20);
+            labelContrastVal.TextAlign = ContentAlignment.MiddleLeft;
+
+            btnResetDisplay.Text      = "Reset";
+            btnResetDisplay.Font      = new Font("Segoe UI", 7.5f);
+            btnResetDisplay.ForeColor = ThemeManager.TextSub;
+            btnResetDisplay.BackColor = ThemeManager.Surface2;
+            btnResetDisplay.FlatStyle = FlatStyle.Flat;
+            btnResetDisplay.FlatAppearance.BorderColor = ThemeManager.Border;
+            btnResetDisplay.Location  = new Point(16, 92);
+            btnResetDisplay.Size      = new Size(72, 20);
+            btnResetDisplay.Cursor    = Cursors.Hand;
+            btnResetDisplay.Click    += btnResetDisplay_Click;
+
+            panelDisplay.Controls.Add(labelSectionDisplay);
+            panelDisplay.Controls.Add(labelBrightness);
+            panelDisplay.Controls.Add(trackBrightness);
+            panelDisplay.Controls.Add(labelBrightnessVal);
+            panelDisplay.Controls.Add(labelContrast);
+            panelDisplay.Controls.Add(trackContrast);
+            panelDisplay.Controls.Add(labelContrastVal);
+            panelDisplay.Controls.Add(btnResetDisplay);
+
             // ── SETTINGS ─────────────────────────────────────────────────
-            panelSettings.Location  = new Point(14, 224);
+            panelSettings.Location  = new Point(14, 346);
             panelSettings.Size      = new Size(452, 152);
             panelSettings.BackColor = ThemeManager.Surface;
             panelSettings.Paint    += CardPanel_Paint;
@@ -233,7 +326,7 @@ namespace Spectra.common
             chkAutostart.ForeColor       = ThemeManager.Text;
             chkAutostart.BackColor       = Color.Transparent;
             chkAutostart.Location        = new Point(16, 34);
-            chkAutostart.Size            = new Size(220, 20);
+            chkAutostart.Size            = new Size(420, 20);
             chkAutostart.CheckedChanged += chkAutostart_CheckedChanged;
 
             chkPrimaryMonitor.Text            = "Primary monitor only";
@@ -241,7 +334,7 @@ namespace Spectra.common
             chkPrimaryMonitor.ForeColor       = ThemeManager.Text;
             chkPrimaryMonitor.BackColor       = Color.Transparent;
             chkPrimaryMonitor.Location        = new Point(16, 58);
-            chkPrimaryMonitor.Size            = new Size(220, 20);
+            chkPrimaryMonitor.Size            = new Size(420, 20);
             chkPrimaryMonitor.CheckedChanged += chkPrimaryMonitor_CheckedChanged;
 
             chkNeverResize.Text              = "Never change resolution";
@@ -249,24 +342,21 @@ namespace Spectra.common
             chkNeverResize.ForeColor         = ThemeManager.Text;
             chkNeverResize.BackColor         = Color.Transparent;
             chkNeverResize.Location          = new Point(16, 82);
-            chkNeverResize.Size              = new Size(220, 20);
+            chkNeverResize.Size              = new Size(420, 20);
             chkNeverResize.CheckedChanged   += chkNeverResize_CheckedChanged;
 
-            // Quick row: LANGUAGE | HOTKEY  — fixed widths, no autosize → no overflow in any language
             panelQuickRow.Location  = new Point(0, 110);
             panelQuickRow.Size      = new Size(452, 36);
             panelQuickRow.BackColor = Color.Transparent;
 
-            // LANG label — FIXED width 72px (accommodates "LANGUAGE" 8 chars, "SNELTOETS" not here)
             labelLang.Text      = "LANGUAGE";
             labelLang.Font      = new Font("Segoe UI", 7f, FontStyle.Bold);
             labelLang.ForeColor = ThemeManager.TextSub;
             labelLang.BackColor = Color.Transparent;
             labelLang.Location  = new Point(16, 10);
-            labelLang.Size      = new Size(72, 16);   // FIXED — no AutoSize
+            labelLang.Size      = new Size(72, 16);
             labelLang.AutoSize  = false;
 
-            // Language combo — starts after fixed label
             comboLanguage.Location      = new Point(92, 6);
             comboLanguage.Size          = new Size(140, 22);
             comboLanguage.DropDownStyle = ComboBoxStyle.DropDownList;
@@ -275,16 +365,14 @@ namespace Spectra.common
             comboLanguage.BackColor     = ThemeManager.Surface2;
             comboLanguage.ForeColor     = ThemeManager.Text;
 
-            // HOTKEY label — FIXED width 76px (accommodates "КЛАВИША" ~63px, "SNELTOETS" ~68px)
             labelHotkeyTitle.Text      = "HOTKEY";
             labelHotkeyTitle.Font      = new Font("Segoe UI", 7f, FontStyle.Bold);
             labelHotkeyTitle.ForeColor = ThemeManager.TextSub;
             labelHotkeyTitle.BackColor = Color.Transparent;
             labelHotkeyTitle.Location  = new Point(248, 10);
-            labelHotkeyTitle.Size      = new Size(76, 16);   // FIXED — no AutoSize
+            labelHotkeyTitle.Size      = new Size(76, 16);
             labelHotkeyTitle.AutoSize  = false;
 
-            // Hotkey button — starts after fixed label area
             btnHotkey.Text      = "F9";
             btnHotkey.Font      = new Font("Segoe UI", 8.5f, FontStyle.Bold);
             btnHotkey.ForeColor = ThemeManager.Accent;
@@ -309,7 +397,7 @@ namespace Spectra.common
             panelSettings.Controls.Add(panelQuickRow);
 
             // ── GAME PROFILES ─────────────────────────────────────────────
-            panelProfiles.Location  = new Point(14, 388);
+            panelProfiles.Location  = new Point(14, 510);
             panelProfiles.Size      = new Size(452, 230);
             panelProfiles.BackColor = ThemeManager.Surface;
             panelProfiles.Paint    += CardPanel_Paint;
@@ -322,7 +410,7 @@ namespace Spectra.common
             labelSectionProfiles.AutoSize  = true;
 
             listProfiles.Location = new Point(10, 34);
-            listProfiles.Size     = new Size(432, 156);
+            listProfiles.Size     = new Size(432, 148);
             listProfiles.View     = View.LargeIcon;
             listProfiles.BackColor= ThemeManager.Surface;
             listProfiles.ForeColor= ThemeManager.Text;
@@ -330,38 +418,48 @@ namespace Spectra.common
             listProfiles.BorderStyle   = BorderStyle.None;
             listProfiles.DoubleClick  += listProfiles_DoubleClick;
 
-            // Profile buttons — 3 equal columns aligned to listProfiles edges (X=10..442, W=432)
-            // Each button: (432 - 2*8 gap) / 3 = 138px. Fits longest translations (French ~120px + padding).
+            // 4 equal columns: Add / Browse / Detect game / Remove
             btnAdd.Text      = "Add File";
-            btnAdd.Font      = new Font("Segoe UI", 8.5f);
+            btnAdd.Font      = new Font("Segoe UI", 8f);
             btnAdd.ForeColor = ThemeManager.Text;
             btnAdd.BackColor = ThemeManager.Surface2;
             btnAdd.FlatStyle = FlatStyle.Flat;
             btnAdd.FlatAppearance.BorderColor = ThemeManager.Border;
-            btnAdd.Location  = new Point(10, 198);
-            btnAdd.Size      = new Size(138, 26);
+            btnAdd.Location  = new Point(10, 190);
+            btnAdd.Size      = new Size(104, 28);
             btnAdd.Cursor    = Cursors.Hand;
             btnAdd.Click    += btnAdd_Click;
 
             btnBrowse.Text      = "Browse Running";
-            btnBrowse.Font      = new Font("Segoe UI", 8.5f);
+            btnBrowse.Font      = new Font("Segoe UI", 8f);
             btnBrowse.ForeColor = ThemeManager.Text;
             btnBrowse.BackColor = ThemeManager.Surface2;
             btnBrowse.FlatStyle = FlatStyle.Flat;
             btnBrowse.FlatAppearance.BorderColor = ThemeManager.Border;
-            btnBrowse.Location  = new Point(156, 198);
-            btnBrowse.Size      = new Size(138, 26);
+            btnBrowse.Location  = new Point(118, 190);
+            btnBrowse.Size      = new Size(104, 28);
             btnBrowse.Cursor    = Cursors.Hand;
             btnBrowse.Click    += btnBrowse_Click;
 
+            btnDetectGame.Text      = "Detect Game";
+            btnDetectGame.Font      = new Font("Segoe UI", 8f);
+            btnDetectGame.ForeColor = ThemeManager.Text;
+            btnDetectGame.BackColor = ThemeManager.Surface2;
+            btnDetectGame.FlatStyle = FlatStyle.Flat;
+            btnDetectGame.FlatAppearance.BorderColor = ThemeManager.Border;
+            btnDetectGame.Location  = new Point(226, 190);
+            btnDetectGame.Size      = new Size(104, 28);
+            btnDetectGame.Cursor    = Cursors.Hand;
+            btnDetectGame.Click    += btnDetectGame_Click;
+
             btnRemove.Text      = "Remove";
-            btnRemove.Font      = new Font("Segoe UI", 8.5f);
+            btnRemove.Font      = new Font("Segoe UI", 8f);
             btnRemove.ForeColor = ThemeManager.Danger;
             btnRemove.BackColor = ThemeManager.Surface2;
             btnRemove.FlatStyle = FlatStyle.Flat;
             btnRemove.FlatAppearance.BorderColor = ThemeManager.Danger;
-            btnRemove.Location  = new Point(302, 198);
-            btnRemove.Size      = new Size(138, 26);
+            btnRemove.Location  = new Point(334, 190);
+            btnRemove.Size      = new Size(108, 28);
             btnRemove.Cursor    = Cursors.Hand;
             btnRemove.Click    += btnRemove_Click;
 
@@ -369,10 +467,11 @@ namespace Spectra.common
             panelProfiles.Controls.Add(listProfiles);
             panelProfiles.Controls.Add(btnAdd);
             panelProfiles.Controls.Add(btnBrowse);
+            panelProfiles.Controls.Add(btnDetectGame);
             panelProfiles.Controls.Add(btnRemove);
 
             // ── STATUS BAR ────────────────────────────────────────────────
-            panelStatus.Location  = new Point(0, 630);
+            panelStatus.Location  = new Point(0, 752);
             panelStatus.Size      = new Size(480, 40);
             panelStatus.BackColor = Color.FromArgb(210, 222, 238);
 
@@ -385,11 +484,21 @@ namespace Spectra.common
             labelGpuInfo.Text      = "";
             labelGpuInfo.Font      = new Font("Segoe UI", 8f);
             labelGpuInfo.ForeColor = ThemeManager.TextSub;
-            labelGpuInfo.Location  = new Point(170, 13);
-            labelGpuInfo.Size      = new Size(220, 16);
+            labelGpuInfo.Location  = new Point(120, 13);
+            labelGpuInfo.Size      = new Size(130, 16);
             labelGpuInfo.TextAlign = ContentAlignment.MiddleRight;
 
-            // Toggle ON/OFF button — far right of status bar
+            btnGamingMode.Text      = "🎮";
+            btnGamingMode.Font      = new Font("Segoe UI", 9f, FontStyle.Bold);
+            btnGamingMode.ForeColor = Color.White;
+            btnGamingMode.BackColor = ThemeManager.Accent;
+            btnGamingMode.FlatStyle = FlatStyle.Flat;
+            btnGamingMode.FlatAppearance.BorderSize = 0;
+            btnGamingMode.Location  = new Point(330, 6);
+            btnGamingMode.Size      = new Size(66, 26);
+            btnGamingMode.Cursor    = Cursors.Hand;
+            btnGamingMode.Click    += btnGamingMode_Click;
+
             btnToggleVibrance.Text      = "ON";
             btnToggleVibrance.Font      = new Font("Segoe UI", 8.5f, FontStyle.Bold);
             btnToggleVibrance.ForeColor = Color.White;
@@ -403,6 +512,7 @@ namespace Spectra.common
 
             panelStatus.Controls.Add(labelStatus);
             panelStatus.Controls.Add(labelGpuInfo);
+            panelStatus.Controls.Add(btnGamingMode);
             panelStatus.Controls.Add(btnToggleVibrance);
 
             // ── TRAY ──────────────────────────────────────────────────────
@@ -426,10 +536,9 @@ namespace Spectra.common
             menuExit.Text  = "Exit";
             menuExit.Click += exitMenuItem_Click;
 
-            // GitHub link — underlined, below Exit
             menuGitHub.Text      = "⭐  GitHub";
             menuGitHub.Font      = new Font("Segoe UI", 8.5f, FontStyle.Underline);
-            menuGitHub.ForeColor = System.Drawing.Color.FromArgb(22, 68, 148); // ThemeManager.Accent
+            menuGitHub.ForeColor = System.Drawing.Color.FromArgb(22, 68, 148);
             menuGitHub.Click    += menuGitHub_Click;
 
             contextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
@@ -449,7 +558,6 @@ namespace Spectra.common
             notifyIcon.Visible          = true;
             notifyIcon.MouseClick      += notifyIcon_MouseClick;
 
-            // ── WORKERS ───────────────────────────────────────────────────
             backgroundWorker.WorkerReportsProgress = true;
             backgroundWorker.DoWork           += backgroundWorker_DoWork;
             backgroundWorker.ProgressChanged  += backgroundWorker_ProgressChanged;
@@ -458,14 +566,17 @@ namespace Spectra.common
 
             Controls.Add(panelHeader);
             Controls.Add(panelVibrance);
+            Controls.Add(panelDisplay);
             Controls.Add(panelSettings);
             Controls.Add(panelProfiles);
             Controls.Add(panelStatus);
 
-            ((System.ComponentModel.ISupportInitialize)trackBarVibrance).EndInit();
+            ((System.ComponentModel.ISupportInitialize)trackBrightness).EndInit();
+            ((System.ComponentModel.ISupportInitialize)trackContrast).EndInit();
             panelHeader.ResumeLayout(false);
             panelVibrance.ResumeLayout(false);
             panelPresets.ResumeLayout(false);
+            panelDisplay.ResumeLayout(false);
             panelSettings.ResumeLayout(false);
             panelQuickRow.ResumeLayout(false);
             panelProfiles.ResumeLayout(false);
@@ -478,14 +589,24 @@ namespace Spectra.common
         private Label     labelAppName;
         private Label     labelVersion;
         private Label     labelGpuBadge;
+        private Button    btnTheme;
         private Button    btnOpenSettings;
 
         private Panel     panelVibrance;
         private Label     labelSectionVibrance;
-        private TrackBar  trackBarVibrance;
-        private Label     labelVibranceValue;
+        private Panel     panelMonitorSliders;
         private Panel     panelPresets;
         private Button    btnPresetDef, btnPresetLow, btnPresetHigh, btnPresetMax;
+
+        private Panel     panelDisplay;
+        private Label     labelSectionDisplay;
+        private Label     labelBrightness;
+        private TrackBar  trackBrightness;
+        private Label     labelBrightnessVal;
+        private Label     labelContrast;
+        private TrackBar  trackContrast;
+        private Label     labelContrastVal;
+        private Button    btnResetDisplay;
 
         private Panel     panelSettings;
         private Label     labelSectionSettings;
@@ -503,11 +624,13 @@ namespace Spectra.common
         private ListView  listProfiles;
         private Button    btnAdd;
         private Button    btnBrowse;
+        private Button    btnDetectGame;
         private Button    btnRemove;
 
         private Panel     panelStatus;
         private Label     labelStatus;
         private Label     labelGpuInfo;
+        private Button    btnGamingMode;
         private Button    btnToggleVibrance;
 
         private NotifyIcon        notifyIcon;

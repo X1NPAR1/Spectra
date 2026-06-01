@@ -44,6 +44,28 @@ namespace Spectra.Localization
             ["PresetHigh"]       = new[]{"High","Yüksek","Высокий","Hoch","Élevé","Hoog"},
             ["PresetMax"]        = new[]{"Max","Max","Макс","Max","Max","Max"},
 
+            // ── Brightness & Contrast (v2.1) ──────────────────────────────
+            ["BrightnessContrast"] = new[]{"BRIGHTNESS & CONTRAST","PARLAKLIK VE KONTRAST","ЯРКОСТЬ И КОНТРАСТ","HELLIGKEIT & KONTRAST","LUMINOSITÉ ET CONTRASTE","HELDERHEID & CONTRAST"},
+            ["Brightness"]         = new[]{"Brightness","Parlaklık","Яркость","Helligkeit","Luminosité","Helderheid"},
+            ["Contrast"]           = new[]{"Contrast","Kontrast","Контраст","Kontrast","Contraste","Contrast"},
+            ["Reset"]              = new[]{"Reset","Sıfırla","Сброс","Zurücksetzen","Réinit.","Reset"},
+
+            // ── Game detection (v2.1) ─────────────────────────────────────
+            ["DetectGame"]         = new[]{"Detect Game","Oyunu Algıla","Найти игру","Spiel erkennen","Détecter jeu","Game detecteren"},
+            ["NoGameDetected"]     = new[]{"No full-screen game detected in the foreground.","Ön planda tam ekran oyun algılanmadı.","Полноэкранная игра не обнаружена.","Kein Vollbildspiel im Vordergrund erkannt.","Aucun jeu plein écran détecté.","Geen volledig scherm-game gedetecteerd."},
+            ["ProfileExists"]      = new[]{"A profile for this application already exists.","Bu uygulama için profil zaten var.","Профиль для этого приложения уже существует.","Ein Profil für diese Anwendung existiert bereits.","Un profil pour cette application existe déjà.","Er bestaat al een profiel voor deze applicatie."},
+            ["RunningInBackground"]= new[]{"Spectra is running in the background.","Spectra arka planda çalışıyor.","Spectra работает в фоновом режиме.","Spectra läuft im Hintergrund.","Spectra fonctionne en arrière-plan.","Spectra draait op de achtergrond."},
+
+            // ── Schedule / night mode (v2.1) ──────────────────────────────
+            ["ScheduleSection"]    = new[]{"AUTOMATIC SCHEDULE","OTOMATİK ZAMANLAMA","АВТО-РАСПИСАНИЕ","AUTOM. ZEITPLAN","PLANIFICATION AUTO","AUTOMATISCH SCHEMA"},
+            ["ScheduleEnable"]     = new[]{"Enable day/night automatic vibrance","Gündüz/gece otomatik canlılığı etkinleştir","Включить авто яркость день/ночь","Tag/Nacht-Automatik aktivieren","Activer la vibrance auto jour/nuit","Dag/nacht automatische vibrance"},
+            ["DayLevel"]           = new[]{"Day level","Gündüz seviyesi","Дневной уровень","Tag-Stufe","Niveau jour","Dagniveau"},
+            ["NightLevel"]         = new[]{"Night level","Gece seviyesi","Ночной уровень","Nacht-Stufe","Niveau nuit","Nachtniveau"},
+            ["DayStart"]           = new[]{"Day starts","Gündüz başlangıcı","Начало дня","Tag beginnt","Début jour","Dag begint"},
+            ["NightStart"]         = new[]{"Night starts","Gece başlangıcı","Начало ночи","Nacht beginnt","Début nuit","Nacht begint"},
+            ["ThemeSection"]       = new[]{"APPEARANCE","GÖRÜNÜM","ВНЕШНИЙ ВИД","ERSCHEINUNGSBILD","APPARENCE","UITERLIJK"},
+            ["DarkMode"]           = new[]{"Dark theme","Koyu tema","Тёмная тема","Dunkles Thema","Thème sombre","Donker thema"},
+
             // ── Tray ─────────────────────────────────────────────────────
             ["OpenSpectra"]      = new[]{"Open Spectra","Spectra'yı Aç","Открыть Spectra","Spectra öffnen","Ouvrir Spectra","Spectra openen"},
             ["TrayToggle"]       = new[]{"Toggle Vibrance","Canlılığı Değiştir","Переключить яркость","Vibrance umschalten","Basculer la vibrance","Vibrance wisselen"},

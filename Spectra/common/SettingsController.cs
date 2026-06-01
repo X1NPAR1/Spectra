@@ -85,6 +85,16 @@ namespace Spectra.common
             return (Marshal.GetLastWin32Error() == 0);
         }
 
+        // Generic single-value reader for the extra v2.x settings
+        // (theme, brightness, contrast, schedule, behavior flags, ...).
+        public string GetSetting(string szKeyName, string szDefault)
+        {
+            if (!IsFileExisting(_fileName)) return szDefault;
+            var sb = new StringBuilder(1024);
+            GetPrivateProfileString(SzSectionName, szKeyName, szDefault, sb, (uint)sb.Capacity, _fileName);
+            return sb.ToString();
+        }
+
         private bool PrepareFile()
         {
             if (!IsFileExisting(_fileName))

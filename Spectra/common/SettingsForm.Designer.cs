@@ -91,7 +91,7 @@ namespace Spectra.common
             // Accommodates all translations without any text clipping.
             AutoScaleDimensions = new SizeF(6f, 13f);
             AutoScaleMode       = AutoScaleMode.Font;
-            ClientSize          = new Size(540, 470);
+            ClientSize          = new Size(540, 560);
             FormBorderStyle     = FormBorderStyle.FixedSingle;
             MaximizeBox         = false;
             StartPosition       = FormStartPosition.CenterParent;
@@ -115,13 +115,13 @@ namespace Spectra.common
             // ── TAB CONTROL ──────────────────────────────────────────────
             // 520px wide, 4 tabs → ItemSize.Width = 520/4 = 130px (fits all language tab labels)
             tabControl.Location  = new Point(10, 58);
-            tabControl.Size      = new Size(520, 360);
+            tabControl.Size      = new Size(520, 448);
             tabControl.DrawMode  = TabDrawMode.OwnerDrawFixed;
-            // 3 tabs × 165 = 495 < 520 → no overflow scroll arrows appear
-            tabControl.ItemSize  = new Size(165, 30);
+            // 4 tabs × 129 = 516 < 520 → no overflow scroll arrows appear
+            tabControl.ItemSize  = new Size(129, 30);
             tabControl.SizeMode  = TabSizeMode.Fixed;
             tabControl.DrawItem += tabControl_DrawItem;
-            tabControl.TabPages.AddRange(new TabPage[] { tabBehavior, tabDisplay, tabAbout });
+            tabControl.TabPages.AddRange(new TabPage[] { tabBehavior, tabDisplay, tabData, tabAbout });
 
             foreach (TabPage tp in tabControl.TabPages)
             {
@@ -439,7 +439,7 @@ namespace Spectra.common
             lblAboutName.Location  = new Point(80, 2);
             lblAboutName.AutoSize  = true;
 
-            lblAboutVersion.Text      = "v1.9.4";
+            lblAboutVersion.Text      = "v2.1.0";
             lblAboutVersion.Font      = new Font("Segoe UI", 9f);
             lblAboutVersion.ForeColor = ThemeManager.TextSub;
             lblAboutVersion.BackColor = Color.Transparent;
@@ -540,7 +540,7 @@ namespace Spectra.common
             btnClose.BackColor = ThemeManager.Accent;
             btnClose.FlatStyle = FlatStyle.Flat;
             btnClose.FlatAppearance.BorderSize = 0;
-            btnClose.Location  = new Point(426, 428);
+            btnClose.Location  = new Point(426, 518);
             btnClose.Size      = new Size(104, 34);
             btnClose.Cursor    = Cursors.Hand;
             btnClose.Click    += btnClose_Click;

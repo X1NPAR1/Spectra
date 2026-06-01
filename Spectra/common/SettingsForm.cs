@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
+using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
 using Spectra.Localization;
@@ -12,49 +14,127 @@ namespace Spectra.common
 {
     public partial class SettingsForm : Form
     {
+        private readonly MainForm       _mainForm;
         private readonly IVibranceProxy _proxy;
+        private readonly int _minLevel;
+        private readonly int _maxLevel;
+
+        // Runtime-added controls (Schedule + Appearance)
+        private CheckBox      _chkSchedule, _chkDarkMode;
+        private NumericUpDown _numDayLevel, _numNightLevel;
+        private DateTimePicker _dtDayStart, _dtNightStart;
+        private Label _lblScheduleSection, _lblDayLevel, _lblNightLevel, _lblDayStart, _lblNightStart, _lblAppearanceSection;
+        private Panel _sepSchedule, _sepAppearance;
+
+        private bool _loading;
 
         public SettingsForm(MainForm mainForm, IVibranceProxy proxy,
             int minLevel, int maxLevel, int defaultLevel, int currentLevel,
             Func<int, string> resolveLabel)
         {
-            _proxy = proxy;
+            _mainForm = mainForm;
+            _proxy    = proxy;
+            _minLevel = minLevel;
+            _maxLevel = maxLevel;
 
             InitializeComponent();
 
             Icon = IconFactory.GetAppIcon(16);
 
-            // Populate monitor dropdown with all connected screens
+            // Monitor dropdown
             cboMonitorTarget.Items.Add(LocalizationManager.Get("MonitorAll"));
             cboMonitorTarget.Items.Add(LocalizationManager.Get("MonitorPrimary"));
             foreach (Screen s in Screen.AllScreens)
-            {
-                if (!s.Primary)
-                    cboMonitorTarget.Items.Add(s.DeviceName);
-            }
+                if (!s.Primary) cboMonitorTarget.Items.Add(s.DeviceName);
 
-            // Sync combo to proxy's current monitor target
             string currentTarget = _proxy.GetVibranceInfo().targetMonitorDeviceName;
             cboMonitorTarget.SelectedIndex = 0;
-            if (currentTarget == "PRIMARY")
-                cboMonitorTarget.SelectedIndex = 1;
+            if (currentTarget == "PRIMARY") cboMonitorTarget.SelectedIndex = 1;
             else if (currentTarget != null)
-            {
                 for (int i = 2; i < cboMonitorTarget.Items.Count; i++)
-                {
-                    if (cboMonitorTarget.Items[i].ToString() == currentTarget)
-                    { cboMonitorTarget.SelectedIndex = i; break; }
-                }
-            }
+                    if (cboMonitorTarget.Items[i].ToString() == currentTarget) { cboMonitorTarget.SelectedIndex = i; break; }
             cboMonitorTarget.SelectedIndexChanged += cboMonitorTarget_SelectedIndexChanged;
 
-            // System info label
             lblSysInfo.Text = string.Format(".NET {0}   |   OS: {1}",
                 Environment.Version, Environment.OSVersion.Version);
+
+            BuildScheduleControls();
+            BuildAppearanceControls();
+            LoadSettings();
+            UpdateProfileList();
 
             LocalizationManager.LanguageChanged += OnLanguageChanged;
             ApplyLocalization();
         }
+
+        // ── Runtime control construction ──────────────────────────────────
+        private void BuildScheduleControls()
+        {
+            _lblScheduleSection = MakeSection(0, 224);
+            _sepSchedule        = MakeSep(244);
+
+            _chkSchedule = new CheckBox { Location = new Point(0, 252), Size = new Size(488, 22),
+                Font = new Font("Segoe UI", 9f), ForeColor = ThemeManager.Text, BackColor = Color.Transparent };
+            _chkSchedule.CheckedChanged += (s, e) => SaveSchedule();
+
+            _lblDayLevel = MakeLabel(0, 284);
+            _numDayLevel = MakeLevelNum(120, 280);
+            _lblNightLevel = MakeLabel(250, 284);
+            _numNightLevel = MakeLevelNum(370, 280);
+
+            _lblDayStart = MakeLabel(0, 320);
+            _dtDayStart  = MakeTimePicker(120, 316);
+            _lblNightStart = MakeLabel(250, 320);
+            _dtNightStart  = MakeTimePicker(370, 316);
+
+            _numDayLevel.ValueChanged   += (s, e) => SaveSchedule();
+            _numNightLevel.ValueChanged += (s, e) => SaveSchedule();
+            _dtDayStart.ValueChanged    += (s, e) => SaveSchedule();
+            _dtNightStart.ValueChanged  += (s, e) => SaveSchedule();
+
+            tabBehavior.Controls.Add(_lblScheduleSection);
+            tabBehavior.Controls.Add(_sepSchedule);
+            tabBehavior.Controls.Add(_chkSchedule);
+            tabBehavior.Controls.Add(_lblDayLevel);
+            tabBehavior.Controls.Add(_numDayLevel);
+            tabBehavior.Controls.Add(_lblNightLevel);
+            tabBehavior.Controls.Add(_numNightLevel);
+            tabBehavior.Controls.Add(_lblDayStart);
+            tabBehavior.Controls.Add(_dtDayStart);
+            tabBehavior.Controls.Add(_lblNightStart);
+            tabBehavior.Controls.Add(_dtNightStart);
+        }
+
+        private void BuildAppearanceControls()
+        {
+            _lblAppearanceSection = MakeSection(0, 200);
+            _sepAppearance        = MakeSep(220);
+            _chkDarkMode = new CheckBox { Location = new Point(0, 230), Size = new Size(488, 22),
+                Font = new Font("Segoe UI", 9f), ForeColor = ThemeManager.Text, BackColor = Color.Transparent };
+            _chkDarkMode.CheckedChanged += (s, e) =>
+            {
+                if (_loading) return;
+                ThemeManager.SetDarkMode(_chkDarkMode.Checked);
+                new SettingsController().SetVibranceSetting("theme", _chkDarkMode.Checked ? "dark" : "light");
+            };
+            tabDisplay.Controls.Add(_lblAppearanceSection);
+            tabDisplay.Controls.Add(_sepAppearance);
+            tabDisplay.Controls.Add(_chkDarkMode);
+        }
+
+        private Label MakeSection(int x, int y) => new Label {
+            Location = new Point(x, y), AutoSize = true,
+            Font = new Font("Segoe UI", 8f, FontStyle.Bold), ForeColor = ThemeManager.Accent, BackColor = Color.Transparent };
+        private Label MakeLabel(int x, int y) => new Label {
+            Location = new Point(x, y), Size = new Size(116, 20),
+            Font = new Font("Segoe UI", 9f), ForeColor = ThemeManager.Text, BackColor = Color.Transparent };
+        private Panel MakeSep(int y) => new Panel { Location = new Point(0, y), Size = new Size(488, 1), BackColor = ThemeManager.Border };
+        private NumericUpDown MakeLevelNum(int x, int y) => new NumericUpDown {
+            Location = new Point(x, y), Size = new Size(100, 24), Font = new Font("Segoe UI", 9f),
+            Minimum = _minLevel, Maximum = _maxLevel, BackColor = ThemeManager.Surface2, ForeColor = ThemeManager.Text };
+        private DateTimePicker MakeTimePicker(int x, int y) => new DateTimePicker {
+            Location = new Point(x, y), Size = new Size(100, 24), Format = DateTimePickerFormat.Custom,
+            CustomFormat = "HH:mm", ShowUpDown = true, Font = new Font("Segoe UI", 9f) };
 
         protected override void OnFormClosed(FormClosedEventArgs e)
         {
@@ -67,17 +147,74 @@ namespace Spectra.common
             if (!IsDisposed && IsHandleCreated) Invoke((Action)ApplyLocalization);
         }
 
+        // ── Load / save behavior settings ─────────────────────────────────
+        private void LoadSettings()
+        {
+            _loading = true;
+            var sc = new SettingsController();
+
+            chkAutostart.Checked     = new RegistryController().IsProgramRegistered("Spectra");
+            chkMinToTray.Checked     = sc.GetSetting("minimizeToTray", "false") == "true";
+            chkNotifications.Checked = sc.GetSetting("showNotifications", "true") == "true";
+            numDelay.Value           = Clamp(ParseInt(sc.GetSetting("applyDelay", "500"), 500), (int)numDelay.Minimum, (int)numDelay.Maximum);
+
+            _chkDarkMode.Checked = ThemeManager.IsDark;
+
+            _chkSchedule.Checked   = sc.GetSetting("scheduleEnabled", "false") == "true";
+            _numDayLevel.Value     = Clamp(ParseInt(sc.GetSetting("scheduleDayLevel", _maxLevel.ToString()), _maxLevel), _minLevel, _maxLevel);
+            _numNightLevel.Value   = Clamp(ParseInt(sc.GetSetting("scheduleNightLevel", _minLevel.ToString()), _minLevel), _minLevel, _maxLevel);
+            _dtDayStart.Value      = TimeToday(sc.GetSetting("scheduleDayStart", "08:00"), 8);
+            _dtNightStart.Value    = TimeToday(sc.GetSetting("scheduleNightStart", "20:00"), 20);
+
+            chkMinToTray.CheckedChanged     += (s, e) => sc.SetVibranceSetting("minimizeToTray", chkMinToTray.Checked ? "true" : "false");
+            chkNotifications.CheckedChanged += (s, e) => sc.SetVibranceSetting("showNotifications", chkNotifications.Checked ? "true" : "false");
+            numDelay.ValueChanged           += (s, e) => sc.SetVibranceSetting("applyDelay", ((int)numDelay.Value).ToString());
+
+            _loading = false;
+        }
+
+        private void SaveSchedule()
+        {
+            if (_loading) return;
+            var sc = new SettingsController();
+            sc.SetVibranceSetting("scheduleEnabled",   _chkSchedule.Checked ? "true" : "false");
+            sc.SetVibranceSetting("scheduleDayLevel",  ((int)_numDayLevel.Value).ToString());
+            sc.SetVibranceSetting("scheduleNightLevel",((int)_numNightLevel.Value).ToString());
+            sc.SetVibranceSetting("scheduleDayStart",  _dtDayStart.Value.ToString("HH:mm", CultureInfo.InvariantCulture));
+            sc.SetVibranceSetting("scheduleNightStart",_dtNightStart.Value.ToString("HH:mm", CultureInfo.InvariantCulture));
+        }
+
+        private static int ParseInt(string s, int def)
+            => int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out int v) ? v : def;
+        private static int Clamp(int v, int lo, int hi) => v < lo ? lo : (v > hi ? hi : v);
+        private static DateTime TimeToday(string hhmm, int defHour)
+        {
+            if (TimeSpan.TryParse(hhmm, CultureInfo.InvariantCulture, out var ts))
+                return DateTime.Today.Add(ts);
+            return DateTime.Today.AddHours(defHour);
+        }
+
+        private void UpdateProfileList()
+        {
+            var profiles = _mainForm?.GetProfiles();
+            int count = profiles?.Count ?? 0;
+            lblProfileCountVal.Text = count.ToString();
+            lbProfiles.Items.Clear();
+            if (profiles == null || count == 0) { lbProfiles.Items.Add("—"); return; }
+            foreach (var p in profiles)
+                lbProfiles.Items.Add($"  {p.Name}   —   Level: {p.IngameLevel}");
+        }
+
         // ── Localization ──────────────────────────────────────────────────
         private void ApplyLocalization()
         {
             Text = LocalizationManager.Get("SettingsTitle");
-
             tabBehavior.Text = LocalizationManager.Get("TabBehavior");
             tabDisplay.Text  = LocalizationManager.Get("TabDisplay");
+            tabData.Text     = LocalizationManager.Get("TabData");
             tabAbout.Text    = LocalizationManager.Get("TabAbout");
             tabControl.Invalidate();
 
-            // Behavior tab
             lblStartupSection.Text = LocalizationManager.Get("BehaviorSection");
             chkAutostart.Text      = LocalizationManager.Get("Autostart");
             chkMinToTray.Text      = LocalizationManager.Get("MinimizeToTray");
@@ -85,12 +222,20 @@ namespace Spectra.common
             lblDelaySection.Text   = LocalizationManager.Get("ApplyDelay");
             lblDelayNote.Text      = LocalizationManager.Get("ApplyDelayNote");
 
-            // Display tab
+            _lblScheduleSection.Text = LocalizationManager.Get("ScheduleSection");
+            _chkSchedule.Text        = LocalizationManager.Get("ScheduleEnable");
+            _lblDayLevel.Text        = LocalizationManager.Get("DayLevel");
+            _lblNightLevel.Text      = LocalizationManager.Get("NightLevel");
+            _lblDayStart.Text        = LocalizationManager.Get("DayStart");
+            _lblNightStart.Text      = LocalizationManager.Get("NightStart");
+
             lblMonitorSection.Text = LocalizationManager.Get("DisplaySection");
             lblMonitorTarget.Text  = LocalizationManager.Get("MonitorTarget");
             lblResSection.Text     = LocalizationManager.Get("ResolutionSection");
             chkNeverResize.Text    = LocalizationManager.Get("NeverResize");
             chkResetOnExit.Text    = LocalizationManager.Get("ResetOnExit");
+            _lblAppearanceSection.Text = LocalizationManager.Get("ThemeSection");
+            _chkDarkMode.Text      = LocalizationManager.Get("DarkMode");
 
             if (cboMonitorTarget.Items.Count >= 2)
             {
@@ -98,7 +243,16 @@ namespace Spectra.common
                 cboMonitorTarget.Items[1] = LocalizationManager.Get("MonitorPrimary");
             }
 
-            // About tab
+            lblProfileSection.Text = LocalizationManager.Get("ProfilesSection");
+            lblProfileCount.Text   = LocalizationManager.Get("ProfileCount");
+            btnExport.Text         = LocalizationManager.Get("ExportProfiles");
+            btnImport.Text         = LocalizationManager.Get("ImportProfiles");
+            btnClearProfiles.Text  = LocalizationManager.Get("ClearProfiles");
+            lblDataSection.Text    = "DATA & DIAGNOSTICS";
+            lblDataNote.Text       = LocalizationManager.Get("DataNote");
+            btnOpenLog.Text        = LocalizationManager.Get("OpenLogFolder");
+            btnResetAll.Text       = LocalizationManager.Get("ResetAll");
+
             lblAboutDesc.Text    = LocalizationManager.Get("AboutDesc");
             lblSupportTitle.Text = LocalizationManager.Get("AboutSupport");
             lblGpuLine1.Text     = LocalizationManager.Get("AboutGpuLine1");
@@ -106,28 +260,22 @@ namespace Spectra.common
             lblSysTitle.Text     = LocalizationManager.Get("SysInfo");
             btnGitHub.Text       = LocalizationManager.Get("ViewOnGitHub");
             btnOpenLogShort.Text = LocalizationManager.Get("OpenLogFolderShort");
-
-            btnClose.Text = LocalizationManager.Get("OK");
+            btnClose.Text        = LocalizationManager.Get("OK");
         }
 
         // ── Owner-draw tabs ───────────────────────────────────────────────
         private void tabControl_DrawItem(object sender, DrawItemEventArgs e)
         {
-            var tab      = tabControl.TabPages[e.Index];
+            var tab = tabControl.TabPages[e.Index];
             bool selected = e.Index == tabControl.SelectedIndex;
-            var g        = e.Graphics;
+            var g = e.Graphics;
             g.SmoothingMode     = SmoothingMode.AntiAlias;
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
-
             using (var bg = new SolidBrush(selected ? ThemeManager.Surface : Color.FromArgb(230, 232, 244)))
                 g.FillRectangle(bg, e.Bounds);
-
             if (selected)
-            {
                 using (var pen = new Pen(ThemeManager.Accent, 2))
                     g.DrawLine(pen, e.Bounds.Left, e.Bounds.Bottom - 1, e.Bounds.Right, e.Bounds.Bottom - 1);
-            }
-
             using (var brush = new SolidBrush(selected ? ThemeManager.Accent : ThemeManager.TextSub))
             using (var font  = new Font("Segoe UI", 8.5f, selected ? FontStyle.Bold : FontStyle.Regular))
             {
@@ -136,13 +284,10 @@ namespace Spectra.common
             }
         }
 
-        // ── Paints ───────────────────────────────────────────────────────
         private void panelHeader_Paint(object sender, PaintEventArgs e)
         {
             var r = panelHeader.ClientRectangle;
-            using (var grad = new LinearGradientBrush(r,
-                ThemeManager.GradStart, ThemeManager.GradEnd,
-                LinearGradientMode.Horizontal))
+            using (var grad = new LinearGradientBrush(r, ThemeManager.GradStart, ThemeManager.GradEnd, LinearGradientMode.Horizontal))
                 e.Graphics.FillRectangle(grad, r);
         }
 
@@ -155,7 +300,6 @@ namespace Spectra.common
             catch { }
         }
 
-        // ── Display tab — monitor combo ───────────────────────────────────
         private void cboMonitorTarget_SelectedIndexChanged(object sender, EventArgs e)
         {
             int idx = cboMonitorTarget.SelectedIndex;
@@ -165,25 +309,93 @@ namespace Spectra.common
                 _proxy.SetTargetMonitorDeviceName(cboMonitorTarget.Items[idx].ToString());
         }
 
-        // ── Data tab stubs (tab is hidden; handlers must exist for designer) ──
-        private void btnExport_Click(object sender, EventArgs e) { }
-        private void btnImport_Click(object sender, EventArgs e) { }
-        private void btnClearProfiles_Click(object sender, EventArgs e) { }
-        private void btnResetAll_Click(object sender, EventArgs e) { }
+        // ── Profile import / export ───────────────────────────────────────
+        private void btnExport_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new SaveFileDialog { Filter = "JSON files (*.json)|*.json", FileName = "spectra-profiles.json" })
+            {
+                if (dlg.ShowDialog() != DialogResult.OK) return;
+                try
+                {
+                    File.WriteAllText(dlg.FileName, BuildProfilesJson(_mainForm.GetProfiles()), System.Text.Encoding.UTF8);
+                    MessageBox.Show("OK", "Spectra", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex) { MessageBox.Show(ex.Message, "Export Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            }
+        }
+
+        private void btnImport_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new OpenFileDialog { Filter = "XML/JSON files (*.xml;*.json)|*.xml;*.json" })
+            {
+                if (dlg.ShowDialog() != DialogResult.OK) return;
+                try
+                {
+                    var xml = new System.Xml.Serialization.XmlSerializer(typeof(List<ApplicationSetting>));
+                    using (var sr = new StreamReader(dlg.FileName))
+                        _mainForm.GetProfiles().AddRange((List<ApplicationSetting>)xml.Deserialize(sr));
+                    UpdateProfileList();
+                    MessageBox.Show("OK", "Spectra", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                catch (Exception ex) { MessageBox.Show(ex.Message, "Import Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            }
+        }
+
+        private static string BuildProfilesJson(List<ApplicationSetting> profiles)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("[");
+            for (int i = 0; i < profiles.Count; i++)
+            {
+                var p = profiles[i];
+                sb.Append("  { ");
+                sb.Append($"\"name\": {J(p.Name)}, \"fileName\": {J(p.FileName)}, \"ingameLevel\": {p.IngameLevel}, \"changeResolution\": {(p.IsResolutionChangeNeeded ? "true" : "false")}");
+                sb.Append(" }");
+                if (i < profiles.Count - 1) sb.Append(",");
+                sb.AppendLine();
+            }
+            sb.Append("]");
+            return sb.ToString();
+        }
+        private static string J(string s) => s == null ? "null" : "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+
+        private void btnClearProfiles_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show(LocalizationManager.Get("ConfirmClear"), "Spectra",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+            _mainForm.GetProfiles()?.Clear();
+            UpdateProfileList();
+        }
 
         private void btnOpenLog_Click(object sender, EventArgs e)
         {
-            string logDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spectra");
+            string logDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spectra");
             if (!Directory.Exists(logDir)) Directory.CreateDirectory(logDir);
             Process.Start("explorer.exe", logDir);
         }
 
-        // ── About handlers ────────────────────────────────────────────────
+        private void btnResetAll_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show(LocalizationManager.Get("ConfirmReset"), "Spectra",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
+            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spectra");
+            try
+            {
+                foreach (var f in new[] { "Spectra.ini", "applicationData.xml" })
+                {
+                    string p = Path.Combine(dir, f);
+                    if (File.Exists(p)) File.Delete(p);
+                }
+                _mainForm.GetProfiles()?.Clear();
+                UpdateProfileList();
+                MessageBox.Show("All settings reset. Restart Spectra.", "Spectra", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex) { MessageBox.Show(ex.Message, "Reset Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+        }
+
         private void btnGitHub_Click(object sender, EventArgs e)
             => Process.Start("https://github.com/X1NPAR1/Spectra");
 
-        // ── Close ─────────────────────────────────────────────────────────
         private void btnClose_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.OK;

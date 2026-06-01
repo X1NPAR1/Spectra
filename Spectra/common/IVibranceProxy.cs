@@ -14,6 +14,8 @@ namespace Spectra.common
         void SetAffectPrimaryMonitorOnly(bool affectPrimaryMonitorOnly);
         // deviceName: null=all, "PRIMARY"=primary only, device path=specific monitor
         void SetTargetMonitorDeviceName(string deviceName);
+        // Applies a vibrance level to one specific monitor (per-monitor independent control).
+        void SetVibranceForMonitor(string deviceName, int level);
         VibranceInfo GetVibranceInfo();
         GraphicsAdapter GraphicsAdapter { get; }
         void SetNeverSwitchResolution(bool neverSwitchResolution);

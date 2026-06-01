@@ -1,15 +1,19 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/version-1.9.5-1E6EB4?style=for-the-badge" alt="Version">
+<img src="https://img.shields.io/badge/version-2.1.0-1E6EB4?style=for-the-badge" alt="Version">
 <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows" alt="Platform">
 <img src="https://img.shields.io/badge/GPU-NVIDIA%20%7C%20AMD-76B900?style=for-the-badge" alt="GPU Support">
 <img src="https://img.shields.io/badge/.NET%20Framework-4.8-512BD4?style=for-the-badge" alt=".NET 4.8">
 
 # Spectra
 
-**Professional Digital Vibrance Controller for NVIDIA & AMD**
+**Professional Digital Vibrance, Brightness & Contrast Controller for NVIDIA & AMD**
 
-*Control display color saturation in real time. Portable, lightweight, zero performance overhead.*
+*Control display color in real time. Portable, lightweight, zero performance overhead.*
+
+[![Discord](https://img.shields.io/badge/Discord-Join%20for%20updates-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/CdpuNUGPDe)
+
+📢 **Follow [our Discord](https://discord.gg/CdpuNUGPDe) for release announcements and updates.**
 
 </div>
 
@@ -38,16 +42,21 @@ Spectra is a professional digital vibrance management tool for Windows. It commu
 | Feature | Description |
 |---------|-------------|
 | **NVIDIA & AMD** | Full native support via NVAPI and AMD ADL 32/64-bit |
-| **Vibrance Slider** | Real-time desktop vibrance control — applied instantly to the display |
-| **Quick Presets** | Default / Low / High / Max one-click presets on the main screen |
+| **Per-Monitor Vibrance** | Independent vibrance slider for every connected display — set each monitor separately |
+| **Quick Presets** | Default / Low / High / Max one-click presets, applied to all monitors |
 | **Tray Quick Presets** | Apply any preset directly from the system tray context menu — no window needed |
-| **Per-Game Profiles** | Add an executable (or pick from running processes) and assign a custom vibrance level that is applied automatically when the game is in focus, then restored on exit |
+| **Brightness & Contrast** | GPU-agnostic brightness and contrast sliders (gamma-based), with one-click reset |
+| **Per-Game Profiles** | Add an executable (or pick from running processes / auto-detect the focused full-screen game) and assign a custom vibrance level, applied automatically when the game is in focus and restored on exit |
+| **Auto Game Detection** | One-click "Detect Game" creates a profile for the currently focused full-screen application |
+| **Gaming Mode** | One-click toggle to temporarily enable/disable all game profiles |
+| **Automatic Schedule** | Day/night automatic vibrance — set day and night levels and switch times (blue-light style) |
+| **Light / Dark Theme** | Switch the interface between light and dark with a single header button |
 | **Global Hotkey** | Toggle vibrance on/off with any key or Ctrl/Alt modifier combo. Persisted across restarts. Safe on Cyrillic and all non-Latin keyboard layouts |
 | **Monitor Selection** | Apply vibrance to all monitors, primary only, or a specific secondary display — other displays stay neutral |
+| **Profile Import / Export** | Back up and restore your game profiles as JSON / XML |
+| **Minimize to Tray** | Optionally keep running in the tray when the window is closed, with a startup notification |
 | **6-Language UI** | English, Turkish, Russian, German, French, Dutch. All labels and buttons fully visible in every language |
-| **Vibrance Apply Delay** | Configurable delay (ms) before applying vibrance |
 | **Startup Integration** | Optional Windows startup via Registry |
-| **System Tray** | Run silently in the background with full tray control |
 | **GitHub Tray Link** | Open the project repository directly from the tray menu |
 
 ### System Requirements
@@ -64,11 +73,15 @@ Spectra is a professional digital vibrance management tool for Windows. It commu
 
 ### Usage
 
-1. **Desktop Vibrance** — Drag the slider or click a preset button (Default / Low / High / Max). Changes apply to the screen instantly.
-2. **Game Profiles** — Click *Add File* to choose an executable, or *Browse Running* to pick from active processes. Double-click an entry to set its in-game vibrance level. The profile applies automatically when the game gains focus.
-3. **Hotkey** — Click the hotkey button and press any key combination to set a global vibrance toggle
-4. **Tray Presets** — Right-click the tray icon → *Quick Presets* to switch vibrance without opening the window
-5. **Settings** — Click ⚙ to access Behavior, Display, and About tabs
+1. **Desktop Vibrance** — Each connected monitor has its own slider; drag it or click a preset (Default / Low / High / Max). Changes apply instantly.
+2. **Brightness & Contrast** — Use the dedicated sliders; press *Reset* to return to neutral.
+3. **Game Profiles** — Click *Add File*, *Browse Running*, or *Detect Game* (auto-detects the focused full-screen game). Double-click an entry to set its in-game vibrance level. The profile applies automatically when the game gains focus.
+4. **Gaming Mode** — Click 🎮 in the status bar to temporarily enable/disable all game profiles.
+5. **Theme** — Click 🌙 / ☀ in the header to switch between light and dark.
+6. **Schedule** — In Settings → Behavior, enable the day/night automatic vibrance and set levels and switch times.
+7. **Hotkey** — Click the hotkey button and press any key combination to set a global vibrance toggle.
+8. **Tray Presets** — Right-click the tray icon → *Quick Presets* to switch vibrance without opening the window.
+9. **Settings** — Click ⚙ to access Behavior, Display, Profiles, and About tabs.
 
 ### Build from Source
 
@@ -81,6 +94,17 @@ dotnet build Spectra/Spectra.csproj /p:Configuration=Release /p:Platform=x86
 Output: `Spectra/bin/x86/Release/Spectra.exe`
 
 ### Changelog
+
+#### v2.1.0 — Major Feature Release
+- **Per-monitor vibrance:** every connected display now has its own independent slider
+- **Brightness & contrast** control (GPU-agnostic, gamma-based) with one-click reset
+- **Automatic day/night schedule** — set day and night vibrance levels and switch times
+- **Light / dark theme** toggle in the header
+- **Auto game detection** — one click creates a profile for the focused full-screen game
+- **Gaming mode** — temporarily enable/disable all game profiles with one click
+- **Minimize to tray** on close (optional) with a background-running notification
+- **Profile import/export** fully wired to JSON / XML
+- **Discord** community link added for release announcements
 
 #### v1.9.5 — Vibrance Engine Fix & Profiles Restored
 - **Fixed (critical):** Desktop vibrance now applies to the screen the moment you move the slider or click a preset. Previously the level was only stored and applied on the next window-focus event, so changes appeared to do nothing.
@@ -254,7 +278,8 @@ Spectra is een professionele vibrance-beheertool voor Windows. Het gebruikt NVID
 
 <div align="center">
 
-**Spectra v1.9.5** — Professional Digital Vibrance Control  
+**Spectra v2.1.0** — Professional Digital Vibrance, Brightness & Contrast Control  
+[Discord](https://discord.gg/CdpuNUGPDe) · 
 [GitHub](https://github.com/X1NPAR1/Spectra) · [Releases](https://github.com/X1NPAR1/Spectra/releases)
 
 </div>

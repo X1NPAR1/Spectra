@@ -114,6 +114,12 @@ namespace Spectra.AMD
                 ApplyVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
         }
 
+        public void SetVibranceForMonitor(string deviceName, int level)
+        {
+            if (_vibranceInfo.isInitialized && !string.IsNullOrEmpty(deviceName))
+                _amdAdapter.SetSaturationOnDisplay(level, deviceName);
+        }
+
         public VibranceInfo GetVibranceInfo()
         {
             return _vibranceInfo;
