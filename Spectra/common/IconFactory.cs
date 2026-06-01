@@ -1,80 +1,50 @@
 using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Drawing.Text;
-using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace Spectra.common
 {
+    // Loads the application icon that is compiled into the exe as ApplicationIcon (setting.ico).
+    // All forms and UI elements use this single source of truth — no generated graphics.
     public static class IconFactory
     {
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern bool DestroyIcon(IntPtr handle);
+        private static Icon _source;  // the raw icon extracted from the exe
 
-        private static Icon _cachedLarge;
-        private static Icon _cachedSmall;
-
+        // Returns a sized copy of the application icon.
+        // size: target size in pixels (typically 16 or 32).
         public static Icon GetAppIcon(int size = 32)
         {
-            if (size <= 16) return _cachedSmall ?? (_cachedSmall = CreateIcon(16));
-            return _cachedLarge ?? (_cachedLarge = CreateIcon(32));
-        }
-
-        private static Icon CreateIcon(int size)
-        {
-            using (var bmp = new Bitmap(size, size))
-            using (var g = Graphics.FromImage(bmp))
+            EnsureLoaded();
+            try
             {
-                g.SmoothingMode      = SmoothingMode.AntiAlias;
-                g.TextRenderingHint  = TextRenderingHint.AntiAlias;
-                g.InterpolationMode  = InterpolationMode.HighQualityBicubic;
-
-                // Background — deep space navy
-                using (var bg = new SolidBrush(Color.FromArgb(13, 17, 23)))
-                    g.FillRectangle(bg, 0, 0, size, size);
-
-                // Rounded rect background
-                int pad = Math.Max(1, size / 16);
-                var rect = new Rectangle(pad, pad, size - pad * 2, size - pad * 2);
-                using (var path = RoundedRect(rect, Math.Max(2, size / 8)))
-                using (var grad = new LinearGradientBrush(rect,
-                    Color.FromArgb(123, 47, 247),
-                    Color.FromArgb(0, 210, 255),
-                    LinearGradientMode.ForwardDiagonal))
-                {
-                    g.FillPath(grad, path);
-                }
-
-                // "S" lettermark
-                float fontSize = size * 0.52f;
-                using (var font = new Font("Segoe UI", fontSize, FontStyle.Bold, GraphicsUnit.Pixel))
-                using (var brush = new SolidBrush(Color.FromArgb(240, 248, 255)))
-                {
-                    var sf = new StringFormat
-                    {
-                        Alignment     = StringAlignment.Center,
-                        LineAlignment = StringAlignment.Center
-                    };
-                    g.DrawString("S", font, brush, new RectangleF(0, 0, size, size), sf);
-                }
-
-                IntPtr hIcon = bmp.GetHicon();
-                Icon icon = (Icon)Icon.FromHandle(hIcon).Clone();
-                DestroyIcon(hIcon);
-                return icon;
+                return new Icon(_source, size, size);
+            }
+            catch
+            {
+                return new Icon(_source, new Size(size, size));
             }
         }
 
-        private static GraphicsPath RoundedRect(Rectangle bounds, int radius)
+        // Returns a Bitmap version of the icon for use in PictureBox / Graphics.DrawImage.
+        public static Bitmap GetAppBitmap(int size = 32)
         {
-            int d = radius * 2;
-            var path = new GraphicsPath();
-            path.AddArc(bounds.X, bounds.Y, d, d, 180, 90);
-            path.AddArc(bounds.Right - d, bounds.Y, d, d, 270, 90);
-            path.AddArc(bounds.Right - d, bounds.Bottom - d, d, d, 0, 90);
-            path.AddArc(bounds.X, bounds.Bottom - d, d, d, 90, 90);
-            path.CloseFigure();
-            return path;
+            using (var icon = GetAppIcon(size))
+                return icon.ToBitmap();
+        }
+
+        private static void EnsureLoaded()
+        {
+            if (_source != null) return;
+            try
+            {
+                // ExtractAssociatedIcon reads the Win32 icon resource embedded by the compiler
+                // from the ApplicationIcon setting in the csproj (setting.ico).
+                _source = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+            }
+            catch
+            {
+                _source = SystemIcons.Application;
+            }
         }
     }
 }

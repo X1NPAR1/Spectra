@@ -162,31 +162,15 @@ namespace Spectra.common
 
         private void panelLogo_Paint(object sender, PaintEventArgs e)
         {
-            var g    = e.Graphics;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-            var rect = new Rectangle(2, 2, 58, 58);
-            int r = 10, d = r * 2;
-
-            using (var path = new GraphicsPath())
+            var g = e.Graphics;
+            g.SmoothingMode     = SmoothingMode.AntiAlias;
+            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            try
             {
-                path.AddArc(rect.X, rect.Y, d, d, 180, 90);
-                path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
-                path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
-                path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
-                path.CloseFigure();
-
-                using (var grad = new LinearGradientBrush(rect,
-                    ThemeManager.GradStart, ThemeManager.GradEnd,
-                    LinearGradientMode.ForwardDiagonal))
-                    g.FillPath(grad, path);
+                using (var bmp = IconFactory.GetAppBitmap(60))
+                    g.DrawImage(bmp, 2, 2, 60, 60);
             }
-
-            using (var font = new Font("Segoe UI", 26f, FontStyle.Bold, GraphicsUnit.Pixel))
-            using (var brush = new SolidBrush(Color.White))
-            {
-                var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString("S", font, brush, new RectangleF(2, 2, 58, 58), sf);
-            }
+            catch { }
         }
 
         // ── Behavior tab handlers ─────────────────────────────────────────

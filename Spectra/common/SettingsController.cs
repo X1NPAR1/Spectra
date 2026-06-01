@@ -32,12 +32,17 @@ namespace Spectra.common
         const string SzKeyNameRefreshRate = "refreshRate";
         const string SzKeyNameAffectPrimaryMonitorOnly = "affectPrimaryMonitorOnly";
         const string SzKeyNameNeverSwitchResolution = "neverSwitchResolution";
+        const string SzKeyNameHotkey = "hotkey";
+        const string SzKeyNameHotkeyModifiers = "hotkeyModifiers";
 
         private string _fileName = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).ToString() + "\\vibranceGUI\\vibranceGUI.ini";
         private string _fileNameApplicationSettings = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).ToString() + "\\vibranceGUI\\applicationData.xml";
 
 
-        public bool SetVibranceSettings(string windowsLevel, string affectPrimaryMonitorOnly, string neverSwitchResolution, List<ApplicationSetting> applicationSettings)
+        public bool SetVibranceSettings(string windowsLevel, string affectPrimaryMonitorOnly, string neverSwitchResolution,
+            List<ApplicationSetting> applicationSettings,
+            System.Windows.Forms.Keys hotkey = System.Windows.Forms.Keys.F9,
+            System.Windows.Forms.Keys hotkeyModifiers = System.Windows.Forms.Keys.None)
         {
             if (!PrepareFile())
             {
@@ -47,6 +52,8 @@ namespace Spectra.common
             WritePrivateProfileString(SzSectionName, SzKeyNameInactive, windowsLevel, _fileName);
             WritePrivateProfileString(SzSectionName, SzKeyNameAffectPrimaryMonitorOnly, affectPrimaryMonitorOnly, _fileName);
             WritePrivateProfileString(SzSectionName, SzKeyNameNeverSwitchResolution, neverSwitchResolution, _fileName);
+            WritePrivateProfileString(SzSectionName, SzKeyNameHotkey, ((int)hotkey).ToString(), _fileName);
+            WritePrivateProfileString(SzSectionName, SzKeyNameHotkeyModifiers, ((int)hotkeyModifiers).ToString(), _fileName);
 
             try
             {
@@ -93,9 +100,12 @@ namespace Spectra.common
             return true;
         }
 
-        public void ReadVibranceSettings(GraphicsAdapter graphicsAdapter, out int vibranceWindowsLevel, out bool affectPrimaryMonitorOnly, out bool neverSwitchResolution, out List<ApplicationSetting> applicationSettings)
+        public void ReadVibranceSettings(GraphicsAdapter graphicsAdapter,
+            out int vibranceWindowsLevel, out bool affectPrimaryMonitorOnly,
+            out bool neverSwitchResolution, out List<ApplicationSetting> applicationSettings,
+            out System.Windows.Forms.Keys hotkey, out System.Windows.Forms.Keys hotkeyModifiers)
         {
-            int defaultLevel = 0; 
+            int defaultLevel = 0;
             int maxLevel = 0;
             if (graphicsAdapter == GraphicsAdapter.Nvidia)
             {
@@ -104,10 +114,12 @@ namespace Spectra.common
             }
             if (graphicsAdapter == GraphicsAdapter.Amd)
             {
-                // todo
                 defaultLevel = 100;
                 maxLevel = 300;
             }
+
+            hotkey          = System.Windows.Forms.Keys.F9;
+            hotkeyModifiers = System.Windows.Forms.Keys.None;
 
             if (!IsFileExisting(_fileName) || !IsFileExisting(_fileNameApplicationSettings))
             {
@@ -121,42 +133,39 @@ namespace Spectra.common
             string szDefault = "";
 
             StringBuilder szValueInactive = new StringBuilder(1024);
-            GetPrivateProfileString(SzSectionName,
-                SzKeyNameInactive,
-                szDefault,
-                szValueInactive,
-                Convert.ToUInt32(szValueInactive.Capacity),
-                _fileName);
+            GetPrivateProfileString(SzSectionName, SzKeyNameInactive, szDefault, szValueInactive,
+                Convert.ToUInt32(szValueInactive.Capacity), _fileName);
 
             StringBuilder szValueRefreshRate = new StringBuilder(1024);
-            GetPrivateProfileString(SzSectionName,
-                SzKeyNameRefreshRate,
-                szDefault,
-                szValueRefreshRate,
-                Convert.ToUInt32(szValueRefreshRate.Capacity),
-                _fileName);
+            GetPrivateProfileString(SzSectionName, SzKeyNameRefreshRate, szDefault, szValueRefreshRate,
+                Convert.ToUInt32(szValueRefreshRate.Capacity), _fileName);
 
             StringBuilder szValueAffectPrimaryMonitorOnly = new StringBuilder(1024);
-            GetPrivateProfileString(SzSectionName,
-                SzKeyNameAffectPrimaryMonitorOnly,
-                "false",
-                szValueAffectPrimaryMonitorOnly,
-                Convert.ToUInt32(szValueAffectPrimaryMonitorOnly.Capacity),
-                _fileName);
+            GetPrivateProfileString(SzSectionName, SzKeyNameAffectPrimaryMonitorOnly, "false",
+                szValueAffectPrimaryMonitorOnly, Convert.ToUInt32(szValueAffectPrimaryMonitorOnly.Capacity), _fileName);
 
             StringBuilder szValueNeverSwitchResolution = new StringBuilder(1024);
-            GetPrivateProfileString(SzSectionName,
-                SzKeyNameNeverSwitchResolution,
-                "false",
-                szValueNeverSwitchResolution,
-                Convert.ToUInt32(szValueNeverSwitchResolution.Capacity),
-                _fileName);
+            GetPrivateProfileString(SzSectionName, SzKeyNameNeverSwitchResolution, "false",
+                szValueNeverSwitchResolution, Convert.ToUInt32(szValueNeverSwitchResolution.Capacity), _fileName);
+
+            StringBuilder szHotkey = new StringBuilder(1024);
+            GetPrivateProfileString(SzSectionName, SzKeyNameHotkey, ((int)System.Windows.Forms.Keys.F9).ToString(),
+                szHotkey, Convert.ToUInt32(szHotkey.Capacity), _fileName);
+
+            StringBuilder szHotkeyMods = new StringBuilder(1024);
+            GetPrivateProfileString(SzSectionName, SzKeyNameHotkeyModifiers, "0",
+                szHotkeyMods, Convert.ToUInt32(szHotkeyMods.Capacity), _fileName);
 
             try
             {
-                vibranceWindowsLevel = int.Parse(szValueInactive.ToString());
+                vibranceWindowsLevel     = int.Parse(szValueInactive.ToString());
                 affectPrimaryMonitorOnly = bool.Parse(szValueAffectPrimaryMonitorOnly.ToString());
-                neverSwitchResolution = bool.Parse(szValueNeverSwitchResolution.ToString());
+                neverSwitchResolution    = bool.Parse(szValueNeverSwitchResolution.ToString());
+
+                if (int.TryParse(szHotkey.ToString(), out int hkInt))
+                    hotkey = (System.Windows.Forms.Keys)hkInt;
+                if (int.TryParse(szHotkeyMods.ToString(), out int hkModsInt))
+                    hotkeyModifiers = (System.Windows.Forms.Keys)hkModsInt;
             }
             catch (Exception)
             {

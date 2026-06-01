@@ -16,6 +16,7 @@ namespace Spectra.common
 {
     public partial class MainForm : Form
     {
+        // ── Vibrance proxy ────────────────────────────────────────────────
         private readonly int _defaultWindowsLevel;
         private readonly int _minLevel;
         private readonly int _maxLevel;
@@ -27,12 +28,17 @@ namespace Spectra.common
         private readonly List<ResolutionModeWrapper> _primaryResolutions;
         private readonly Dictionary<string, Tuple<ResolutionModeWrapper, List<ResolutionModeWrapper>>> _resolutionMap;
 
+        // ── State ─────────────────────────────────────────────────────────
         private bool _allowVisible    = true;
         private bool _vibranceEnabled = true;
         private int  _savedLevel;
         private HotkeyManager _hotkey;
         private bool _capturingHotkey;
         private const string AppName = "Spectra";
+
+        // Preset level fractions indexed to [def, low, high, max]
+        // Calculated at initialization based on min/max range
+        private int _presetDef, _presetLow, _presetHigh, _presetMax;
 
         public MainForm(
             Func<List<ApplicationSetting>,
@@ -50,10 +56,17 @@ namespace Spectra.common
             _resolutionMap       = new Dictionary<string, Tuple<ResolutionModeWrapper, List<ResolutionModeWrapper>>>();
             _primaryResolutions  = new List<ResolutionModeWrapper>();
 
+            // Preset levels: def=default, low=25%, high=75%, max=100%
+            int range   = maxLevel - minLevel;
+            _presetDef  = defaultWindowsLevel;
+            _presetLow  = minLevel + (int)(range * 0.25);
+            _presetHigh = minLevel + (int)(range * 0.75);
+            _presetMax  = maxLevel;
+
             InitializeComponent();
 
-            Icon            = IconFactory.GetAppIcon(32);
-            notifyIcon.Icon = IconFactory.GetAppIcon(16);
+            Icon              = IconFactory.GetAppIcon(32);
+            notifyIcon.Icon   = IconFactory.GetAppIcon(16);
 
             trackBarVibrance.Minimum = minLevel;
             trackBarVibrance.Maximum = maxLevel;
@@ -82,6 +95,7 @@ namespace Spectra.common
             backgroundWorker.RunWorkerAsync();
         }
 
+        // ── Visibility ────────────────────────────────────────────────────
         protected override void SetVisibleCore(bool value)
         {
             if (!_allowVisible) { value = false; if (!IsHandleCreated) CreateHandle(); }
@@ -90,6 +104,7 @@ namespace Spectra.common
 
         public void SetAllowVisible(bool v) => _allowVisible = v;
 
+        // ── Handle / hotkey ───────────────────────────────────────────────
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -107,7 +122,6 @@ namespace Spectra.common
 
         public HotkeyManager GetHotkeyManager() => _hotkey;
         public List<ApplicationSetting> GetProfiles() => _profiles;
-        public void ReloadProfiles() => backgroundWorker.RunWorkerAsync();
 
         // ── Localization ──────────────────────────────────────────────────
         private void ApplyLocalization()
@@ -130,81 +144,49 @@ namespace Spectra.common
             menuExit.Text              = LocalizationManager.Get("Exit");
             notifyIcon.Text            = AppName;
 
-            // Sync combobox selection without firing the event again
+            // Sync combo without firing change event
             comboLanguage.SelectedIndexChanged -= comboLanguage_SelectedIndexChanged;
             if (comboLanguage.Items.Count > 0)
                 comboLanguage.SelectedIndex = (int)LocalizationManager.Current;
             comboLanguage.SelectedIndexChanged += comboLanguage_SelectedIndexChanged;
 
-            // Re-apply status label in current language
+            // Re-apply status (language-aware)
             UpdateStatusIndicator();
         }
 
-        // ── Header painting (gradient + inline S logo) ───────────────────
+        // ── Header painting — real icon + gradient ────────────────────────
         private void panelHeader_Paint(object sender, PaintEventArgs e)
         {
             var g    = e.Graphics;
             var rect = panelHeader.ClientRectangle;
-            g.SmoothingMode      = SmoothingMode.AntiAlias;
-            g.TextRenderingHint  = TextRenderingHint.AntiAlias;
+            g.SmoothingMode     = SmoothingMode.AntiAlias;
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
 
-            // Gradient fill
+            // Navy gradient background
             using (var grad = new LinearGradientBrush(rect,
                 ThemeManager.GradStart, ThemeManager.GradEnd,
                 LinearGradientMode.Horizontal))
                 g.FillRectangle(grad, rect);
 
-            // Small "S" logo (40×40 rounded rect) at left
-            DrawLogoMini(g, 14, (rect.Height - 40) / 2, 40);
+            // Draw the actual application icon (setting.ico embedded in exe)
+            const int iconSize = 44;
+            int iconY = (rect.Height - iconSize) / 2;
+            try
+            {
+                using (var bmp = IconFactory.GetAppBitmap(iconSize))
+                    g.DrawImage(bmp, 14, iconY, iconSize, iconSize);
+            }
+            catch { /* icon not yet available */ }
         }
 
-        private static void DrawLogoMini(Graphics g, int x, int y, int size)
-        {
-            var rect = new Rectangle(x, y, size, size);
-            int r    = size / 6, d = r * 2;
-
-            using (var path = new GraphicsPath())
-            {
-                path.AddArc(rect.X, rect.Y, d, d, 180, 90);
-                path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
-                path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
-                path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
-                path.CloseFigure();
-
-                // Semi-transparent white fill so it's distinct from the gradient
-                using (var fill = new SolidBrush(Color.FromArgb(50, 255, 255, 255)))
-                    g.FillPath(fill, path);
-                using (var border = new Pen(Color.FromArgb(120, 255, 255, 255), 1.5f))
-                    g.DrawPath(border, path);
-            }
-
-            // "S" text inside
-            using (var font = new Font("Segoe UI", size * 0.52f, FontStyle.Bold, GraphicsUnit.Pixel))
-            using (var brush = new SolidBrush(Color.White))
-            {
-                var sf = new StringFormat
-                {
-                    Alignment     = StringAlignment.Center,
-                    LineAlignment = StringAlignment.Center
-                };
-                g.DrawString("S", font, brush, new RectangleF(x, y, size, size), sf);
-            }
-        }
-
-        // ── Card panel painting (white card with accent left border) ──────
+        // ── Card panel (white card + 3px navy left border) ────────────────
         private void CardPanel_Paint(object sender, PaintEventArgs e)
         {
             var p = (Panel)sender;
             var g = e.Graphics;
-
-            // White card fill
             g.FillRectangle(Brushes.White, p.ClientRectangle);
-
-            // 3px accent left border (purple)
             using (var pen = new Pen(ThemeManager.Accent, 3f))
                 g.DrawLine(pen, 1, 0, 1, p.Height);
-
-            // Subtle outer border
             using (var pen = new Pen(ThemeManager.Border, 1))
                 g.DrawRectangle(pen, 0, 0, p.Width - 1, p.Height - 1);
         }
@@ -221,8 +203,7 @@ namespace Spectra.common
 
         private void MainForm_Shown(object sender, EventArgs e)
         {
-            if (_proxy?.GetVibranceInfo().isInitialized == true)
-                SetControlsEnabled(true);
+            if (_proxy?.GetVibranceInfo().isInitialized == true) SetControlsEnabled(true);
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -273,13 +254,54 @@ namespace Spectra.common
 
         private void settingsWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e) { }
 
-        // ── Vibrance ──────────────────────────────────────────────────────
+        // ── Vibrance slider ───────────────────────────────────────────────
         private void trackBarVibrance_Scroll(object sender, EventArgs e)
         {
             _proxy?.SetVibranceWindowsLevel(trackBarVibrance.Value);
             labelVibranceValue.Text = _resolveLevelLabel(trackBarVibrance.Value);
             _savedLevel = trackBarVibrance.Value;
+            HighlightActivePreset();
             TriggerSettingsSave();
+        }
+
+        // ── Presets ───────────────────────────────────────────────────────
+        private void btnPreset_Click(object sender, EventArgs e)
+        {
+            var btn = (Button)sender;
+            int level;
+            switch (btn.Tag?.ToString())
+            {
+                case "def":  level = _presetDef;  break;
+                case "low":  level = _presetLow;  break;
+                case "high": level = _presetHigh; break;
+                case "max":  level = _presetMax;  break;
+                default:     return;
+            }
+            level = Math.Max(_minLevel, Math.Min(_maxLevel, level));
+            trackBarVibrance.Value  = level;
+            labelVibranceValue.Text = _resolveLevelLabel(level);
+            _proxy?.SetVibranceWindowsLevel(level);
+            _savedLevel = level;
+            HighlightActivePreset();
+            TriggerSettingsSave();
+        }
+
+        private void HighlightActivePreset()
+        {
+            var presets = new (Button Btn, int Level)[]
+            {
+                (btnPresetDef,  _presetDef),
+                (btnPresetLow,  _presetLow),
+                (btnPresetHigh, _presetHigh),
+                (btnPresetMax,  _presetMax),
+            };
+            int cur = trackBarVibrance.Value;
+            foreach (var p in presets)
+            {
+                bool active = p.Level == cur;
+                p.Btn.BackColor = active ? ThemeManager.Accent  : ThemeManager.Surface2;
+                p.Btn.ForeColor = active ? Color.White           : ThemeManager.TextSub;
+            }
         }
 
         // ── Checkboxes ────────────────────────────────────────────────────
@@ -316,22 +338,18 @@ namespace Spectra.common
         {
             using (var dlg = new SettingsForm(this, _proxy, _minLevel, _maxLevel,
                 _defaultWindowsLevel, trackBarVibrance.Value, _resolveLevelLabel))
-            {
                 dlg.ShowDialog();
-                // Re-sync checkboxes that may have changed in settings
-                ApplyLocalization();
-            }
         }
 
         // ── Hotkey ────────────────────────────────────────────────────────
         private void btnHotkey_Click(object sender, EventArgs e)
         {
             if (_capturingHotkey) return;
-            _capturingHotkey      = true;
-            btnHotkey.Text        = "...";
-            btnHotkey.BackColor   = ThemeManager.Accent;
-            btnHotkey.ForeColor   = Color.White;
-            btnHotkey.KeyDown    += BtnHotkey_KeyDown;
+            _capturingHotkey    = true;
+            btnHotkey.Text      = "...";
+            btnHotkey.BackColor = ThemeManager.Accent;
+            btnHotkey.ForeColor = Color.White;
+            btnHotkey.KeyDown  += BtnHotkey_KeyDown;
             btnHotkey.Focus();
         }
 
@@ -342,25 +360,28 @@ namespace Spectra.common
             btnHotkey.KeyDown -= BtnHotkey_KeyDown;
             _capturingHotkey   = false;
 
-            if (e.KeyCode != Keys.Escape && e.KeyCode != Keys.None)
-                _hotkey?.Register(e.KeyCode);
+            Keys baseKey = e.KeyCode & ~Keys.Modifiers;
+            if (baseKey != Keys.Escape && baseKey != Keys.None)
+            {
+                _hotkey?.Register(baseKey, e.Modifiers);
+                TriggerSettingsSave();
+            }
 
             UpdateHotkeyLabel();
-            // Restore colors
             btnHotkey.BackColor = ThemeManager.Surface2;
             btnHotkey.ForeColor = ThemeManager.Accent;
         }
 
-        public void ApplyHotkeyKey(Keys key)
+        public void ApplyHotkeyKey(Keys key, Keys modifiers = Keys.None)
         {
-            _hotkey?.Register(key);
+            _hotkey?.Register(key, modifiers);
             UpdateHotkeyLabel();
         }
 
         private void UpdateHotkeyLabel()
         {
             if (btnHotkey != null && _hotkey != null)
-                btnHotkey.Text = _hotkey.CurrentKey.ToString();
+                btnHotkey.Text = _hotkey.GetDisplayString();
         }
 
         private void OnHotkeyToggle(object sender, EventArgs e)
@@ -369,6 +390,9 @@ namespace Spectra.common
             _proxy?.SetVibranceWindowsLevel(_vibranceEnabled ? _savedLevel : _defaultWindowsLevel);
             UpdateStatusIndicator();
         }
+
+        // ── Toggle button (status bar) ────────────────────────────────────
+        private void btnToggleVibrance_Click(object sender, EventArgs e) => OnHotkeyToggle(sender, e);
 
         // ── Tray ─────────────────────────────────────────────────────────
         private void notifyIcon_MouseClick(object sender, MouseEventArgs e)
@@ -379,6 +403,33 @@ namespace Spectra.common
         private void menuOpenSpectra_Click(object sender, EventArgs e) => ShowMainWindow();
         private void menuTrayToggle_Click(object sender, EventArgs e) => OnHotkeyToggle(sender, e);
         private void exitMenuItem_Click(object sender, EventArgs e) => Close();
+
+        private void menuTrayPreset_Click(object sender, EventArgs e)
+        {
+            var item = (System.Windows.Forms.ToolStripMenuItem)sender;
+            int level;
+            switch (item.Tag?.ToString())
+            {
+                case "def":  level = _presetDef;  break;
+                case "low":  level = _presetLow;  break;
+                case "high": level = _presetHigh; break;
+                case "max":  level = _presetMax;  break;
+                default: return;
+            }
+            level = Math.Max(_minLevel, Math.Min(_maxLevel, level));
+            if (InvokeRequired) Invoke((MethodInvoker)(() => ApplyPresetLevel(level)));
+            else ApplyPresetLevel(level);
+        }
+
+        private void ApplyPresetLevel(int level)
+        {
+            trackBarVibrance.Value  = level;
+            labelVibranceValue.Text = _resolveLevelLabel(level);
+            _proxy?.SetVibranceWindowsLevel(level);
+            _savedLevel = level;
+            HighlightActivePreset();
+            TriggerSettingsSave();
+        }
 
         private void ShowMainWindow()
         {
@@ -398,10 +449,9 @@ namespace Spectra.common
                 if (dlg.ShowDialog() != DialogResult.OK) return;
                 if (!File.Exists(dlg.FileName)) return;
                 if (_profiles.Any(p => p.FileName.Equals(dlg.FileName, StringComparison.OrdinalIgnoreCase))) return;
-                var entry = new ProcessExplorerEntry(dlg.FileName,
+                AddProfileIntern(new ProcessExplorerEntry(dlg.FileName,
                     Icon.ExtractAssociatedIcon(dlg.FileName),
-                    Path.GetFileNameWithoutExtension(dlg.FileName));
-                AddProfileIntern(entry);
+                    Path.GetFileNameWithoutExtension(dlg.FileName)));
             }
         }
 
@@ -502,10 +552,16 @@ namespace Spectra.common
             chkAutostart.Checked = _registry.IsProgramRegistered(AppName);
 
             bool po = false, nr = false;
+            Keys hotkey = Keys.F9, hotkeyMods = Keys.None;
             new SettingsController().ReadVibranceSettings(
-                _proxy.GraphicsAdapter, out level, out po, out nr, out _profiles);
+                _proxy.GraphicsAdapter, out level, out po, out nr, out _profiles,
+                out hotkey, out hotkeyMods);
             primaryOnly = po;
             neverResize = nr;
+
+            // Restore saved hotkey
+            _hotkey?.Register(hotkey, hotkeyMods);
+            UpdateHotkeyLabel();
 
             int safe = Math.Max(_minLevel, Math.Min(_maxLevel, level));
             labelVibranceValue.Text   = _resolveLevelLabel(safe);
@@ -513,6 +569,7 @@ namespace Spectra.common
             chkPrimaryMonitor.Checked = po;
             chkNeverResize.Checked    = nr;
             _savedLevel               = safe;
+            HighlightActivePreset();
 
             foreach (var s in _profiles.ToList())
             {
@@ -533,13 +590,28 @@ namespace Spectra.common
         {
             int level = _defaultWindowsLevel;
             bool po   = false, nr = false;
+            Keys hk = Keys.F9, hkMods = Keys.None;
             if (IsHandleCreated)
             {
                 if (InvokeRequired)
-                    Invoke((MethodInvoker)(() => { level = trackBarVibrance.Value; po = chkPrimaryMonitor.Checked; nr = chkNeverResize.Checked; }));
-                else { level = trackBarVibrance.Value; po = chkPrimaryMonitor.Checked; nr = chkNeverResize.Checked; }
+                    Invoke((MethodInvoker)(() =>
+                    {
+                        level  = trackBarVibrance.Value;
+                        po     = chkPrimaryMonitor.Checked;
+                        nr     = chkNeverResize.Checked;
+                        hk     = _hotkey?.CurrentKey ?? Keys.F9;
+                        hkMods = _hotkey?.CurrentModifiers ?? Keys.None;
+                    }));
+                else
+                {
+                    level  = trackBarVibrance.Value;
+                    po     = chkPrimaryMonitor.Checked;
+                    nr     = chkNeverResize.Checked;
+                    hk     = _hotkey?.CurrentKey ?? Keys.F9;
+                    hkMods = _hotkey?.CurrentModifiers ?? Keys.None;
+                }
             }
-            new SettingsController().SetVibranceSettings(level.ToString(), po.ToString(), nr.ToString(), _profiles);
+            new SettingsController().SetVibranceSettings(level.ToString(), po.ToString(), nr.ToString(), _profiles, hk, hkMods);
         }
 
         private void TriggerSettingsSave()
@@ -562,9 +634,15 @@ namespace Spectra.common
         {
             if (!IsHandleCreated || IsDisposed) return;
             if (InvokeRequired) { Invoke((Action)UpdateStatusIndicator); return; }
+
             bool running = _proxy?.GetVibranceInfo().isInitialized == true && _vibranceEnabled;
+
             labelStatus.Text      = LocalizationManager.Get(running ? "StatusRunning" : "StatusStopped");
             labelStatus.ForeColor = running ? ThemeManager.Success : ThemeManager.TextSub;
+
+            // Toggle button reflects state
+            btnToggleVibrance.Text      = _vibranceEnabled ? "ON" : "OFF";
+            btnToggleVibrance.BackColor = _vibranceEnabled ? ThemeManager.Success : ThemeManager.Danger;
         }
 
         private void CleanUp()
