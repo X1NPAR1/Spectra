@@ -48,18 +48,21 @@ namespace Spectra.common
             chkNeverResize     = new CheckBox();
 
             // ── Data tab ──────────────────────────────────────────────────
-            lblProfileSection  = new Label();
-            sepProfile         = new Panel();
-            lblProfileCount    = new Label();
-            lblProfileCountVal = new Label();
-            btnExport          = new Button();
-            btnImport          = new Button();
-            btnClearProfiles   = new Button();
-            lblDataSection     = new Label();
-            sepData            = new Panel();
-            lblDataNote        = new Label();
-            btnResetAll        = new Button();
-            btnOpenLog         = new Button();
+            lblProfileSection      = new Label();
+            sepProfile             = new Panel();
+            lblProfileCount        = new Label();
+            lblProfileCountVal     = new Label();
+            btnExport              = new Button();
+            btnImport              = new Button();
+            btnClearProfiles       = new Button();
+            lblSavedProfilesHeader = new Label();
+            sepSavedProfiles       = new Panel();
+            lbProfiles             = new ListBox();
+            lblDataSection         = new Label();
+            sepData                = new Panel();
+            lblDataNote            = new Label();
+            btnResetAll            = new Button();
+            btnOpenLog             = new Button();
 
             // ── About tab ─────────────────────────────────────────────────
             panelLogo       = new Panel();
@@ -88,7 +91,7 @@ namespace Spectra.common
             // Accommodates all translations without any text clipping.
             AutoScaleDimensions = new SizeF(6f, 13f);
             AutoScaleMode       = AutoScaleMode.Font;
-            ClientSize          = new Size(540, 540);
+            ClientSize          = new Size(540, 600);
             FormBorderStyle     = FormBorderStyle.FixedSingle;
             MaximizeBox         = false;
             StartPosition       = FormStartPosition.CenterParent;
@@ -112,7 +115,7 @@ namespace Spectra.common
             // ── TAB CONTROL ──────────────────────────────────────────────
             // 520px wide, 4 tabs → ItemSize.Width = 520/4 = 130px (fits all language tab labels)
             tabControl.Location  = new Point(10, 60);
-            tabControl.Size      = new Size(520, 452);
+            tabControl.Size      = new Size(520, 490);
             tabControl.DrawMode  = TabDrawMode.OwnerDrawFixed;
             tabControl.ItemSize  = new Size(129, 30);
             tabControl.SizeMode  = TabSizeMode.Fixed;
@@ -332,7 +335,7 @@ namespace Spectra.common
             btnImport.Cursor    = Cursors.Hand;
             btnImport.Click    += btnImport_Click;
 
-            // Row 2: Clear all profiles — full width, danger, always visible in any language
+            // Row 2: Clear all profiles — full width, danger
             btnClearProfiles.Text      = "Clear all profiles";
             btnClearProfiles.Font      = new Font("Segoe UI", 9f);
             btnClearProfiles.ForeColor = ThemeManager.Danger;
@@ -344,14 +347,35 @@ namespace Spectra.common
             btnClearProfiles.Cursor    = Cursors.Hand;
             btnClearProfiles.Click    += btnClearProfiles_Click;
 
+            // ── Saved profiles list ────────────────────────────────────────
+            lblSavedProfilesHeader.Text      = "SAVED PROFILES";
+            lblSavedProfilesHeader.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
+            lblSavedProfilesHeader.ForeColor = ThemeManager.Accent;
+            lblSavedProfilesHeader.BackColor = Color.Transparent;
+            lblSavedProfilesHeader.Location  = new Point(0, 140);
+            lblSavedProfilesHeader.AutoSize  = true;
+
+            sepSavedProfiles.Location  = new Point(0, 160);
+            sepSavedProfiles.Size      = new Size(488, 1);
+            sepSavedProfiles.BackColor = ThemeManager.Border;
+
+            lbProfiles.Location    = new Point(0, 168);
+            lbProfiles.Size        = new Size(488, 110);
+            lbProfiles.Font        = new Font("Segoe UI", 9f);
+            lbProfiles.BackColor   = ThemeManager.Surface2;
+            lbProfiles.ForeColor   = ThemeManager.Text;
+            lbProfiles.BorderStyle = BorderStyle.FixedSingle;
+            lbProfiles.SelectionMode = SelectionMode.None;
+
+            // ── DATA & DIAGNOSTICS — Y shifted down to make room for profile list ──
             lblDataSection.Text      = "DATA & DIAGNOSTICS";
             lblDataSection.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
             lblDataSection.ForeColor = ThemeManager.Accent;
             lblDataSection.BackColor = Color.Transparent;
-            lblDataSection.Location  = new Point(0, 140);
+            lblDataSection.Location  = new Point(0, 296);
             lblDataSection.AutoSize  = true;
 
-            sepData.Location  = new Point(0, 160);
+            sepData.Location  = new Point(0, 316);
             sepData.Size      = new Size(488, 1);
             sepData.BackColor = ThemeManager.Border;
 
@@ -359,18 +383,17 @@ namespace Spectra.common
             lblDataNote.Font        = new Font("Segoe UI", 8.5f, FontStyle.Italic);
             lblDataNote.ForeColor   = ThemeManager.TextSub;
             lblDataNote.BackColor   = Color.Transparent;
-            lblDataNote.Location    = new Point(0, 168);
+            lblDataNote.Location    = new Point(0, 324);
             lblDataNote.AutoSize    = true;
             lblDataNote.MaximumSize = new Size(488, 0);
 
-            // Row 3: Open log folder | Reset all settings — equal columns
             btnOpenLog.Text      = "Open log folder";
             btnOpenLog.Font      = new Font("Segoe UI", 9f);
             btnOpenLog.ForeColor = ThemeManager.Text;
             btnOpenLog.BackColor = ThemeManager.Surface2;
             btnOpenLog.FlatStyle = FlatStyle.Flat;
             btnOpenLog.FlatAppearance.BorderColor = ThemeManager.Border;
-            btnOpenLog.Location  = new Point(0, 200);
+            btnOpenLog.Location  = new Point(0, 356);
             btnOpenLog.Size      = new Size(ColW, 28);
             btnOpenLog.Cursor    = Cursors.Hand;
             btnOpenLog.Click    += btnOpenLog_Click;
@@ -381,7 +404,7 @@ namespace Spectra.common
             btnResetAll.BackColor = ThemeManager.Surface2;
             btnResetAll.FlatStyle = FlatStyle.Flat;
             btnResetAll.FlatAppearance.BorderColor = ThemeManager.Danger;
-            btnResetAll.Location  = new Point(ColR, 200);
+            btnResetAll.Location  = new Point(ColR, 356);
             btnResetAll.Size      = new Size(ColW, 28);
             btnResetAll.Cursor    = Cursors.Hand;
             btnResetAll.Click    += btnResetAll_Click;
@@ -393,6 +416,9 @@ namespace Spectra.common
             tabData.Controls.Add(btnExport);
             tabData.Controls.Add(btnImport);
             tabData.Controls.Add(btnClearProfiles);
+            tabData.Controls.Add(lblSavedProfilesHeader);
+            tabData.Controls.Add(sepSavedProfiles);
+            tabData.Controls.Add(lbProfiles);
             tabData.Controls.Add(lblDataSection);
             tabData.Controls.Add(sepData);
             tabData.Controls.Add(lblDataNote);
@@ -412,7 +438,7 @@ namespace Spectra.common
             lblAboutName.Location  = new Point(80, 2);
             lblAboutName.AutoSize  = true;
 
-            lblAboutVersion.Text      = "v1.9.2";
+            lblAboutVersion.Text      = "v1.9.3";
             lblAboutVersion.Font      = new Font("Segoe UI", 9f);
             lblAboutVersion.ForeColor = ThemeManager.TextSub;
             lblAboutVersion.BackColor = Color.Transparent;
@@ -513,7 +539,7 @@ namespace Spectra.common
             btnClose.BackColor = ThemeManager.Accent;
             btnClose.FlatStyle = FlatStyle.Flat;
             btnClose.FlatAppearance.BorderSize = 0;
-            btnClose.Location  = new Point(426, 498);
+            btnClose.Location  = new Point(426, 558);
             btnClose.Size      = new Size(104, 34);
             btnClose.Cursor    = Cursors.Hand;
             btnClose.Click    += btnClose_Click;
@@ -551,12 +577,15 @@ namespace Spectra.common
         private CheckBox chkNeverResize, chkResetOnExit;
 
         // Data
-        private Label  lblProfileSection, lblProfileCount, lblProfileCountVal;
-        private Panel  sepProfile;
-        private Button btnExport, btnImport, btnClearProfiles;
-        private Label  lblDataSection, lblDataNote;
-        private Panel  sepData;
-        private Button btnOpenLog, btnResetAll;
+        private Label   lblProfileSection, lblProfileCount, lblProfileCountVal;
+        private Panel   sepProfile;
+        private Button  btnExport, btnImport, btnClearProfiles;
+        private Label   lblSavedProfilesHeader;
+        private Panel   sepSavedProfiles;
+        private ListBox lbProfiles;
+        private Label   lblDataSection, lblDataNote;
+        private Panel   sepData;
+        private Button  btnOpenLog, btnResetAll;
 
         // About
         private Panel  panelLogo;

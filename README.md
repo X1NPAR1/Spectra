@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/version-1.9.2-1E6EB4?style=for-the-badge" alt="Version">
+<img src="https://img.shields.io/badge/version-1.9.3-1E6EB4?style=for-the-badge" alt="Version">
 <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows" alt="Platform">
 <img src="https://img.shields.io/badge/GPU-NVIDIA%20%7C%20AMD-76B900?style=for-the-badge" alt="GPU Support">
 <img src="https://img.shields.io/badge/.NET%20Framework-4.8-512BD4?style=for-the-badge" alt=".NET 4.8">
@@ -84,6 +84,13 @@ dotnet build Spectra/Spectra.csproj /p:Configuration=Release /p:Platform=x86
 Output: `Spectra/bin/x86/Release/Spectra.exe`
 
 ### Changelog
+
+#### v1.9.3 — Settings UX & Tray GitHub Link
+- **Fix:** Settings window height increased to 600 px — OK button is now always fully visible
+- **New:** Profiles tab shows a live list of all saved game profiles with their vibrance levels
+- **New:** Export to file now produces real JSON (previously exported XML with a .json extension)
+- **New:** Tray context menu: GitHub link below Exit — opens the project page in the browser
+- **Improved:** Profile list refreshes automatically after import or clear operations
 
 #### v1.9.2 — Monitor Selection Fix & Full Localization
 - **Fix:** Monitor selection in Settings now actually works — choosing "Primary Monitor Only" or a specific secondary monitor correctly restricts vibrance application to that display only (both NVIDIA and AMD)

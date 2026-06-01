@@ -416,6 +416,8 @@ namespace Spectra.common
         private void menuOpenSpectra_Click(object sender, EventArgs e) => ShowMainWindow();
         private void menuTrayToggle_Click(object sender, EventArgs e) => OnHotkeyToggle(sender, e);
         private void exitMenuItem_Click(object sender, EventArgs e) => Close();
+        private void menuGitHub_Click(object sender, EventArgs e)
+            => System.Diagnostics.Process.Start("https://github.com/X1NPAR1/Spectra");
 
         private void menuTrayPreset_Click(object sender, EventArgs e)
         {

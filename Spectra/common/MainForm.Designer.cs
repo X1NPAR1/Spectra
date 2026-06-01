@@ -73,6 +73,7 @@ namespace Spectra.common
             menuTrayPresetHigh   = new ToolStripMenuItem();
             menuTrayPresetMax    = new ToolStripMenuItem();
             menuExit             = new ToolStripMenuItem();
+            menuGitHub           = new ToolStripMenuItem();
 
             // Workers
             backgroundWorker = new System.ComponentModel.BackgroundWorker();
@@ -118,7 +119,7 @@ namespace Spectra.common
             labelAppName.Location  = new Point(70, 10);
             labelAppName.AutoSize  = true;
 
-            labelVersion.Text      = "v1.9.2";
+            labelVersion.Text      = "v1.9.3";
             labelVersion.Font      = new Font("Segoe UI", 7.5f);
             labelVersion.ForeColor = Color.FromArgb(180, 215, 255);
             labelVersion.BackColor = Color.Transparent;
@@ -425,6 +426,12 @@ namespace Spectra.common
             menuExit.Text  = "Exit";
             menuExit.Click += exitMenuItem_Click;
 
+            // GitHub link — underlined, below Exit
+            menuGitHub.Text      = "⭐  GitHub";
+            menuGitHub.Font      = new Font("Segoe UI", 8.5f, FontStyle.Underline);
+            menuGitHub.ForeColor = System.Drawing.Color.FromArgb(22, 68, 148); // ThemeManager.Accent
+            menuGitHub.Click    += menuGitHub_Click;
+
             contextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
             {
                 menuOpenSpectra,
@@ -432,7 +439,9 @@ namespace Spectra.common
                 menuTrayToggle,
                 menuTrayPresets,
                 new ToolStripSeparator(),
-                menuExit
+                menuExit,
+                new ToolStripSeparator(),
+                menuGitHub
             });
 
             notifyIcon.ContextMenuStrip = contextMenu;
@@ -508,6 +517,7 @@ namespace Spectra.common
         private ToolStripMenuItem menuTrayPresets;
         private ToolStripMenuItem menuTrayPresetDef, menuTrayPresetLow, menuTrayPresetHigh, menuTrayPresetMax;
         private ToolStripMenuItem menuExit;
+        private ToolStripMenuItem menuGitHub;
 
         private System.ComponentModel.BackgroundWorker backgroundWorker;
         private System.ComponentModel.BackgroundWorker settingsWorker;

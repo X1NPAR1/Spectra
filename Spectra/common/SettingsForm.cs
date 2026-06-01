@@ -64,6 +64,9 @@ namespace Spectra.common
             lblSysInfo.Text = string.Format(".NET {0}   |   OS: {1}",
                 Environment.Version, Environment.OSVersion.Version);
 
+            // Populate profile list
+            UpdateProfileList();
+
             // Subscribe localization
             LocalizationManager.LanguageChanged += OnLanguageChanged;
 
@@ -81,10 +84,22 @@ namespace Spectra.common
             if (!IsDisposed && IsHandleCreated) Invoke((Action)ApplyLocalization);
         }
 
-        private void UpdateProfileCount()
+        private void UpdateProfileCount() => UpdateProfileList();
+
+        private void UpdateProfileList()
         {
             var profiles = _mainForm.GetProfiles();
-            lblProfileCountVal.Text = profiles != null ? profiles.Count.ToString() : "0";
+            int count = profiles?.Count ?? 0;
+            lblProfileCountVal.Text = count.ToString();
+
+            lbProfiles.Items.Clear();
+            if (profiles == null || count == 0)
+            {
+                lbProfiles.Items.Add("— " + LocalizationManager.Get("ProfileCount") + " 0 —");
+                return;
+            }
+            foreach (var p in profiles)
+                lbProfiles.Items.Add($"  {p.Name}   —   Level: {p.IngameLevel}");
         }
 
         // ── Localization ──────────────────────────────────────────────────
@@ -213,7 +228,7 @@ namespace Spectra.common
         {
             using (var dlg = new SaveFileDialog
             {
-                Filter   = "JSON files (*.json)|*.json",
+                Filter   = "JSON files (*.json)|*.json|XML files (*.xml)|*.xml",
                 FileName = "spectra-profiles.json"
             })
             {
@@ -221,13 +236,49 @@ namespace Spectra.common
                 try
                 {
                     var profiles = _mainForm.GetProfiles();
-                    var xml = new System.Xml.Serialization.XmlSerializer(typeof(System.Collections.Generic.List<ApplicationSetting>));
-                    using (var sw = new StreamWriter(dlg.FileName))
-                        xml.Serialize(sw, profiles);
-                    MessageBox.Show("Profiles exported successfully.", "Spectra", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    string content;
+                    if (dlg.FilterIndex == 1)
+                        content = BuildProfilesJson(profiles);
+                    else
+                    {
+                        var xml = new System.Xml.Serialization.XmlSerializer(typeof(System.Collections.Generic.List<ApplicationSetting>));
+                        var sb = new System.Text.StringBuilder();
+                        using (var sw = new System.IO.StringWriter(sb))
+                            xml.Serialize(sw, profiles);
+                        content = sb.ToString();
+                    }
+                    File.WriteAllText(dlg.FileName, content, System.Text.Encoding.UTF8);
+                    MessageBox.Show(LocalizationManager.Get("ExportProfiles") + " OK.", "Spectra", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex) { MessageBox.Show(ex.Message, "Export Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             }
+        }
+
+        // Builds a proper JSON array from the profile list — no external libraries required.
+        private static string BuildProfilesJson(System.Collections.Generic.List<ApplicationSetting> profiles)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("[");
+            for (int i = 0; i < profiles.Count; i++)
+            {
+                var p = profiles[i];
+                sb.Append("  {");
+                sb.Append($" \"name\": {JStr(p.Name)},");
+                sb.Append($" \"fileName\": {JStr(p.FileName)},");
+                sb.Append($" \"ingameLevel\": {p.IngameLevel},");
+                sb.Append($" \"changeResolution\": {(p.IsResolutionChangeNeeded ? "true" : "false")}");
+                sb.Append(" }");
+                if (i < profiles.Count - 1) sb.Append(",");
+                sb.AppendLine();
+            }
+            sb.Append("]");
+            return sb.ToString();
+        }
+
+        private static string JStr(string s)
+        {
+            if (s == null) return "null";
+            return "\"" + s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "") + "\"";
         }
 
         private void btnImport_Click(object sender, EventArgs e)
@@ -244,7 +295,7 @@ namespace Spectra.common
                         var existing = _mainForm.GetProfiles();
                         existing.AddRange(imported);
                     }
-                    UpdateProfileCount();
+                    UpdateProfileList();
                     MessageBox.Show("Profiles imported.", "Spectra", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex) { MessageBox.Show(ex.Message, "Import Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
@@ -256,7 +307,7 @@ namespace Spectra.common
             if (MessageBox.Show(LocalizationManager.Get("ConfirmClear"), "Spectra",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
             _mainForm.GetProfiles()?.Clear();
-            UpdateProfileCount();
+            UpdateProfileList();
         }
 
         private void btnOpenLog_Click(object sender, EventArgs e)
