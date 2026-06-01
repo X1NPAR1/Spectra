@@ -79,11 +79,7 @@ namespace Spectra.common
 
         private void listView_DoubleClick(object sender, EventArgs e)
         {
-            if (listView.SelectedItems.Count != 1) return;
-            var entry = listView.SelectedItems[0].Tag as ProcessExplorerEntry;
-            if (entry == null) return;
-            Hide();
-            ((MainForm)_mainForm).AddProgramExtern(entry);
+            // Game profile feature removed in v1.9.4
             Close();
         }
 

@@ -117,10 +117,10 @@ namespace Spectra.common
             tabControl.Location  = new Point(10, 60);
             tabControl.Size      = new Size(520, 490);
             tabControl.DrawMode  = TabDrawMode.OwnerDrawFixed;
-            tabControl.ItemSize  = new Size(129, 30);
+            tabControl.ItemSize  = new Size(173, 30);  // 520/3 tabs
             tabControl.SizeMode  = TabSizeMode.Fixed;
             tabControl.DrawItem += tabControl_DrawItem;
-            tabControl.TabPages.AddRange(new TabPage[] { tabBehavior, tabDisplay, tabData, tabAbout });
+            tabControl.TabPages.AddRange(new TabPage[] { tabBehavior, tabDisplay, tabAbout });
 
             foreach (TabPage tp in tabControl.TabPages)
             {
@@ -438,7 +438,7 @@ namespace Spectra.common
             lblAboutName.Location  = new Point(80, 2);
             lblAboutName.AutoSize  = true;
 
-            lblAboutVersion.Text      = "v1.9.3";
+            lblAboutVersion.Text      = "v1.9.4";
             lblAboutVersion.Font      = new Font("Segoe UI", 9f);
             lblAboutVersion.ForeColor = ThemeManager.TextSub;
             lblAboutVersion.BackColor = Color.Transparent;
