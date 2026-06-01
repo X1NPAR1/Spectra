@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
@@ -44,8 +44,7 @@ namespace Spectra.common
             }
 
             ApplyTheme();
-            ThemeManager.ThemeChanged += (s, e) => ApplyTheme();
-            LocalizationManager.LanguageChanged += (s, e) => ApplyLocalization();
+                        LocalizationManager.LanguageChanged += (s, e) => ApplyLocalization();
 
             Icon = IconFactory.GetAppIcon(16);
         }
@@ -109,3 +108,4 @@ namespace Spectra.common
         }
     }
 }
+

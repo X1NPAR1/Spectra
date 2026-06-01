@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Text;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -72,27 +73,15 @@ namespace Spectra.common
             backgroundWorker.WorkerReportsProgress = true;
             settingsWorker.WorkerReportsProgress   = true;
 
-            ThemeManager.ThemeChanged          += (s, e) => SafeInvoke(ApplyAll);
-            LocalizationManager.LanguageChanged += (s, e) => SafeInvoke(ApplyLocalization);
+            LocalizationManager.LanguageChanged += (s, e) =>
+            {
+                if (!IsDisposed && IsHandleCreated) Invoke((Action)ApplyLocalization);
+            };
 
-            ApplyAll();
+            ApplyLocalization();
             backgroundWorker.RunWorkerAsync();
         }
 
-        // ── Core helpers ──────────────────────────────────────────────────
-        private void SafeInvoke(Action a)
-        {
-            if (IsHandleCreated && InvokeRequired) Invoke(a);
-            else a();
-        }
-
-        private void ApplyAll()
-        {
-            ApplyTheme();
-            ApplyLocalization();
-        }
-
-        // ── Visibility ────────────────────────────────────────────────────
         protected override void SetVisibleCore(bool value)
         {
             if (!_allowVisible) { value = false; if (!IsHandleCreated) CreateHandle(); }
@@ -101,7 +90,6 @@ namespace Spectra.common
 
         public void SetAllowVisible(bool v) => _allowVisible = v;
 
-        // ── Handle & hotkey ───────────────────────────────────────────────
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -118,119 +106,13 @@ namespace Spectra.common
         }
 
         public HotkeyManager GetHotkeyManager() => _hotkey;
+        public List<ApplicationSetting> GetProfiles() => _profiles;
+        public void ReloadProfiles() => backgroundWorker.RunWorkerAsync();
 
-        // ── Theme — every control explicit ───────────────────────────────
-        private void ApplyTheme()
-        {
-            if (!IsHandleCreated || IsDisposed) return;
-            bool dark = ThemeManager.IsDark;
-
-            BackColor = ThemeManager.Bg;
-
-            // Header (always gradient painted, text always white)
-            panelHeader.BackColor  = Color.Transparent;
-            labelAppName.ForeColor = Color.White;
-            labelAppName.BackColor = Color.Transparent;
-            labelVersion.ForeColor = Color.FromArgb(190, 225, 255);
-            labelVersion.BackColor = Color.Transparent;
-            labelGpuBadge.ForeColor= Color.FromArgb(210, 240, 255);
-            labelGpuBadge.BackColor= Color.Transparent;
-
-            // Section panels
-            panelVibrance.BackColor  = ThemeManager.Surface;
-            panelSettings.BackColor  = ThemeManager.Surface;
-            panelProfiles.BackColor  = ThemeManager.Surface;
-
-            // Status bar
-            panelStatus.BackColor    = dark ? Color.FromArgb(8, 12, 18) : Color.FromArgb(210, 215, 222);
-
-            // Accent section labels
-            labelSectionVibrance.ForeColor  = ThemeManager.Accent;
-            labelSectionVibrance.BackColor  = Color.Transparent;
-            labelSectionSettings.ForeColor  = ThemeManager.Accent;
-            labelSectionSettings.BackColor  = Color.Transparent;
-            labelSectionProfiles.ForeColor  = ThemeManager.Accent;
-            labelSectionProfiles.BackColor  = Color.Transparent;
-
-            // Vibrance value
-            labelVibranceValue.ForeColor = ThemeManager.Accent;
-            labelVibranceValue.BackColor = Color.Transparent;
-            trackBarVibrance.BackColor   = ThemeManager.Surface;
-
-            // Checkboxes
-            chkAutostart.ForeColor      = ThemeManager.Text;
-            chkAutostart.BackColor      = Color.Transparent;
-            chkPrimaryMonitor.ForeColor = ThemeManager.Text;
-            chkPrimaryMonitor.BackColor = Color.Transparent;
-            chkNeverResize.ForeColor    = ThemeManager.Text;
-            chkNeverResize.BackColor    = Color.Transparent;
-
-            // Quick rows
-            panelQuickRow.BackColor = Color.Transparent;
-            panelRow1.BackColor     = Color.Transparent;
-            panelRow2.BackColor     = Color.Transparent;
-            panelRowSep1.BackColor  = ThemeManager.Border;
-
-            // Theme toggle buttons
-            btnDark.BackColor  = dark ? ThemeManager.Accent  : ThemeManager.Surface2;
-            btnDark.ForeColor  = dark ? Color.White            : ThemeManager.TextSub;
-            btnLight.BackColor = dark ? ThemeManager.Surface2  : ThemeManager.Accent;
-            btnLight.ForeColor = dark ? ThemeManager.TextSub   : Color.White;
-            btnDark.FlatAppearance.BorderColor  = ThemeManager.Accent;
-            btnLight.FlatAppearance.BorderColor = ThemeManager.Accent;
-
-            // Labels in quick rows
-            labelTheme.ForeColor       = ThemeManager.TextSub;
-            labelTheme.BackColor       = Color.Transparent;
-            labelLang.ForeColor        = ThemeManager.TextSub;
-            labelLang.BackColor        = Color.Transparent;
-            labelHotkeyTitle.ForeColor = ThemeManager.TextSub;
-            labelHotkeyTitle.BackColor = Color.Transparent;
-
-            // Language combo
-            comboLanguage.BackColor = ThemeManager.Surface2;
-            comboLanguage.ForeColor = ThemeManager.Text;
-
-            // Hotkey button (accent border)
-            btnHotkey.BackColor = ThemeManager.Surface2;
-            btnHotkey.ForeColor = ThemeManager.Accent;
-            btnHotkey.FlatAppearance.BorderColor = ThemeManager.Accent;
-
-            // Profile list
-            listProfiles.BackColor = ThemeManager.Surface;
-            listProfiles.ForeColor = ThemeManager.Text;
-
-            // Action buttons
-            Color btnBg  = ThemeManager.Surface2;
-            Color btnFg  = ThemeManager.Text;
-            Color btnBdr = ThemeManager.Border;
-            foreach (Button b in new[] { btnAdd, btnBrowse, btnRemove })
-            {
-                b.BackColor = btnBg;
-                b.ForeColor = btnFg;
-                b.FlatAppearance.BorderColor = btnBdr;
-            }
-
-            // Status label
-            UpdateStatusIndicator();
-            labelGpuInfo.ForeColor = ThemeManager.TextSub;
-
-            // Tray context menu (ToolStrip uses system renderer — set colors)
-            contextMenu.BackColor = ThemeManager.Surface;
-            contextMenu.ForeColor = ThemeManager.Text;
-            foreach (ToolStripItem item in contextMenu.Items)
-            {
-                item.BackColor = ThemeManager.Surface;
-                item.ForeColor = ThemeManager.Text;
-            }
-
-            Refresh();
-        }
-
-        // ── Localization — every string explicit ──────────────────────────
+        // ── Localization ──────────────────────────────────────────────────
         private void ApplyLocalization()
         {
-            if (!IsHandleCreated || IsDisposed) return;
+            if (IsDisposed) return;
 
             labelSectionVibrance.Text  = LocalizationManager.Get("DesktopVibrance");
             labelSectionSettings.Text  = LocalizationManager.Get("Settings");
@@ -238,11 +120,8 @@ namespace Spectra.common
             chkAutostart.Text          = LocalizationManager.Get("Autostart");
             chkPrimaryMonitor.Text     = LocalizationManager.Get("PrimaryMonitor");
             chkNeverResize.Text        = LocalizationManager.Get("NeverResize");
-            labelTheme.Text            = LocalizationManager.Get("Theme");
-            btnDark.Text               = LocalizationManager.Get("Dark");
-            btnLight.Text              = LocalizationManager.Get("Light");
-            labelLang.Text             = LocalizationManager.Get("LangShort");
-            labelHotkeyTitle.Text      = LocalizationManager.Get("HotkeyShort");
+            labelLang.Text             = LocalizationManager.Get("LangLabel");
+            labelHotkeyTitle.Text      = LocalizationManager.Get("HotkeyLabel");
             btnAdd.Text                = LocalizationManager.Get("AddFile");
             btnBrowse.Text             = LocalizationManager.Get("BrowseRunning");
             btnRemove.Text             = LocalizationManager.Get("Remove");
@@ -250,24 +129,84 @@ namespace Spectra.common
             menuTrayToggle.Text        = LocalizationManager.Get("TrayToggle");
             menuExit.Text              = LocalizationManager.Get("Exit");
             notifyIcon.Text            = AppName;
+
+            // Sync combobox selection without firing the event again
+            comboLanguage.SelectedIndexChanged -= comboLanguage_SelectedIndexChanged;
+            if (comboLanguage.Items.Count > 0)
+                comboLanguage.SelectedIndex = (int)LocalizationManager.Current;
+            comboLanguage.SelectedIndexChanged += comboLanguage_SelectedIndexChanged;
+
+            // Re-apply status label in current language
+            UpdateStatusIndicator();
         }
 
-        // ── Header gradient ───────────────────────────────────────────────
-        private void panelHeader_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+        // ── Header painting (gradient + inline S logo) ───────────────────
+        private void panelHeader_Paint(object sender, PaintEventArgs e)
         {
-            var r = panelHeader.ClientRectangle;
-            using (var g = new LinearGradientBrush(r,
-                Color.FromArgb(100, 30, 220), Color.FromArgb(0, 175, 225),
+            var g    = e.Graphics;
+            var rect = panelHeader.ClientRectangle;
+            g.SmoothingMode      = SmoothingMode.AntiAlias;
+            g.TextRenderingHint  = TextRenderingHint.AntiAlias;
+
+            // Gradient fill
+            using (var grad = new LinearGradientBrush(rect,
+                ThemeManager.GradStart, ThemeManager.GradEnd,
                 LinearGradientMode.Horizontal))
-                e.Graphics.FillRectangle(g, r);
+                g.FillRectangle(grad, rect);
+
+            // Small "S" logo (40×40 rounded rect) at left
+            DrawLogoMini(g, 14, (rect.Height - 40) / 2, 40);
         }
 
-        // ── Section border ────────────────────────────────────────────────
-        private void SectionPanel_Paint(object sender, System.Windows.Forms.PaintEventArgs e)
+        private static void DrawLogoMini(Graphics g, int x, int y, int size)
+        {
+            var rect = new Rectangle(x, y, size, size);
+            int r    = size / 6, d = r * 2;
+
+            using (var path = new GraphicsPath())
+            {
+                path.AddArc(rect.X, rect.Y, d, d, 180, 90);
+                path.AddArc(rect.Right - d, rect.Y, d, d, 270, 90);
+                path.AddArc(rect.Right - d, rect.Bottom - d, d, d, 0, 90);
+                path.AddArc(rect.X, rect.Bottom - d, d, d, 90, 90);
+                path.CloseFigure();
+
+                // Semi-transparent white fill so it's distinct from the gradient
+                using (var fill = new SolidBrush(Color.FromArgb(50, 255, 255, 255)))
+                    g.FillPath(fill, path);
+                using (var border = new Pen(Color.FromArgb(120, 255, 255, 255), 1.5f))
+                    g.DrawPath(border, path);
+            }
+
+            // "S" text inside
+            using (var font = new Font("Segoe UI", size * 0.52f, FontStyle.Bold, GraphicsUnit.Pixel))
+            using (var brush = new SolidBrush(Color.White))
+            {
+                var sf = new StringFormat
+                {
+                    Alignment     = StringAlignment.Center,
+                    LineAlignment = StringAlignment.Center
+                };
+                g.DrawString("S", font, brush, new RectangleF(x, y, size, size), sf);
+            }
+        }
+
+        // ── Card panel painting (white card with accent left border) ──────
+        private void CardPanel_Paint(object sender, PaintEventArgs e)
         {
             var p = (Panel)sender;
+            var g = e.Graphics;
+
+            // White card fill
+            g.FillRectangle(Brushes.White, p.ClientRectangle);
+
+            // 3px accent left border (purple)
+            using (var pen = new Pen(ThemeManager.Accent, 3f))
+                g.DrawLine(pen, 1, 0, 1, p.Height);
+
+            // Subtle outer border
             using (var pen = new Pen(ThemeManager.Border, 1))
-                e.Graphics.DrawRectangle(pen, 0, 0, p.Width - 1, p.Height - 1);
+                g.DrawRectangle(pen, 0, 0, p.Width - 1, p.Height - 1);
         }
 
         // ── Form events ───────────────────────────────────────────────────
@@ -297,7 +236,7 @@ namespace Spectra.common
             if (WindowState == FormWindowState.Minimized) Hide();
         }
 
-        // ── Background workers ────────────────────────────────────────────
+        // ── Workers ───────────────────────────────────────────────────────
         private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             int level = _defaultWindowsLevel;
@@ -368,10 +307,7 @@ namespace Spectra.common
             TriggerSettingsSave();
         }
 
-        // ── Theme / Language ──────────────────────────────────────────────
-        private void btnDark_Click(object sender, EventArgs e)  => ThemeManager.SetTheme(AppTheme.Dark);
-        private void btnLight_Click(object sender, EventArgs e) => ThemeManager.SetTheme(AppTheme.Light);
-
+        // ── Language ──────────────────────────────────────────────────────
         private void comboLanguage_SelectedIndexChanged(object sender, EventArgs e)
             => LocalizationManager.SetLanguage((Language)comboLanguage.SelectedIndex);
 
@@ -381,15 +317,9 @@ namespace Spectra.common
             using (var dlg = new SettingsForm(this, _proxy, _minLevel, _maxLevel,
                 _defaultWindowsLevel, trackBarVibrance.Value, _resolveLevelLabel))
             {
-                if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                {
-                    int nv = dlg.DesktopVibranceLevel;
-                    trackBarVibrance.Value  = Math.Max(_minLevel, Math.Min(_maxLevel, nv));
-                    labelVibranceValue.Text = _resolveLevelLabel(trackBarVibrance.Value);
-                    _proxy?.SetVibranceWindowsLevel(trackBarVibrance.Value);
-                    _savedLevel = trackBarVibrance.Value;
-                    ForceSaveSettings();
-                }
+                dlg.ShowDialog();
+                // Re-sync checkboxes that may have changed in settings
+                ApplyLocalization();
             }
         }
 
@@ -399,7 +329,7 @@ namespace Spectra.common
             if (_capturingHotkey) return;
             _capturingHotkey      = true;
             btnHotkey.Text        = "...";
-            btnHotkey.BackColor   = Color.FromArgb(123, 47, 247);
+            btnHotkey.BackColor   = ThemeManager.Accent;
             btnHotkey.ForeColor   = Color.White;
             btnHotkey.KeyDown    += BtnHotkey_KeyDown;
             btnHotkey.Focus();
@@ -416,7 +346,9 @@ namespace Spectra.common
                 _hotkey?.Register(e.KeyCode);
 
             UpdateHotkeyLabel();
-            ApplyTheme();
+            // Restore colors
+            btnHotkey.BackColor = ThemeManager.Surface2;
+            btnHotkey.ForeColor = ThemeManager.Accent;
         }
 
         public void ApplyHotkeyKey(Keys key)
@@ -441,14 +373,11 @@ namespace Spectra.common
         // ── Tray ─────────────────────────────────────────────────────────
         private void notifyIcon_MouseClick(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left)
-                ShowMainWindow();
+            if (e.Button == MouseButtons.Left) ShowMainWindow();
         }
 
         private void menuOpenSpectra_Click(object sender, EventArgs e) => ShowMainWindow();
-
         private void menuTrayToggle_Click(object sender, EventArgs e) => OnHotkeyToggle(sender, e);
-
         private void exitMenuItem_Click(object sender, EventArgs e) => Close();
 
         private void ShowMainWindow()
@@ -466,7 +395,7 @@ namespace Spectra.common
             EnsureProfileList();
             using (var dlg = new OpenFileDialog { Filter = "Executable Files (*.exe)|*.exe" })
             {
-                if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+                if (dlg.ShowDialog() != DialogResult.OK) return;
                 if (!File.Exists(dlg.FileName)) return;
                 if (_profiles.Any(p => p.FileName.Equals(dlg.FileName, StringComparison.OrdinalIgnoreCase))) return;
                 var entry = new ProcessExplorerEntry(dlg.FileName,
@@ -501,7 +430,7 @@ namespace Spectra.common
             using (var dlg = new GameSettingsForm(_proxy, _minLevel, _maxLevel, _defaultIngameLevel,
                 sel, existing, _primaryResolutions, _resolveLevelLabel))
             {
-                if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                if (dlg.ShowDialog() == DialogResult.OK)
                 {
                     var ns  = dlg.GetApplicationSetting();
                     var old = _profiles.FirstOrDefault(p => p.FileName == ns.FileName);
@@ -618,7 +547,6 @@ namespace Spectra.common
             if (!settingsWorker.IsBusy) settingsWorker.RunWorkerAsync();
         }
 
-        // ── UI helpers ────────────────────────────────────────────────────
         private void SetControlsEnabled(bool flag)
         {
             if (InvokeRequired) { Invoke((MethodInvoker)(() => SetControlsEnabled(flag))); return; }
@@ -632,7 +560,7 @@ namespace Spectra.common
 
         private void UpdateStatusIndicator()
         {
-            if (!IsHandleCreated) return;
+            if (!IsHandleCreated || IsDisposed) return;
             if (InvokeRequired) { Invoke((Action)UpdateStatusIndicator); return; }
             bool running = _proxy?.GetVibranceInfo().isInitialized == true && _vibranceEnabled;
             labelStatus.Text      = LocalizationManager.Get(running ? "StatusRunning" : "StatusStopped");
@@ -657,10 +585,10 @@ namespace Spectra.common
         {
             try
             {
-                string dir = System.IO.Path.Combine(
+                string dir = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spectra");
-                System.IO.Directory.CreateDirectory(dir);
-                System.IO.File.AppendAllText(System.IO.Path.Combine(dir, "spectra.log"),
+                Directory.CreateDirectory(dir);
+                File.AppendAllText(Path.Combine(dir, "spectra.log"),
                     string.Format("[{0:yyyy-MM-dd HH:mm:ss}] {1}: {2}\r\n{3}\r\n",
                         DateTime.Now, ex.GetType().Name, ex.Message, ex.StackTrace));
             }

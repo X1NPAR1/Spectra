@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -32,8 +32,7 @@ namespace Spectra.common
             Text = LocalizationManager.Get("ProcessExplorer");
 
             ApplyTheme();
-            ThemeManager.ThemeChanged += (s, e) => ApplyTheme();
-
+            
             backgroundWorker.WorkerReportsProgress = true;
             backgroundWorker.RunWorkerAsync();
         }
@@ -108,3 +107,4 @@ namespace Spectra.common
         }
     }
 }
+
