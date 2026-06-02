@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/version-2.4.0-1E6EB4?style=for-the-badge" alt="Version">
+<img src="https://img.shields.io/badge/version-2.4.4-1E6EB4?style=for-the-badge" alt="Version">
 <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows" alt="Platform">
 <img src="https://img.shields.io/badge/GPU-NVIDIA%20%7C%20AMD-76B900?style=for-the-badge" alt="GPU Support">
 <img src="https://img.shields.io/badge/.NET%20Framework-4.8-512BD4?style=for-the-badge" alt=".NET 4.8">
@@ -93,6 +93,13 @@ dotnet build Spectra/Spectra.csproj --configuration Release
 Output: `Spectra/bin/x86/Release/Spectra.exe`
 
 ### Changelog
+
+#### v2.4.4 — Bug Fixes & Code Cleanup
+- **NvidiaVibranceValueWrapper:** `Find()` infinite recursion fixed — out-of-range input no longer causes StackOverflowException
+- **AmdAdapter32:** Duplicate `AdlMainControlCreate` call removed (corrupted ADL reference count)
+- **MainForm:** Background worker no longer uses `while(!IsHandleCreated)` busy-wait; starts in `Load` where handle is guaranteed
+- **AddProfileIntern:** Defensive null icon guard added
+- All `//` explanatory comments removed from 20 source files
 
 #### v2.4.0 — Deep Audit Release (15 bugs across 9 files)
 - **RegistryController (3 fixes):** `NullReferenceException` when `OpenSubKey` returns null (affected startup on some systems); registry key handle leak in `IsProgramRegistered`; `GetValue().ToString()` NPE — all rewritten with `using(RegistryKey)` blocks
@@ -293,7 +300,7 @@ Spectra is een professionele vibrance-beheertool voor Windows. Het gebruikt NVID
 
 <div align="center">
 
-**Spectra v2.4.0** — Professional Digital Vibrance, Brightness & Contrast Control  
+**Spectra v2.4.4** — Professional Digital Vibrance, Brightness & Contrast Control  
 [Discord](https://discord.gg/CdpuNUGPDe) · [GitHub](https://github.com/X1NPAR1/Spectra) · [Releases](https://github.com/X1NPAR1/Spectra/releases)
 
 </div>
