@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/version-2.2.3-1E6EB4?style=for-the-badge" alt="Version">
+<img src="https://img.shields.io/badge/version-2.3.0-1E6EB4?style=for-the-badge" alt="Version">
 <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows" alt="Platform">
 <img src="https://img.shields.io/badge/GPU-NVIDIA%20%7C%20AMD-76B900?style=for-the-badge" alt="GPU Support">
 <img src="https://img.shields.io/badge/.NET%20Framework-4.8-512BD4?style=for-the-badge" alt=".NET 4.8">
@@ -93,6 +93,13 @@ dotnet build Spectra/Spectra.csproj --configuration Release
 Output: `Spectra/bin/x86/Release/Spectra.exe`
 
 ### Changelog
+
+#### v2.3.0 — Comprehensive Bug Fix Release (15 bugs)
+- **SettingsController (5 fixes):** One corrupt INI value no longer wipes all settings; INI and XML read independently so a missing profile XML doesn't lose vibrance/hotkey settings; `XmlWriter` and `XmlReader` wrapped in `using` to eliminate file-handle leaks; dead `WriteState` check removed
+- **NVIDIA + AMD proxy (4 fixes):** `_monitorDesktopLevels` changed to `ConcurrentDictionary` for thread safety; polling timer now starts immediately (0ms) instead of after a 1-second blind spot; AMD `== 0` initialization check replaced with a proper `_defaultLevelSet` flag (0 is a valid saturation level); primary-monitor level correctly takes priority in multi-monitor setups
+- **ProcessExplorer (2 fixes):** Current PID cached before loop (was called per-iteration); null-icon guard added to prevent `ArgumentNullException` when `ExtractAssociatedIcon` fails
+- **MainForm (2 fixes):** `ForceSaveSettings` guarded against `ObjectDisposedException` on shutdown; orphaned profiles with null icons now removed from both memory and UI
+- **GameSettingsForm:** Fixed indentation error on `LocalizationManager.LanguageChanged` subscription
 
 #### v2.2.3 — Desktop Vibrance Stability Fix
 - **Fixed (critical):** Desktop vibrance no longer drops to 0 when switching between programs — root cause was `SetVibranceForMonitor` never updating `userVibranceSettingDefault`, causing the restore logic to apply level 0 on every window-focus event
@@ -278,7 +285,7 @@ Spectra is een professionele vibrance-beheertool voor Windows. Het gebruikt NVID
 
 <div align="center">
 
-**Spectra v2.2.3** — Professional Digital Vibrance, Brightness & Contrast Control  
+**Spectra v2.3.0** — Professional Digital Vibrance, Brightness & Contrast Control  
 [Discord](https://discord.gg/CdpuNUGPDe) · [GitHub](https://github.com/X1NPAR1/Spectra) · [Releases](https://github.com/X1NPAR1/Spectra/releases)
 
 </div>
