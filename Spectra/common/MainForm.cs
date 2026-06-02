@@ -45,6 +45,9 @@ namespace Spectra.common
         private bool _minimizeToTray;
         private bool _showNotifications;
         private bool _startedMinimized;
+        private bool _obsEnabled;
+        private int  _obsLevel;
+        private PipeServer _pipeServer;
 
         public MainForm(
             Func<List<ApplicationSetting>,
@@ -101,6 +104,9 @@ namespace Spectra.common
 
             ApplyLocalization();
             ApplyTheme();
+
+            if (_proxy != null)
+                _pipeServer = new PipeServer(_proxy);
         }
 
         private void BuildMonitorSliders()
@@ -485,10 +491,188 @@ namespace Spectra.common
             sc.SetVibranceSetting("contrast",   DisplayGammaController.Neutral.ToString());
         }
 
+        private List<ApplicationSetting> BuildEffectiveProfiles()
+        {
+            var list = new List<ApplicationSetting>(_profiles);
+            if (_obsEnabled)
+            {
+                foreach (var name in new[] { "obs64", "obs", "obs32" })
+                {
+                    bool exists = list.Any(p =>
+                        string.Equals(Path.GetFileNameWithoutExtension(p.FileName ?? ""), name, StringComparison.OrdinalIgnoreCase));
+                    if (!exists)
+                        list.Add(new ApplicationSetting(name, name + ".exe", _obsLevel, null, false));
+                }
+            }
+            return list;
+        }
+
+        private void trackBlueLight_Scroll(object sender, EventArgs e)
+        {
+            DisplayGammaController.SetBlueLight(trackBlueLight.Value);
+            labelBlueLightVal.Text = trackBlueLight.Value + "%";
+            new SettingsController().SetVibranceSetting("blueLight", trackBlueLight.Value.ToString());
+        }
+
+        private void btnColorBlind_Click(object sender, EventArgs e)
+        {
+            var tag = ((Button)sender).Tag?.ToString();
+            var mode = ColorBlindMode.Normal;
+            switch (tag)
+            {
+                case "protan": mode = ColorBlindMode.Protanopia;   break;
+                case "deutan": mode = ColorBlindMode.Deuteranopia; break;
+                case "tritan": mode = ColorBlindMode.Tritanopia;   break;
+            }
+            DisplayGammaController.SetColorBlindMode(mode);
+            new SettingsController().SetVibranceSetting("colorBlind", tag ?? "normal");
+            UpdateColorBlindButtons(mode);
+        }
+
+        private void UpdateColorBlindButtons(ColorBlindMode mode)
+        {
+            foreach (var (Btn, Mode) in new[]
+            {
+                (btnCbNormal,       ColorBlindMode.Normal),
+                (btnCbProtanopia,   ColorBlindMode.Protanopia),
+                (btnCbDeuteranopia, ColorBlindMode.Deuteranopia),
+                (btnCbTritanopia,   ColorBlindMode.Tritanopia)
+            })
+            {
+                bool active = Mode == mode;
+                Btn.BackColor = active ? ThemeManager.Accent : ThemeManager.Surface2;
+                Btn.ForeColor = active ? Color.White         : ThemeManager.TextSub;
+                Btn.FlatAppearance.BorderColor = active ? ThemeManager.Accent : ThemeManager.Border;
+            }
+        }
+
+        private void btnTemplates_Click(object sender, EventArgs e)
+        {
+            var menu = new ContextMenuStrip();
+            foreach (var t in ProfileTemplates.All)
+            {
+                var tmpl = t;
+                var item = new ToolStripMenuItem(string.Format("{0}  —  {1}%", tmpl.Name, tmpl.Percent))
+                {
+                    Tag = tmpl
+                };
+                item.Click += (s2, e2) => ApplyTemplate(tmpl);
+                menu.Items.Add(item);
+            }
+            menu.Show(btnTemplates, new Point(0, btnTemplates.Height));
+        }
+
+        private void ApplyTemplate(ProfileTemplate template)
+        {
+            int targetLevel = template.ToLevel(_minLevel, _maxLevel);
+
+            if (listProfiles.SelectedItems.Count > 0)
+            {
+                foreach (ListViewItem sel in listProfiles.SelectedItems)
+                {
+                    var s = _profiles.FirstOrDefault(
+                        p => p.FileName.Equals(sel.Tag?.ToString(), StringComparison.OrdinalIgnoreCase));
+                    if (s != null) s.IngameLevel = targetLevel;
+                }
+                if (!_gamingMode) _proxy?.SetApplicationSettings(BuildEffectiveProfiles());
+                ForceSaveSettings();
+                MessageBox.Show(
+                    string.Format("Template '{0}' applied to {1} profile(s).", template.Name, listProfiles.SelectedItems.Count),
+                    AppName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                MessageBox.Show("Select one or more game profiles first, then apply a template.",
+                    AppName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void listProfiles_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Right) return;
+            var item = listProfiles.GetItemAt(e.X, e.Y);
+            if (item == null) return;
+            if (!item.Selected)
+            {
+                listProfiles.SelectedItems.Clear();
+                item.Selected = true;
+            }
+
+            var menu = new ContextMenuStrip();
+
+            var editItem = new ToolStripMenuItem("Edit Profile");
+            editItem.Click += (s, e2) => listProfiles_DoubleClick(this, EventArgs.Empty);
+            menu.Items.Add(editItem);
+
+            var templatesMenu = new ToolStripMenuItem("Apply Template");
+            foreach (var t in ProfileTemplates.All)
+            {
+                var tmpl = t;
+                var sub = new ToolStripMenuItem(tmpl.Name);
+                sub.Click += (s, e2) => ApplyTemplate(tmpl);
+                templatesMenu.DropDownItems.Add(sub);
+            }
+            menu.Items.Add(templatesMenu);
+
+            var setVibrance = new ToolStripMenuItem("Set Vibrance for Selected...");
+            setVibrance.Click += (s, e2) => BatchSetVibrance();
+            menu.Items.Add(setVibrance);
+
+            menu.Items.Add(new ToolStripSeparator());
+
+            var removeItem = new ToolStripMenuItem("Remove");
+            removeItem.ForeColor = ThemeManager.Danger;
+            removeItem.Click += btnRemove_Click;
+            menu.Items.Add(removeItem);
+
+            menu.Show(listProfiles, e.Location);
+        }
+
+        private void BatchSetVibrance()
+        {
+            if (listProfiles.SelectedItems.Count == 0) return;
+
+            using (var form = new Form())
+            {
+                form.Text            = "Set Vibrance";
+                form.FormBorderStyle = FormBorderStyle.FixedDialog;
+                form.MaximizeBox     = false;
+                form.MinimizeBox     = false;
+                form.ClientSize      = new Size(280, 90);
+                form.StartPosition   = FormStartPosition.CenterParent;
+                form.Icon            = IconFactory.GetAppIcon(16);
+                form.BackColor       = ThemeManager.Surface;
+
+                var lbl = new Label { Text = "Vibrance level:", Location = new Point(16, 16), AutoSize = true,
+                    Font = new Font("Segoe UI", 9f), ForeColor = ThemeManager.Text };
+                var num = new NumericUpDown { Location = new Point(130, 12), Size = new Size(80, 24),
+                    Minimum = _minLevel, Maximum = _maxLevel, Value = _defaultIngameLevel,
+                    Font = new Font("Segoe UI", 9f), BackColor = ThemeManager.Surface2 };
+                var ok = new Button { Text = "Apply", Location = new Point(130, 50), Size = new Size(80, 26),
+                    BackColor = ThemeManager.Accent, ForeColor = Color.White, FlatStyle = FlatStyle.Flat,
+                    DialogResult = DialogResult.OK };
+                ok.FlatAppearance.BorderSize = 0;
+                form.Controls.AddRange(new Control[] { lbl, num, ok });
+                form.AcceptButton = ok;
+
+                if (form.ShowDialog(this) != DialogResult.OK) return;
+
+                int newLevel = (int)num.Value;
+                foreach (ListViewItem sel in listProfiles.SelectedItems)
+                {
+                    var s = _profiles.FirstOrDefault(
+                        p => p.FileName.Equals(sel.Tag?.ToString(), StringComparison.OrdinalIgnoreCase));
+                    if (s != null) s.IngameLevel = newLevel;
+                }
+                if (!_gamingMode) _proxy?.SetApplicationSettings(BuildEffectiveProfiles());
+                ForceSaveSettings();
+            }
+        }
+
         private void btnGamingMode_Click(object sender, EventArgs e)
         {
             _gamingMode = !_gamingMode;
-            _proxy?.SetApplicationSettings(_gamingMode ? new List<ApplicationSetting>() : _profiles);
+            _proxy?.SetApplicationSettings(_gamingMode ? new List<ApplicationSetting>() : BuildEffectiveProfiles());
             UpdateGamingModeButton();
         }
 
@@ -704,7 +888,7 @@ namespace Spectra.common
                     var old = _profiles.FirstOrDefault(p => p.FileName == ns.FileName);
                     if (old != null) _profiles.Remove(old);
                     _profiles.Add(ns);
-                    if (!_gamingMode) _proxy?.SetApplicationSettings(_profiles);
+                    if (!_gamingMode) _proxy?.SetApplicationSettings(BuildEffectiveProfiles());
                     ForceSaveSettings();
                 }
                 else if (existing == null) RemoveProfileItem(sel);
@@ -821,6 +1005,32 @@ namespace Spectra.common
             labelContrastVal.Text   = trackContrast.Value.ToString();
             DisplayGammaController.Set(trackBrightness.Value, trackContrast.Value);
 
+            int blueLight = ParseInt(sc.GetSetting("blueLight", "0"), 0);
+            trackBlueLight.Value = Math.Max(0, Math.Min(100, blueLight));
+            labelBlueLightVal.Text = trackBlueLight.Value + "%";
+            DisplayGammaController.SetBlueLight(trackBlueLight.Value);
+
+            string cbTag = sc.GetSetting("colorBlind", "normal");
+            var cbMode = ColorBlindMode.Normal;
+            switch (cbTag)
+            {
+                case "protan": cbMode = ColorBlindMode.Protanopia;   break;
+                case "deutan": cbMode = ColorBlindMode.Deuteranopia; break;
+                case "tritan": cbMode = ColorBlindMode.Tritanopia;   break;
+            }
+            DisplayGammaController.SetColorBlindMode(cbMode);
+            UpdateColorBlindButtons(cbMode);
+
+            _obsEnabled = sc.GetSetting("obsEnabled", "false") == "true";
+            _obsLevel   = ParseInt(sc.GetSetting("obsLevel", _defaultIngameLevel.ToString()), _defaultIngameLevel);
+
+            bool transEnabled  = sc.GetSetting("transitionEnabled", "true") == "true";
+            int  transDuration = ParseInt(sc.GetSetting("transitionDuration", "300"), 300);
+            _proxy?.SetTransitionEnabled(transEnabled);
+            _proxy?.SetTransitionDuration(transDuration);
+
+            _proxy?.SetApplicationSettings(BuildEffectiveProfiles());
+
             _minimizeToTray    = sc.GetSetting("minimizeToTray", "false") == "true";
             _showNotifications = sc.GetSetting("showNotifications", "true") == "true";
 
@@ -897,6 +1107,8 @@ namespace Spectra.common
 
         private void CleanUp()
         {
+            _pipeServer?.Dispose();
+            _pipeServer = null;
             try
             {
                 if (_proxy?.GetVibranceInfo().isInitialized == true)

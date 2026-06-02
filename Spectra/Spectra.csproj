@@ -71,6 +71,9 @@
     <Compile Include="AMD\vendor\utils\CommonUtils.cs" />
     <Compile Include="AMD\vendor\utils\NativeMethods.cs" />
     <Compile Include="common\ApplicationSetting.cs" />
+    <Compile Include="common\LevelAnimator.cs" />
+    <Compile Include="common\PipeServer.cs" />
+    <Compile Include="common\ProfileTemplates.cs" />
     <Compile Include="common\Definitions.cs" />
     <Compile Include="common\GameSettingsForm.cs">
       <SubType>Form</SubType>

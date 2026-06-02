@@ -25,6 +25,16 @@ namespace Spectra.common
         private Label _lblScheduleSection, _lblDayLevel, _lblNightLevel, _lblDayStart, _lblNightStart;
         private Panel _sepSchedule;
 
+        private CheckBox      _chkObsIntegration;
+        private NumericUpDown _numObsLevel;
+        private Label         _lblObsSection, _lblObsLevel;
+        private Panel         _sepObs;
+
+        private CheckBox      _chkTransition;
+        private NumericUpDown _numTransitionDuration;
+        private Label         _lblTransitionSection, _lblTransitionDuration;
+        private Panel         _sepTransition;
+
         private bool _loading;
 
         public SettingsForm(MainForm mainForm, IVibranceProxy proxy,
@@ -57,6 +67,8 @@ namespace Spectra.common
                 Environment.Version, Environment.OSVersion.Version);
 
             BuildScheduleControls();
+            BuildObsControls();
+            BuildTransitionControls();
             LoadSettings();
             UpdateProfileList();
 
@@ -99,6 +111,85 @@ namespace Spectra.common
             tabBehavior.Controls.Add(_dtDayStart);
             tabBehavior.Controls.Add(_lblNightStart);
             tabBehavior.Controls.Add(_dtNightStart);
+        }
+
+        private void BuildObsControls()
+        {
+            _lblObsSection = MakeSection(0, 368);
+            _lblObsSection.Text = "OBS / STREAMING INTEGRATION";
+            _sepObs = MakeSep(388);
+
+            _chkObsIntegration = new CheckBox
+            {
+                Location = new Point(0, 396), Size = new Size(488, 22),
+                Font = new Font("Segoe UI", 9f), ForeColor = ThemeManager.Text, BackColor = Color.Transparent
+            };
+            _chkObsIntegration.CheckedChanged += (s, e) =>
+            {
+                if (_loading) return;
+                new SettingsController().SetVibranceSetting("obsEnabled", _chkObsIntegration.Checked ? "true" : "false");
+            };
+
+            _lblObsLevel = MakeLabel(0, 428);
+            _lblObsLevel.Text = "Streaming vibrance";
+            _numObsLevel = new NumericUpDown
+            {
+                Location = new Point(160, 424), Size = new Size(80, 24), Font = new Font("Segoe UI", 9f),
+                Minimum = _minLevel, Maximum = _maxLevel, BackColor = ThemeManager.Surface2, ForeColor = ThemeManager.Text
+            };
+            _numObsLevel.ValueChanged += (s, e) =>
+            {
+                if (_loading) return;
+                new SettingsController().SetVibranceSetting("obsLevel", ((int)_numObsLevel.Value).ToString());
+            };
+
+            tabBehavior.Controls.Add(_lblObsSection);
+            tabBehavior.Controls.Add(_sepObs);
+            tabBehavior.Controls.Add(_chkObsIntegration);
+            tabBehavior.Controls.Add(_lblObsLevel);
+            tabBehavior.Controls.Add(_numObsLevel);
+        }
+
+        private void BuildTransitionControls()
+        {
+            _lblTransitionSection = MakeSection(0, 464);
+            _lblTransitionSection.Text = "VIBRANCE TRANSITION";
+            _sepTransition = MakeSep(484);
+
+            _chkTransition = new CheckBox
+            {
+                Location = new Point(0, 492), Size = new Size(488, 22),
+                Font = new Font("Segoe UI", 9f), ForeColor = ThemeManager.Text, BackColor = Color.Transparent
+            };
+            _chkTransition.CheckedChanged += (s, e) =>
+            {
+                if (_loading) return;
+                var sc = new SettingsController();
+                sc.SetVibranceSetting("transitionEnabled", _chkTransition.Checked ? "true" : "false");
+                _proxy?.SetTransitionEnabled(_chkTransition.Checked);
+            };
+
+            _lblTransitionDuration = MakeLabel(0, 524);
+            _lblTransitionDuration.Text = "Duration (ms)";
+            _numTransitionDuration = new NumericUpDown
+            {
+                Location = new Point(120, 520), Size = new Size(80, 24), Font = new Font("Segoe UI", 9f),
+                Minimum = 50, Maximum = 2000, Increment = 50,
+                BackColor = ThemeManager.Surface2, ForeColor = ThemeManager.Text
+            };
+            _numTransitionDuration.ValueChanged += (s, e) =>
+            {
+                if (_loading) return;
+                int d = (int)_numTransitionDuration.Value;
+                new SettingsController().SetVibranceSetting("transitionDuration", d.ToString());
+                _proxy?.SetTransitionDuration(d);
+            };
+
+            tabBehavior.Controls.Add(_lblTransitionSection);
+            tabBehavior.Controls.Add(_sepTransition);
+            tabBehavior.Controls.Add(_chkTransition);
+            tabBehavior.Controls.Add(_lblTransitionDuration);
+            tabBehavior.Controls.Add(_numTransitionDuration);
         }
 
         private Label MakeSection(int x, int y) => new Label {
@@ -157,6 +248,16 @@ namespace Spectra.common
             chkNotifications.CheckedChanged += (s, e) => sc.SetVibranceSetting("showNotifications", chkNotifications.Checked ? "true" : "false");
             chkResetOnExit.CheckedChanged   += (s, e) => sc.SetVibranceSetting("resetOnExit",       chkResetOnExit.Checked   ? "true" : "false");
             numDelay.ValueChanged           += (s, e) => sc.SetVibranceSetting("applyDelay", ((int)numDelay.Value).ToString());
+
+            _chkObsIntegration.Checked = sc.GetSetting("obsEnabled", "false") == "true";
+            int obsLvl = Clamp(ParseInt(sc.GetSetting("obsLevel", _maxLevel.ToString()), _maxLevel), _minLevel, _maxLevel);
+            _numObsLevel.Value = obsLvl;
+            _chkObsIntegration.Text = "Enable OBS/Streaming integration";
+
+            _chkTransition.Checked  = sc.GetSetting("transitionEnabled", "true") == "true";
+            _chkTransition.Text     = "Smooth vibrance transitions";
+            int transDur = Clamp(ParseInt(sc.GetSetting("transitionDuration", "300"), 300), 50, 2000);
+            _numTransitionDuration.Value = transDur;
 
             _chkSchedule.Checked   = sc.GetSetting("scheduleEnabled", "false") == "true";
             _numDayLevel.Value     = Clamp(ParseInt(sc.GetSetting("scheduleDayLevel", _maxLevel.ToString()), _maxLevel), _minLevel, _maxLevel);

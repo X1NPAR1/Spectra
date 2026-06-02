@@ -31,8 +31,10 @@ namespace Spectra.AMD
             = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         private bool _defaultLevelSet;
+        private int  _currentDisplayedLevel;
         private volatile string _lastProfileApplied;
         private System.Threading.Timer _pollTimer;
+        private LevelAnimator _animator;
 
         private const int AmdNeutralSaturation = 100;
 
@@ -48,6 +50,8 @@ namespace Spectra.AMD
             try
             {
                 _vibranceInfo = new VibranceInfo();
+                _currentDisplayedLevel = AmdNeutralSaturation;
+
                 if (amdAdapter.IsAvailable())
                 {
                     _vibranceInfo.isInitialized = true;
@@ -56,6 +60,7 @@ namespace Spectra.AMD
 
                 if (_vibranceInfo.isInitialized)
                 {
+                    _animator = new LevelAnimator(ApplyLevelForAnimation);
                     _hook = WinEventHook.GetInstance();
                     _hook.WinEventHookHandler += OnWinEventHook;
                     _pollTimer = new System.Threading.Timer(_ => PollAndApply(), null, 0, 500);
@@ -75,17 +80,19 @@ namespace Spectra.AMD
             => string.Equals(Path.GetFileNameWithoutExtension(s.FileName), processName, StringComparison.OrdinalIgnoreCase)
             || string.Equals(s.Name, processName, StringComparison.OrdinalIgnoreCase);
 
+        private void ApplyLevelForAnimation(int level)
+        {
+            _currentDisplayedLevel = level;
+            _amdAdapter.SetSaturationOnAllDisplays(level);
+        }
+
         private void RestoreDesktopVibrance()
         {
             if (!_monitorDesktopLevels.IsEmpty)
-            {
                 foreach (var kvp in _monitorDesktopLevels)
                     _amdAdapter.SetSaturationOnDisplay(kvp.Value, kvp.Key);
-            }
             else
-            {
                 ApplyVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
-            }
         }
 
         private void PollAndApply()
@@ -107,13 +114,19 @@ namespace Spectra.AMD
                 {
                     if (_lastProfileApplied == processName) return;
                     _lastProfileApplied = processName;
-                    ApplyVibranceToTarget(match.IngameLevel);
+                    if (_animator != null && _animator.Enabled)
+                        _animator.AnimateTo(_currentDisplayedLevel, match.IngameLevel);
+                    else
+                    { _currentDisplayedLevel = match.IngameLevel; ApplyVibranceToTarget(match.IngameLevel); }
                 }
                 else
                 {
                     if (_lastProfileApplied == null) return;
                     _lastProfileApplied = null;
-                    RestoreDesktopVibrance();
+                    if (_animator != null && _animator.Enabled)
+                        _animator.AnimateTo(_currentDisplayedLevel, _vibranceInfo.userVibranceSettingDefault);
+                    else
+                        RestoreDesktopVibrance();
                 }
             }
             catch { }
@@ -138,7 +151,10 @@ namespace Spectra.AMD
                     ResolutionHelper.ChangeResolutionEx(match.ResolutionSettings, screen.DeviceName);
                 }
 
-                ApplyVibranceToTarget(match.IngameLevel);
+                if (_animator != null && _animator.Enabled)
+                    _animator.AnimateTo(_currentDisplayedLevel, match.IngameLevel);
+                else
+                { _currentDisplayedLevel = match.IngameLevel; ApplyVibranceToTarget(match.IngameLevel); }
             }
             else
             {
@@ -156,7 +172,10 @@ namespace Spectra.AMD
                     }
                 }
 
-                RestoreDesktopVibrance();
+                if (_animator != null && _animator.Enabled)
+                    _animator.AnimateTo(_currentDisplayedLevel, _vibranceInfo.userVibranceSettingDefault);
+                else
+                    RestoreDesktopVibrance();
             }
         }
 
@@ -176,9 +195,13 @@ namespace Spectra.AMD
         public void SetVibranceIngameLevel(int level)    { _vibranceInfo.userVibranceSettingActive = level; }
         public GraphicsAdapter GraphicsAdapter { get; }  = GraphicsAdapter.Amd;
 
+        public void SetTransitionEnabled(bool enabled)    { if (_animator != null) _animator.Enabled  = enabled; }
+        public void SetTransitionDuration(int durationMs) { if (_animator != null) _animator.Duration = durationMs; }
+
         public void SetVibranceWindowsLevel(int level)
         {
             _vibranceInfo.userVibranceSettingDefault = level;
+            _currentDisplayedLevel = level;
             _defaultLevelSet = true;
             _monitorDesktopLevels.Clear();
             if (_vibranceInfo.isInitialized)
@@ -198,6 +221,7 @@ namespace Spectra.AMD
             if (isPrimary || !_defaultLevelSet)
             {
                 _vibranceInfo.userVibranceSettingDefault = level;
+                _currentDisplayedLevel = level;
                 _defaultLevelSet = true;
             }
 
@@ -227,6 +251,8 @@ namespace Spectra.AMD
         {
             _pollTimer?.Dispose();
             _pollTimer = null;
+            _animator?.Dispose();
+            _animator = null;
             _hook?.RemoveWinEventHook();
             return true;
         }

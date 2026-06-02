@@ -13,7 +13,7 @@ namespace Spectra.NVIDIA
 {
     class NvidiaDynamicVibranceProxy : IVibranceProxy
     {
-        #region DllImports — vibranceDLL
+        #region DllImports
         [DllImport("vibranceDLL.dll", EntryPoint = "?initializeLibrary@vibrance@vibranceDLL@@QAE_NXZ",
             CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Auto)]
         static extern bool initializeLibrary();
@@ -55,7 +55,7 @@ namespace Spectra.NVIDIA
         static extern int getAssociatedNvidiaDisplayHandle(string deviceName, [In] int length);
         #endregion
 
-        #region DllImports — Win32
+        #region Win32
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
 
@@ -81,9 +81,11 @@ namespace Spectra.NVIDIA
         private static readonly ConcurrentDictionary<string, int> _monitorDesktopLevels
             = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-        private static bool _defaultLevelSet;
+        private static bool   _defaultLevelSet;
+        private static int    _currentDisplayedLevel;
         private static volatile string _lastProfileApplied;
         private static System.Threading.Timer _pollTimer;
+        private static LevelAnimator _animator;
 
         public NvidiaDynamicVibranceProxy(
             List<ApplicationSetting> savedApplicationSettings,
@@ -95,12 +97,14 @@ namespace Spectra.NVIDIA
                 _windowsResolutionSettings = currentWindowsResolutionSettings;
                 _vibranceInfo              = new VibranceInfo();
                 _defaultLevelSet           = false;
+                _currentDisplayedLevel     = NvapiDefaultLevel;
 
                 if (initializeLibrary())
                     InitializeProxy();
 
                 if (_vibranceInfo.isInitialized)
                 {
+                    _animator = new LevelAnimator(ApplyLevelForAnimation);
                     _hook = WinEventHook.GetInstance();
                     _hook.WinEventHookHandler += OnWinEventHook;
                     _pollTimer = new System.Threading.Timer(_ => PollAndApply(), null, 0, 500);
@@ -153,6 +157,15 @@ namespace Spectra.NVIDIA
             => string.Equals(Path.GetFileNameWithoutExtension(s.FileName), processName, StringComparison.OrdinalIgnoreCase)
             || string.Equals(s.Name, processName, StringComparison.OrdinalIgnoreCase);
 
+        private static void ApplyLevelForAnimation(int level)
+        {
+            _currentDisplayedLevel = level;
+            if (_vibranceInfo.displayHandles != null)
+                _vibranceInfo.displayHandles.ForEach(h => setDVCLevel(h, level));
+            else if (_vibranceInfo.defaultHandle != 0)
+                setDVCLevel(_vibranceInfo.defaultHandle, level);
+        }
+
         private static void RestoreDesktopVibrance()
         {
             if (!_monitorDesktopLevels.IsEmpty)
@@ -190,13 +203,19 @@ namespace Spectra.NVIDIA
                     if (_lastProfileApplied == processName) return;
                     _lastProfileApplied = processName;
                     int handle = GetBestDisplayHandle(hwnd);
-                    setDVCLevel(handle, match.IngameLevel);
+                    if (_animator != null && _animator.Enabled)
+                        _animator.AnimateTo(_currentDisplayedLevel, match.IngameLevel);
+                    else
+                    { _currentDisplayedLevel = match.IngameLevel; setDVCLevel(handle, match.IngameLevel); }
                 }
                 else
                 {
                     if (_lastProfileApplied == null) return;
                     _lastProfileApplied = null;
-                    RestoreDesktopVibrance();
+                    if (_animator != null && _animator.Enabled)
+                        _animator.AnimateTo(_currentDisplayedLevel, _vibranceInfo.userVibranceSettingDefault);
+                    else
+                        RestoreDesktopVibrance();
                 }
             }
             catch { }
@@ -223,7 +242,11 @@ namespace Spectra.NVIDIA
 
                 int handle = GetBestDisplayHandle(e.Handle);
                 _vibranceInfo.defaultHandle = handle;
-                setDVCLevel(handle, match.IngameLevel);
+
+                if (_animator != null && _animator.Enabled)
+                    _animator.AnimateTo(_currentDisplayedLevel, match.IngameLevel);
+                else
+                { _currentDisplayedLevel = match.IngameLevel; setDVCLevel(handle, match.IngameLevel); }
             }
             else
             {
@@ -241,7 +264,10 @@ namespace Spectra.NVIDIA
                     }
                 }
 
-                RestoreDesktopVibrance();
+                if (_animator != null && _animator.Enabled)
+                    _animator.AnimateTo(_currentDisplayedLevel, _vibranceInfo.userVibranceSettingDefault);
+                else
+                    RestoreDesktopVibrance();
             }
         }
 
@@ -288,9 +314,13 @@ namespace Spectra.NVIDIA
         public void SetVibranceIngameLevel(int level)    { _vibranceInfo.userVibranceSettingActive = level; }
         public GraphicsAdapter GraphicsAdapter { get; }  = GraphicsAdapter.Nvidia;
 
+        public void SetTransitionEnabled(bool enabled)     { if (_animator != null) _animator.Enabled  = enabled; }
+        public void SetTransitionDuration(int durationMs)  { if (_animator != null) _animator.Duration = durationMs; }
+
         public void SetVibranceWindowsLevel(int level)
         {
             _vibranceInfo.userVibranceSettingDefault = level;
+            _currentDisplayedLevel = level;
             _defaultLevelSet = true;
             _monitorDesktopLevels.Clear();
             if (_vibranceInfo.isInitialized)
@@ -310,6 +340,7 @@ namespace Spectra.NVIDIA
             if (isPrimary || !_defaultLevelSet)
             {
                 _vibranceInfo.userVibranceSettingDefault = level;
+                _currentDisplayedLevel = level;
                 _defaultLevelSet = true;
             }
 
@@ -341,6 +372,8 @@ namespace Spectra.NVIDIA
         {
             _pollTimer?.Dispose();
             _pollTimer = null;
+            _animator?.Dispose();
+            _animator = null;
             _hook?.RemoveWinEventHook();
             return unloadLibrary();
         }
