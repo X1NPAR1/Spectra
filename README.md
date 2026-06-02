@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/version-2.2.1-1E6EB4?style=for-the-badge" alt="Version">
+<img src="https://img.shields.io/badge/version-2.2.3-1E6EB4?style=for-the-badge" alt="Version">
 <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows" alt="Platform">
 <img src="https://img.shields.io/badge/GPU-NVIDIA%20%7C%20AMD-76B900?style=for-the-badge" alt="GPU Support">
 <img src="https://img.shields.io/badge/.NET%20Framework-4.8-512BD4?style=for-the-badge" alt=".NET 4.8">
@@ -93,6 +93,12 @@ dotnet build Spectra/Spectra.csproj --configuration Release
 Output: `Spectra/bin/x86/Release/Spectra.exe`
 
 ### Changelog
+
+#### v2.2.3 — Desktop Vibrance Stability Fix
+- **Fixed (critical):** Desktop vibrance no longer drops to 0 when switching between programs — root cause was `SetVibranceForMonitor` never updating `userVibranceSettingDefault`, causing the restore logic to apply level 0 on every window-focus event
+- **Fixed (critical):** WinEventHook else branch now has a guard: vibrance is only touched when transitioning OUT of a game profile — normal program switching has zero effect on the user's desktop vibrance
+- **Fixed:** Per-monitor desktop levels are tracked individually so each monitor returns to its own user-set level after a game session, not a single averaged fallback
+- **UI:** Added horizontal separator line between Brightness and Contrast sliders
 
 #### v2.2.1 — Profile Engine Reliability & Display Fixes
 - **Fixed (critical):** Game profiles now reliably apply vibrance on every launch and alt-tab — dual detection (WinEventHook + 500 ms polling timer) means events are never missed by either mechanism alone
@@ -272,7 +278,7 @@ Spectra is een professionele vibrance-beheertool voor Windows. Het gebruikt NVID
 
 <div align="center">
 
-**Spectra v2.2.1** — Professional Digital Vibrance, Brightness & Contrast Control  
+**Spectra v2.2.3** — Professional Digital Vibrance, Brightness & Contrast Control  
 [Discord](https://discord.gg/CdpuNUGPDe) · [GitHub](https://github.com/X1NPAR1/Spectra) · [Releases](https://github.com/X1NPAR1/Spectra/releases)
 
 </div>
