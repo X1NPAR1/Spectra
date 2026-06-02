@@ -44,7 +44,7 @@ namespace Spectra.common
             }
 
             ApplyTheme();
-                        LocalizationManager.LanguageChanged += (s, e) => ApplyLocalization();
+            LocalizationManager.LanguageChanged += (s, e) => ApplyLocalization();
 
             Icon = IconFactory.GetAppIcon(16);
         }

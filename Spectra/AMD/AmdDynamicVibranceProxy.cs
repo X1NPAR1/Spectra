@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -28,8 +29,15 @@ namespace Spectra.AMD
         private WinEventHook _hook;
         private Screen _gameScreen;
 
-        // Per-monitor desktop saturation levels tracked for correct multi-monitor restoration.
-        private readonly Dictionary<string, int> _monitorDesktopLevels = new Dictionary<string, int>();
+        // ConcurrentDictionary for thread-safe access from UI thread (SetVibranceForMonitor)
+        // and the timer thread pool (PollAndApply / RestoreDesktopVibrance).
+        private readonly ConcurrentDictionary<string, int> _monitorDesktopLevels
+            = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+        // Tracks whether userVibranceSettingDefault has been explicitly initialised.
+        // Avoids treating AMD value 0 (completely desaturated, which IS a valid user choice)
+        // as "uninitialised" — the previous == 0 check was a type-checking bug.
+        private bool _defaultLevelSet;
 
         private volatile string _lastProfileApplied;
         private System.Threading.Timer _pollTimer;
@@ -59,7 +67,9 @@ namespace Spectra.AMD
                     _hook = WinEventHook.GetInstance();
                     _hook.WinEventHookHandler += OnWinEventHook;
 
-                    _pollTimer = new System.Threading.Timer(_ => PollAndApply(), null, 1000, 500);
+                    // Start polling immediately (0ms) — games already focused when Spectra
+                    // launches are detected on the first tick, not after a 1 s blind spot.
+                    _pollTimer = new System.Threading.Timer(_ => PollAndApply(), null, 0, 500);
                 }
             }
             catch (Exception ex)
@@ -78,10 +88,9 @@ namespace Spectra.AMD
             || string.Equals(s.Name, processName, StringComparison.OrdinalIgnoreCase);
 
         // ── Desktop restore ───────────────────────────────────────────────────
-        // Restores each monitor to its saved desktop saturation level.
         private void RestoreDesktopVibrance()
         {
-            if (_monitorDesktopLevels.Count > 0)
+            if (!_monitorDesktopLevels.IsEmpty)
             {
                 foreach (var kvp in _monitorDesktopLevels)
                     _amdAdapter.SetSaturationOnDisplay(kvp.Value, kvp.Key);
@@ -102,7 +111,6 @@ namespace Spectra.AMD
                 if (hwnd == IntPtr.Zero) return;
 
                 GetWindowThreadProcessId(hwnd, out uint pid);
-
                 string processName;
                 try { using (var p = Process.GetProcessById((int)pid)) processName = p.ProcessName; }
                 catch { return; }
@@ -135,7 +143,6 @@ namespace Spectra.AMD
                 _lastProfileApplied = e.ProcessName;
 
                 Screen screen = Screen.FromHandle(e.Handle);
-
                 if (!_vibranceInfo.neverChangeResolution
                     && match.IsResolutionChangeNeeded
                     && IsResolutionChangeNeeded(screen, match.ResolutionSettings)
@@ -150,8 +157,8 @@ namespace Spectra.AMD
             }
             else
             {
-                // Only restore when leaving a game profile — leave desktop vibrance untouched
-                // during normal program switching so the user's setting is preserved.
+                // Guard: only restore when leaving a game profile.
+                // Normal program switching must NOT change the user's desktop vibrance.
                 if (_lastProfileApplied == null) return;
                 _lastProfileApplied = null;
 
@@ -190,25 +197,32 @@ namespace Spectra.AMD
         public void SetVibranceWindowsLevel(int level)
         {
             _vibranceInfo.userVibranceSettingDefault = level;
+            _defaultLevelSet = true;
             _monitorDesktopLevels.Clear();
             if (_vibranceInfo.isInitialized)
                 ApplyVibranceToTarget(level);
         }
 
-        // Records the desktop saturation for this monitor so RestoreDesktopVibrance
-        // returns each display to the user's chosen level after a game session.
+        // Records the per-monitor desktop saturation level for post-game restoration.
+        // Primary monitor level takes priority for the single-level fallback;
+        // any monitor is used when the default hasn't been set yet.
+        // Uses a dedicated _defaultLevelSet flag — AMD saturation 0 is a valid value
+        // so checking == 0 or == AmdNeutralSaturation was incorrect.
         public void SetVibranceForMonitor(string deviceName, int level)
         {
             if (string.IsNullOrEmpty(deviceName)) return;
 
             _monitorDesktopLevels[deviceName] = level;
 
-            // Keep userVibranceSettingDefault updated (used by tray presets, schedule, etc.)
             Screen primary = Screen.PrimaryScreen;
-            if (primary != null && string.Equals(deviceName, primary.DeviceName, StringComparison.OrdinalIgnoreCase))
+            bool isPrimary = primary != null &&
+                string.Equals(deviceName, primary.DeviceName, StringComparison.OrdinalIgnoreCase);
+
+            if (isPrimary || !_defaultLevelSet)
+            {
                 _vibranceInfo.userVibranceSettingDefault = level;
-            else if (_vibranceInfo.userVibranceSettingDefault == 0 || _vibranceInfo.userVibranceSettingDefault == AmdNeutralSaturation)
-                _vibranceInfo.userVibranceSettingDefault = level;
+                _defaultLevelSet = true;
+            }
 
             if (_vibranceInfo.isInitialized)
                 _amdAdapter.SetSaturationOnDisplay(level, deviceName);
@@ -245,11 +259,9 @@ namespace Spectra.AMD
             _amdAdapter.SetSaturationOnAllDisplays(_vibranceInfo.userVibranceSettingDefault);
         }
 
-        // Applies a single saturation level to the configured monitor target.
         private void ApplyVibranceToTarget(int level)
         {
             string target = _vibranceInfo.targetMonitorDeviceName;
-
             if (target == null)
             {
                 _amdAdapter.SetSaturationOnAllDisplays(level);

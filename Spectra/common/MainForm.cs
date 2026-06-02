@@ -816,7 +816,9 @@ namespace Spectra.common
                 if (!File.Exists(s.FileName)) { _profiles.Remove(s); continue; }
                 EnsureProfileList();
                 var icon = Icon.ExtractAssociatedIcon(s.FileName);
-                if (icon == null) continue;
+                // ExtractAssociatedIcon returns null for some file types. Remove the
+                // profile from both the list and memory so the UI stays consistent.
+                if (icon == null) { _profiles.Remove(s); continue; }
                 listProfiles.LargeImageList.Images.Add(icon);
                 listProfiles.Items.Add(new ListViewItem(s.Name)
                 {
@@ -863,6 +865,7 @@ namespace Spectra.common
 
         private void ForceSaveSettings()
         {
+            if (IsDisposed) return; // Form disposed during shutdown — skip
             int level = _defaultWindowsLevel;
             bool po   = false, nr = false;
             Keys hk = Keys.F9, hkMods = Keys.None;
@@ -870,13 +873,15 @@ namespace Spectra.common
             {
                 MethodInvoker read = () =>
                 {
+                    if (IsDisposed) return;
                     level  = PrimaryLevel;
                     po     = chkPrimaryMonitor.Checked;
                     nr     = chkNeverResize.Checked;
                     hk     = _hotkey?.CurrentKey ?? Keys.F9;
                     hkMods = _hotkey?.CurrentModifiers ?? Keys.None;
                 };
-                if (InvokeRequired) Invoke(read); else read();
+                try { if (InvokeRequired) Invoke(read); else read(); }
+                catch (ObjectDisposedException) { return; }
             }
             new SettingsController().SetVibranceSettings(level.ToString(), po.ToString(), nr.ToString(), _profiles, hk, hkMods);
         }

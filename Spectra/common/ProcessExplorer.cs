@@ -60,18 +60,26 @@ namespace Spectra.common
 
         private void EnumerateProcesses()
         {
+            // Cache current PID outside the loop — creating a new Process object per
+            // iteration via GetCurrentProcess() is an unnecessary allocation and P/Invoke.
+            int selfPid = Process.GetCurrentProcess().Id;
             int count = 0;
+
             foreach (Process p in Process.GetProcesses())
             {
-                if (p.MainWindowHandle == IntPtr.Zero || p.Id == Process.GetCurrentProcess().Id) continue;
+                if (p.MainWindowHandle == IntPtr.Zero || p.Id == selfPid) continue;
                 try
                 {
                     string path = GetProcessPath(p);
-                    if (!string.IsNullOrEmpty(path) && File.Exists(path))
-                    {
-                        var entry = new ProcessExplorerEntry(path, Icon.ExtractAssociatedIcon(path), p);
-                        backgroundWorker.ReportProgress(++count, entry);
-                    }
+                    if (string.IsNullOrEmpty(path) || !File.Exists(path)) continue;
+
+                    // ExtractAssociatedIcon can return null for certain file types;
+                    // skip those entries rather than passing null into the ImageList.
+                    var icon = Icon.ExtractAssociatedIcon(path);
+                    if (icon == null) continue;
+
+                    var entry = new ProcessExplorerEntry(path, icon, p);
+                    backgroundWorker.ReportProgress(++count, entry);
                 }
                 catch (Exception ex) { MainForm.Log(ex); }
             }

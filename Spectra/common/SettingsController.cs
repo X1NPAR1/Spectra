@@ -1,232 +1,176 @@
-﻿using System;
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Xml;
 using System.Xml.Serialization;
 using Spectra.NVIDIA;
 
 namespace Spectra.common
 {
-
     class SettingsController : ISettingsController
     {
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
-        static extern uint GetPrivateProfileString(
-           string lpAppName,
-           string lpKeyName,
-           string lpDefault,
-           StringBuilder lpReturnedString,
-           uint nSize,
-           string lpFileName);
+        private static extern uint GetPrivateProfileString(
+            string lpAppName, string lpKeyName, string lpDefault,
+            StringBuilder lpReturnedString, uint nSize, string lpFileName);
 
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+        private static extern bool WritePrivateProfileString(
+            string lpAppName, string lpKeyName, string lpString, string lpFileName);
 
-        [DllImport("kernel32.dll", EntryPoint = "WritePrivateProfileString")]
-        private static extern bool WritePrivateProfileString(string lpAppName,
-          string lpKeyName, string lpString, string lpFileName);
-
-        const string SzSectionName = "Settings";
-        const string SzKeyNameInactive = "inactiveValue";
-        const string SzKeyNameRefreshRate = "refreshRate";
-        const string SzKeyNameAffectPrimaryMonitorOnly = "affectPrimaryMonitorOnly";
-        const string SzKeyNameNeverSwitchResolution = "neverSwitchResolution";
-        const string SzKeyNameHotkey = "hotkey";
-        const string SzKeyNameHotkeyModifiers = "hotkeyModifiers";
+        private const string SzSectionName                   = "Settings";
+        private const string SzKeyNameInactive               = "inactiveValue";
+        private const string SzKeyNameRefreshRate            = "refreshRate";
+        private const string SzKeyNameAffectPrimaryMonitorOnly = "affectPrimaryMonitorOnly";
+        private const string SzKeyNameNeverSwitchResolution  = "neverSwitchResolution";
+        private const string SzKeyNameHotkey                 = "hotkey";
+        private const string SzKeyNameHotkeyModifiers        = "hotkeyModifiers";
 
         private static readonly string AppDataDir =
-            System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spectra");
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spectra");
 
-        private string _fileName                = System.IO.Path.Combine(AppDataDir, "Spectra.ini");
-        private string _fileNameApplicationSettings = System.IO.Path.Combine(AppDataDir, "applicationData.xml");
+        private readonly string _fileName =
+            Path.Combine(AppDataDir, "Spectra.ini");
+        private readonly string _fileNameApplicationSettings =
+            Path.Combine(AppDataDir, "applicationData.xml");
 
-
-        public bool SetVibranceSettings(string windowsLevel, string affectPrimaryMonitorOnly, string neverSwitchResolution,
-            List<ApplicationSetting> applicationSettings,
-            System.Windows.Forms.Keys hotkey = System.Windows.Forms.Keys.F9,
+        // ── Save (INI + XML) ──────────────────────────────────────────────────
+        public bool SetVibranceSettings(string windowsLevel, string affectPrimaryMonitorOnly,
+            string neverSwitchResolution, List<ApplicationSetting> applicationSettings,
+            System.Windows.Forms.Keys hotkey          = System.Windows.Forms.Keys.F9,
             System.Windows.Forms.Keys hotkeyModifiers = System.Windows.Forms.Keys.None)
         {
-            if (!PrepareFile())
-            {
-                return false;
-            }
+            if (!PrepareFile()) return false;
 
-            WritePrivateProfileString(SzSectionName, SzKeyNameInactive, windowsLevel, _fileName);
+            WritePrivateProfileString(SzSectionName, SzKeyNameInactive,               windowsLevel,             _fileName);
             WritePrivateProfileString(SzSectionName, SzKeyNameAffectPrimaryMonitorOnly, affectPrimaryMonitorOnly, _fileName);
-            WritePrivateProfileString(SzSectionName, SzKeyNameNeverSwitchResolution, neverSwitchResolution, _fileName);
-            WritePrivateProfileString(SzSectionName, SzKeyNameHotkey, ((int)hotkey).ToString(), _fileName);
-            WritePrivateProfileString(SzSectionName, SzKeyNameHotkeyModifiers, ((int)hotkeyModifiers).ToString(), _fileName);
+            WritePrivateProfileString(SzSectionName, SzKeyNameNeverSwitchResolution,  neverSwitchResolution,    _fileName);
+            WritePrivateProfileString(SzSectionName, SzKeyNameHotkey,                 ((int)hotkey).ToString(),          _fileName);
+            WritePrivateProfileString(SzSectionName, SzKeyNameHotkeyModifiers,        ((int)hotkeyModifiers).ToString(), _fileName);
 
             try
             {
-                var writer = System.Xml.XmlWriter.Create(_fileNameApplicationSettings);
-                if (writer.WriteState != WriteState.Start)
-                    return false;
-                XmlSerializer serializer = new XmlSerializer(typeof(List<ApplicationSetting>));
-                serializer.Serialize(writer, applicationSettings);
-                writer.Flush();
-                writer.Close();
+                Directory.CreateDirectory(AppDataDir);
+                // XmlWriter is wrapped in using so the file handle is always released,
+                // even when serialisation throws mid-way.
+                using (var writer = System.Xml.XmlWriter.Create(_fileNameApplicationSettings))
+                {
+                    var serializer = new XmlSerializer(typeof(List<ApplicationSetting>));
+                    serializer.Serialize(writer, applicationSettings);
+                }
             }
-            catch (Exception)
-            {
-                return false;
-            }
+            catch { return false; }
 
-            return (Marshal.GetLastWin32Error() == 0);
+            return true;
         }
 
         public bool SetVibranceSetting(string szKeyName, string value)
         {
-            if (!PrepareFile())
-            {
-                return false;
-            }
-
-            WritePrivateProfileString(SzSectionName, szKeyName, value.ToString(), _fileName);
-
-            return (Marshal.GetLastWin32Error() == 0);
-        }
-
-        // Generic single-value reader for the extra v2.x settings
-        // (theme, brightness, contrast, schedule, behavior flags, ...).
-        public string GetSetting(string szKeyName, string szDefault)
-        {
-            if (!IsFileExisting(_fileName)) return szDefault;
-            var sb = new StringBuilder(1024);
-            GetPrivateProfileString(SzSectionName, szKeyName, szDefault, sb, (uint)sb.Capacity, _fileName);
-            return sb.ToString();
-        }
-
-        private bool PrepareFile()
-        {
-            if (!IsFileExisting(_fileName))
-            {
-                try
-                {
-                    Directory.CreateDirectory(AppDataDir);
-                    MigrateFromLegacy();
-                    File.WriteAllText(_fileName, "");
-                }
-                catch { return false; }
-                if (!IsFileExisting(_fileName)) return false;
-            }
+            if (!PrepareFile()) return false;
+            WritePrivateProfileString(SzSectionName, szKeyName, value, _fileName);
             return true;
         }
 
-        // Migrates settings from the old vibranceGUI folder if they exist and
-        // the new location is empty (first run after upgrade to v2.2+).
-        private void MigrateFromLegacy()
+        public string GetSetting(string szKeyName, string szDefault)
         {
-            string legacyDir = System.IO.Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "vibranceGUI");
-            string legacyIni = System.IO.Path.Combine(legacyDir, "vibranceGUI.ini");
-            string legacyXml = System.IO.Path.Combine(legacyDir, "applicationData.xml");
-
-            if (File.Exists(legacyIni) && !IsFileExisting(_fileName))
-                File.Copy(legacyIni, _fileName, overwrite: false);
-
-            if (File.Exists(legacyXml) && !IsFileExisting(_fileNameApplicationSettings))
-                File.Copy(legacyXml, _fileNameApplicationSettings, overwrite: false);
+            if (!File.Exists(_fileName)) return szDefault;
+            return ReadIni(szKeyName, szDefault);
         }
 
+        // ── Load (INI + XML) ──────────────────────────────────────────────────
+        // INI and XML are loaded independently. A missing or corrupt XML only
+        // loses the game-profile list; all other settings are preserved from INI.
+        // A missing INI returns safe per-field defaults rather than blanket-resetting.
         public void ReadVibranceSettings(GraphicsAdapter graphicsAdapter,
             out int vibranceWindowsLevel, out bool affectPrimaryMonitorOnly,
             out bool neverSwitchResolution, out List<ApplicationSetting> applicationSettings,
             out System.Windows.Forms.Keys hotkey, out System.Windows.Forms.Keys hotkeyModifiers)
         {
-            int defaultLevel = 0;
-            int maxLevel = 0;
+            int defaultLevel = 0, maxLevel = 0;
             if (graphicsAdapter == GraphicsAdapter.Nvidia)
+                { defaultLevel = NvidiaDynamicVibranceProxy.NvapiDefaultLevel; maxLevel = NvidiaDynamicVibranceProxy.NvapiMaxLevel; }
+            else if (graphicsAdapter == GraphicsAdapter.Amd)
+                { defaultLevel = 100; maxLevel = 300; }
+
+            // Safe defaults
+            vibranceWindowsLevel     = defaultLevel;
+            affectPrimaryMonitorOnly = false;
+            neverSwitchResolution    = false;
+            hotkey                   = System.Windows.Forms.Keys.F9;
+            hotkeyModifiers          = System.Windows.Forms.Keys.None;
+
+            // ── INI settings (each field parsed independently; one bad value never
+            //    discards the rest — the previous all-or-nothing try/catch was a bug) ──
+            if (File.Exists(_fileName))
             {
-                defaultLevel = NvidiaDynamicVibranceProxy.NvapiDefaultLevel;
-                maxLevel = NvidiaDynamicVibranceProxy.NvapiMaxLevel;
-            }
-            if (graphicsAdapter == GraphicsAdapter.Amd)
-            {
-                defaultLevel = 100;
-                maxLevel = 300;
-            }
+                if (int.TryParse(ReadIni(SzKeyNameInactive, defaultLevel.ToString()), out int parsedLevel))
+                {
+                    if (parsedLevel >= defaultLevel && parsedLevel <= maxLevel)
+                        vibranceWindowsLevel = parsedLevel;
+                }
 
-            hotkey          = System.Windows.Forms.Keys.F9;
-            hotkeyModifiers = System.Windows.Forms.Keys.None;
+                affectPrimaryMonitorOnly = ReadIni(SzKeyNameAffectPrimaryMonitorOnly, "false")
+                    .Equals("true", StringComparison.OrdinalIgnoreCase);
+                neverSwitchResolution = ReadIni(SzKeyNameNeverSwitchResolution, "false")
+                    .Equals("true", StringComparison.OrdinalIgnoreCase);
 
-            if (!IsFileExisting(_fileName) || !IsFileExisting(_fileNameApplicationSettings))
-            {
-                vibranceWindowsLevel = defaultLevel;
-                affectPrimaryMonitorOnly = false;
-                applicationSettings = new List<ApplicationSetting>();
-                neverSwitchResolution = false;
-                return;
-            }
-
-            string szDefault = "";
-
-            StringBuilder szValueInactive = new StringBuilder(1024);
-            GetPrivateProfileString(SzSectionName, SzKeyNameInactive, szDefault, szValueInactive,
-                Convert.ToUInt32(szValueInactive.Capacity), _fileName);
-
-            StringBuilder szValueRefreshRate = new StringBuilder(1024);
-            GetPrivateProfileString(SzSectionName, SzKeyNameRefreshRate, szDefault, szValueRefreshRate,
-                Convert.ToUInt32(szValueRefreshRate.Capacity), _fileName);
-
-            StringBuilder szValueAffectPrimaryMonitorOnly = new StringBuilder(1024);
-            GetPrivateProfileString(SzSectionName, SzKeyNameAffectPrimaryMonitorOnly, "false",
-                szValueAffectPrimaryMonitorOnly, Convert.ToUInt32(szValueAffectPrimaryMonitorOnly.Capacity), _fileName);
-
-            StringBuilder szValueNeverSwitchResolution = new StringBuilder(1024);
-            GetPrivateProfileString(SzSectionName, SzKeyNameNeverSwitchResolution, "false",
-                szValueNeverSwitchResolution, Convert.ToUInt32(szValueNeverSwitchResolution.Capacity), _fileName);
-
-            StringBuilder szHotkey = new StringBuilder(1024);
-            GetPrivateProfileString(SzSectionName, SzKeyNameHotkey, ((int)System.Windows.Forms.Keys.F9).ToString(),
-                szHotkey, Convert.ToUInt32(szHotkey.Capacity), _fileName);
-
-            StringBuilder szHotkeyMods = new StringBuilder(1024);
-            GetPrivateProfileString(SzSectionName, SzKeyNameHotkeyModifiers, "0",
-                szHotkeyMods, Convert.ToUInt32(szHotkeyMods.Capacity), _fileName);
-
-            try
-            {
-                vibranceWindowsLevel     = int.Parse(szValueInactive.ToString());
-                affectPrimaryMonitorOnly = bool.Parse(szValueAffectPrimaryMonitorOnly.ToString());
-                neverSwitchResolution    = bool.Parse(szValueNeverSwitchResolution.ToString());
-
-                if (int.TryParse(szHotkey.ToString(), out int hkInt))
+                if (int.TryParse(ReadIni(SzKeyNameHotkey, ((int)System.Windows.Forms.Keys.F9).ToString()), out int hkInt))
                     hotkey = (System.Windows.Forms.Keys)hkInt;
-                if (int.TryParse(szHotkeyMods.ToString(), out int hkModsInt))
+                if (int.TryParse(ReadIni(SzKeyNameHotkeyModifiers, "0"), out int hkModsInt))
                     hotkeyModifiers = (System.Windows.Forms.Keys)hkModsInt;
             }
-            catch (Exception)
-            {
-                vibranceWindowsLevel = defaultLevel;
-                affectPrimaryMonitorOnly = false;
-                applicationSettings = new List<ApplicationSetting>();
-                neverSwitchResolution = false;
-                return;
-            }
 
-            if (vibranceWindowsLevel < defaultLevel || vibranceWindowsLevel > maxLevel)
-                vibranceWindowsLevel = defaultLevel;
+            // ── Game profiles XML (failure → empty list, INI data unaffected) ──
+            applicationSettings = new List<ApplicationSetting>();
+            if (!File.Exists(_fileNameApplicationSettings)) return;
 
             try
             {
-                var reader = System.Xml.XmlReader.Create(_fileNameApplicationSettings);
-                XmlSerializer serializer = new XmlSerializer(typeof(List<ApplicationSetting>));
-                applicationSettings = (List<ApplicationSetting>)serializer.Deserialize(reader);
-                reader.Close();
+                // XmlReader in using so the file handle is released even on exception.
+                using (var reader = System.Xml.XmlReader.Create(_fileNameApplicationSettings))
+                {
+                    var serializer = new XmlSerializer(typeof(List<ApplicationSetting>));
+                    applicationSettings = (List<ApplicationSetting>)serializer.Deserialize(reader);
+                }
             }
-            catch (Exception)
-            {
-                applicationSettings = new List<ApplicationSetting>();
-            }
+            catch { applicationSettings = new List<ApplicationSetting>(); }
         }
 
-        private bool IsFileExisting(string szFilename)
+        // ── Helpers ───────────────────────────────────────────────────────────
+        private string ReadIni(string key, string def)
         {
-            return File.Exists(szFilename);
+            var sb = new StringBuilder(1024);
+            GetPrivateProfileString(SzSectionName, key, def, sb, (uint)sb.Capacity, _fileName);
+            return sb.ToString();
+        }
+
+        private bool PrepareFile()
+        {
+            if (File.Exists(_fileName)) return true;
+            try
+            {
+                Directory.CreateDirectory(AppDataDir);
+                MigrateFromLegacy();
+                File.WriteAllText(_fileName, "");
+                return File.Exists(_fileName);
+            }
+            catch { return false; }
+        }
+
+        private void MigrateFromLegacy()
+        {
+            string legacyDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "vibranceGUI");
+
+            string legacyIni = Path.Combine(legacyDir, "vibranceGUI.ini");
+            string legacyXml = Path.Combine(legacyDir, "applicationData.xml");
+
+            if (File.Exists(legacyIni) && !File.Exists(_fileName))
+                File.Copy(legacyIni, _fileName, overwrite: false);
+
+            if (File.Exists(legacyXml) && !File.Exists(_fileNameApplicationSettings))
+                File.Copy(legacyXml, _fileNameApplicationSettings, overwrite: false);
         }
     }
 }
-
-
