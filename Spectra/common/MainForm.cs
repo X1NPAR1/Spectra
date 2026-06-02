@@ -507,45 +507,6 @@ namespace Spectra.common
             return list;
         }
 
-        private void trackBlueLight_Scroll(object sender, EventArgs e)
-        {
-            DisplayGammaController.SetBlueLight(trackBlueLight.Value);
-            labelBlueLightVal.Text = trackBlueLight.Value + "%";
-            new SettingsController().SetVibranceSetting("blueLight", trackBlueLight.Value.ToString());
-        }
-
-        private void btnColorBlind_Click(object sender, EventArgs e)
-        {
-            var tag = ((Button)sender).Tag?.ToString();
-            var mode = ColorBlindMode.Normal;
-            switch (tag)
-            {
-                case "protan": mode = ColorBlindMode.Protanopia;   break;
-                case "deutan": mode = ColorBlindMode.Deuteranopia; break;
-                case "tritan": mode = ColorBlindMode.Tritanopia;   break;
-            }
-            DisplayGammaController.SetColorBlindMode(mode);
-            new SettingsController().SetVibranceSetting("colorBlind", tag ?? "normal");
-            UpdateColorBlindButtons(mode);
-        }
-
-        private void UpdateColorBlindButtons(ColorBlindMode mode)
-        {
-            foreach (var (Btn, Mode) in new[]
-            {
-                (btnCbNormal,       ColorBlindMode.Normal),
-                (btnCbProtanopia,   ColorBlindMode.Protanopia),
-                (btnCbDeuteranopia, ColorBlindMode.Deuteranopia),
-                (btnCbTritanopia,   ColorBlindMode.Tritanopia)
-            })
-            {
-                bool active = Mode == mode;
-                Btn.BackColor = active ? ThemeManager.Accent : ThemeManager.Surface2;
-                Btn.ForeColor = active ? Color.White         : ThemeManager.TextSub;
-                Btn.FlatAppearance.BorderColor = active ? ThemeManager.Accent : ThemeManager.Border;
-            }
-        }
-
         private void btnTemplates_Click(object sender, EventArgs e)
         {
             var menu = new ContextMenuStrip();
@@ -1006,9 +967,7 @@ namespace Spectra.common
             DisplayGammaController.Set(trackBrightness.Value, trackContrast.Value);
 
             int blueLight = ParseInt(sc.GetSetting("blueLight", "0"), 0);
-            trackBlueLight.Value = Math.Max(0, Math.Min(100, blueLight));
-            labelBlueLightVal.Text = trackBlueLight.Value + "%";
-            DisplayGammaController.SetBlueLight(trackBlueLight.Value);
+            DisplayGammaController.SetBlueLight(Math.Max(0, Math.Min(100, blueLight)));
 
             string cbTag = sc.GetSetting("colorBlind", "normal");
             var cbMode = ColorBlindMode.Normal;
@@ -1019,7 +978,6 @@ namespace Spectra.common
                 case "tritan": cbMode = ColorBlindMode.Tritanopia;   break;
             }
             DisplayGammaController.SetColorBlindMode(cbMode);
-            UpdateColorBlindButtons(cbMode);
 
             _obsEnabled = sc.GetSetting("obsEnabled", "false") == "true";
             _obsLevel   = ParseInt(sc.GetSetting("obsLevel", _defaultIngameLevel.ToString()), _defaultIngameLevel);

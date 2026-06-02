@@ -130,7 +130,7 @@ namespace Spectra.common
             labelAppName.Location  = new Point(70, 10);
             labelAppName.AutoSize  = true;
 
-            labelVersion.Text      = "v2.4.4.1";
+            labelVersion.Text      = "v" + Application.ProductVersion;
             labelVersion.Font      = new Font("Segoe UI", 7.5f);
             labelVersion.ForeColor = Color.FromArgb(180, 215, 255);
             labelVersion.BackColor = Color.Transparent;
@@ -215,7 +215,7 @@ namespace Spectra.common
 
             // â”€â”€ DISPLAY (brightness / contrast) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             panelDisplay.Location  = new Point(14, 220);
-            panelDisplay.Size      = new Size(452, 228);
+            panelDisplay.Size      = new Size(452, 116);
             panelDisplay.BackColor = ThemeManager.Surface;
             panelDisplay.Paint    += CardPanel_Paint;
 
@@ -292,61 +292,6 @@ namespace Spectra.common
                 BackColor = ThemeManager.Border
             };
 
-            var sepBlueLine = new Panel { Location = new Point(12, 114), Size = new Size(428, 1), BackColor = ThemeManager.Border };
-
-            labelSectionBlueLight = new Label();
-            labelSectionBlueLight.Text      = "BLUE LIGHT & COLOR";
-            labelSectionBlueLight.Font      = new Font("Segoe UI", 7.5f, FontStyle.Bold);
-            labelSectionBlueLight.ForeColor = ThemeManager.Accent;
-            labelSectionBlueLight.BackColor = Color.Transparent;
-            labelSectionBlueLight.Location  = new Point(16, 122);
-            labelSectionBlueLight.AutoSize  = true;
-
-            labelBlueLightLbl = new Label();
-            labelBlueLightLbl.Text      = "Blue Light";
-            labelBlueLightLbl.Font      = new Font("Segoe UI", 8.5f);
-            labelBlueLightLbl.ForeColor = ThemeManager.TextSub;
-            labelBlueLightLbl.BackColor = Color.Transparent;
-            labelBlueLightLbl.Location  = new Point(16, 144);
-            labelBlueLightLbl.Size      = new Size(90, 18);
-
-            trackBlueLight = new TrackBar();
-            trackBlueLight.Location  = new Point(108, 140);
-            trackBlueLight.Size      = new Size(280, 30);
-            trackBlueLight.Minimum   = 0;
-            trackBlueLight.Maximum   = 100;
-            trackBlueLight.Value     = 0;
-            trackBlueLight.TickStyle = TickStyle.None;
-            trackBlueLight.BackColor = ThemeManager.Surface;
-            trackBlueLight.Scroll   += trackBlueLight_Scroll;
-            ((System.ComponentModel.ISupportInitialize)trackBlueLight).BeginInit();
-
-            labelBlueLightVal = new Label();
-            labelBlueLightVal.Text      = "0%";
-            labelBlueLightVal.Font      = new Font("Segoe UI", 9f, FontStyle.Bold);
-            labelBlueLightVal.ForeColor = ThemeManager.Accent;
-            labelBlueLightVal.BackColor = Color.Transparent;
-            labelBlueLightVal.Location  = new Point(394, 144);
-            labelBlueLightVal.Size      = new Size(44, 20);
-            labelBlueLightVal.TextAlign = ContentAlignment.MiddleLeft;
-
-            int cbx = 16;
-            foreach (var pair in new[]
-            {
-                new { Btn = (Button)null, Tag = "normal",   Label = "Normal"      },
-                new { Btn = (Button)null, Tag = "protan",   Label = "Protanopia"  },
-                new { Btn = (Button)null, Tag = "deutan",   Label = "Deuteranopia"},
-                new { Btn = (Button)null, Tag = "tritan",   Label = "Tritanopia"  },
-            })
-            {
-                _ = pair;
-            }
-
-            btnCbNormal    = MakeColorBlindBtn("Normal",       "normal",   ref cbx);
-            btnCbProtanopia= MakeColorBlindBtn("Protanopia",   "protan",   ref cbx);
-            btnCbDeuteranopia=MakeColorBlindBtn("Deuteranopia","deutan",   ref cbx);
-            btnCbTritanopia= MakeColorBlindBtn("Tritanopia",   "tritan",   ref cbx);
-
             panelDisplay.Controls.Add(labelSectionDisplay);
             panelDisplay.Controls.Add(labelBrightness);
             panelDisplay.Controls.Add(trackBrightness);
@@ -356,16 +301,6 @@ namespace Spectra.common
             panelDisplay.Controls.Add(trackContrast);
             panelDisplay.Controls.Add(labelContrastVal);
             panelDisplay.Controls.Add(btnResetDisplay);
-            panelDisplay.Controls.Add(sepBlueLine);
-            panelDisplay.Controls.Add(labelSectionBlueLight);
-            panelDisplay.Controls.Add(labelBlueLightLbl);
-            panelDisplay.Controls.Add(trackBlueLight);
-            panelDisplay.Controls.Add(labelBlueLightVal);
-            panelDisplay.Controls.Add(btnCbNormal);
-            panelDisplay.Controls.Add(btnCbProtanopia);
-            panelDisplay.Controls.Add(btnCbDeuteranopia);
-            panelDisplay.Controls.Add(btnCbTritanopia);
-            ((System.ComponentModel.ISupportInitialize)trackBlueLight).EndInit();
 
             // â”€â”€ SETTINGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             panelSettings.Location  = new Point(14, 346);
@@ -661,26 +596,6 @@ namespace Spectra.common
         }
 
         // â”€â”€ Fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        private Button MakeColorBlindBtn(string label, string tag, ref int x)
-        {
-            var btn = new Button
-            {
-                Text      = label,
-                Font      = new Font("Segoe UI", 7.5f),
-                ForeColor = ThemeManager.TextSub,
-                BackColor = ThemeManager.Surface2,
-                FlatStyle = FlatStyle.Flat,
-                Location  = new Point(x, 178),
-                Size      = new Size(98, 24),
-                Cursor    = Cursors.Hand,
-                Tag       = tag
-            };
-            btn.FlatAppearance.BorderColor = ThemeManager.Border;
-            btn.Click += btnColorBlind_Click;
-            x += 104;
-            return btn;
-        }
-
         private Panel     panelHeader;
         private Label     labelAppName;
         private Label     labelVersion;
@@ -702,14 +617,6 @@ namespace Spectra.common
         private TrackBar  trackContrast;
         private Label     labelContrastVal;
         private Button    btnResetDisplay;
-        private Label     labelSectionBlueLight;
-        private Label     labelBlueLightLbl;
-        private TrackBar  trackBlueLight;
-        private Label     labelBlueLightVal;
-        private Button    btnCbNormal;
-        private Button    btnCbProtanopia;
-        private Button    btnCbDeuteranopia;
-        private Button    btnCbTritanopia;
 
         private Panel     panelSettings;
         private Label     labelSectionSettings;

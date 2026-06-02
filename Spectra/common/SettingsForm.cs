@@ -25,6 +25,10 @@ namespace Spectra.common
         private Label _lblScheduleSection, _lblDayLevel, _lblNightLevel, _lblDayStart, _lblNightStart;
         private Panel _sepSchedule;
 
+        private TrackBar      _trackBlueLight;
+        private Label         _labelBlueLightVal;
+        private Button[]      _btnColorBlind;
+
         private CheckBox      _chkObsIntegration;
         private NumericUpDown _numObsLevel;
         private Label         _lblObsSection, _lblObsLevel;
@@ -69,6 +73,7 @@ namespace Spectra.common
             BuildScheduleControls();
             BuildObsControls();
             BuildTransitionControls();
+            BuildDisplayEnhancementControls();
             LoadSettings();
             UpdateProfileList();
 
@@ -111,6 +116,120 @@ namespace Spectra.common
             tabBehavior.Controls.Add(_dtDayStart);
             tabBehavior.Controls.Add(_lblNightStart);
             tabBehavior.Controls.Add(_dtNightStart);
+        }
+
+        private void BuildDisplayEnhancementControls()
+        {
+            int yBase = chkNeverResize.Bottom + 20;
+
+            var sep = MakeSep(yBase);
+
+            var lblSection = MakeSection(0, yBase + 8);
+            lblSection.Text = "BLUE LIGHT & COLOR";
+
+            var lblBlue = MakeLabel(0, yBase + 34);
+            lblBlue.Text = "Blue Light";
+
+            _trackBlueLight = new TrackBar
+            {
+                Location  = new Point(100, yBase + 30),
+                Size      = new Size(290, 30),
+                Minimum   = 0, Maximum = 100, Value = 0,
+                TickStyle = TickStyle.None,
+                BackColor = ThemeManager.Surface
+            };
+            _trackBlueLight.Scroll += (s, e) =>
+            {
+                if (_loading) return;
+                DisplayGammaController.SetBlueLight(_trackBlueLight.Value);
+                _labelBlueLightVal.Text = _trackBlueLight.Value + "%";
+                new SettingsController().SetVibranceSetting("blueLight", _trackBlueLight.Value.ToString());
+            };
+
+            _labelBlueLightVal = new Label
+            {
+                Location  = new Point(396, yBase + 34),
+                Size      = new Size(44, 20),
+                Font      = new Font("Segoe UI", 9f, FontStyle.Bold),
+                ForeColor = ThemeManager.Accent,
+                BackColor = Color.Transparent,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+
+            int yBtn = yBase + 74;
+            var lblCb = MakeSection(0, yBtn);
+            lblCb.Text = "COLOR BLIND PRESET";
+
+            string[] cbLabels = { "Normal", "Protanopia", "Deuteranopia", "Tritanopia" };
+            string[] cbTags   = { "normal", "protan",     "deutan",       "tritan"     };
+            _btnColorBlind = new Button[4];
+            int bx = 0;
+            for (int i = 0; i < 4; i++)
+            {
+                int idx = i;
+                var btn = new Button
+                {
+                    Text      = cbLabels[i],
+                    Font      = new Font("Segoe UI", 7.5f),
+                    ForeColor = ThemeManager.TextSub,
+                    BackColor = ThemeManager.Surface2,
+                    FlatStyle = FlatStyle.Flat,
+                    Location  = new Point(bx, yBtn + 22),
+                    Size      = new Size(112, 24),
+                    Cursor    = Cursors.Hand,
+                    Tag       = cbTags[i]
+                };
+                btn.FlatAppearance.BorderColor = ThemeManager.Border;
+                btn.Click += (s, e) => OnColorBlindClick((string)((Button)s).Tag);
+                _btnColorBlind[i] = btn;
+                bx += 118;
+            }
+
+            tabDisplay.Controls.Add(sep);
+            tabDisplay.Controls.Add(lblSection);
+            tabDisplay.Controls.Add(lblBlue);
+            tabDisplay.Controls.Add(_trackBlueLight);
+            tabDisplay.Controls.Add(_labelBlueLightVal);
+            tabDisplay.Controls.Add(lblCb);
+            foreach (var btn in _btnColorBlind) tabDisplay.Controls.Add(btn);
+        }
+
+        private void OnColorBlindClick(string tag)
+        {
+            var mode = ColorBlindMode.Normal;
+            switch (tag)
+            {
+                case "protan": mode = ColorBlindMode.Protanopia;   break;
+                case "deutan": mode = ColorBlindMode.Deuteranopia; break;
+                case "tritan": mode = ColorBlindMode.Tritanopia;   break;
+            }
+            DisplayGammaController.SetColorBlindMode(mode);
+            new SettingsController().SetVibranceSetting("colorBlind", tag);
+            UpdateColorBlindButtons(mode);
+        }
+
+        private void UpdateColorBlindButtons(ColorBlindMode mode)
+        {
+            if (_btnColorBlind == null) return;
+            string[] tags = { "normal", "protan", "deutan", "tritan" };
+            for (int i = 0; i < _btnColorBlind.Length; i++)
+            {
+                bool active = tags[i] == ColorBlindModeToTag(mode);
+                _btnColorBlind[i].BackColor = active ? ThemeManager.Accent : ThemeManager.Surface2;
+                _btnColorBlind[i].ForeColor = active ? Color.White : ThemeManager.TextSub;
+                _btnColorBlind[i].FlatAppearance.BorderColor = active ? ThemeManager.Accent : ThemeManager.Border;
+            }
+        }
+
+        private static string ColorBlindModeToTag(ColorBlindMode mode)
+        {
+            switch (mode)
+            {
+                case ColorBlindMode.Protanopia:   return "protan";
+                case ColorBlindMode.Deuteranopia: return "deutan";
+                case ColorBlindMode.Tritanopia:   return "tritan";
+                default:                          return "normal";
+            }
         }
 
         private void BuildObsControls()
@@ -248,6 +367,20 @@ namespace Spectra.common
             chkNotifications.CheckedChanged += (s, e) => sc.SetVibranceSetting("showNotifications", chkNotifications.Checked ? "true" : "false");
             chkResetOnExit.CheckedChanged   += (s, e) => sc.SetVibranceSetting("resetOnExit",       chkResetOnExit.Checked   ? "true" : "false");
             numDelay.ValueChanged           += (s, e) => sc.SetVibranceSetting("applyDelay", ((int)numDelay.Value).ToString());
+
+            int bl = Clamp(ParseInt(sc.GetSetting("blueLight", "0"), 0), 0, 100);
+            _trackBlueLight.Value = bl;
+            _labelBlueLightVal.Text = bl + "%";
+
+            string cbTag = sc.GetSetting("colorBlind", "normal");
+            var cbMode = ColorBlindMode.Normal;
+            switch (cbTag)
+            {
+                case "protan": cbMode = ColorBlindMode.Protanopia;   break;
+                case "deutan": cbMode = ColorBlindMode.Deuteranopia; break;
+                case "tritan": cbMode = ColorBlindMode.Tritanopia;   break;
+            }
+            UpdateColorBlindButtons(cbMode);
 
             _chkObsIntegration.Checked = sc.GetSetting("obsEnabled", "false") == "true";
             int obsLvl = Clamp(ParseInt(sc.GetSetting("obsLevel", _maxLevel.ToString()), _maxLevel), _minLevel, _maxLevel);
