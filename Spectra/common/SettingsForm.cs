@@ -31,13 +31,16 @@ namespace Spectra.common
 
         private CheckBox      _chkObsIntegration;
         private NumericUpDown _numObsLevel;
-        private Label         _lblObsSection, _lblObsLevel;
+        private Label         _lblObsSection, _lblObsLevelLbl;
         private Panel         _sepObs;
 
         private CheckBox      _chkTransition;
         private NumericUpDown _numTransitionDuration;
-        private Label         _lblTransitionSection, _lblTransitionDuration;
+        private Label         _lblTransitionSection, _lblTransitionDurationLbl;
         private Panel         _sepTransition;
+
+        private Label         _lblBlueLightSection, _lblBlueLightLbl;
+        private Label         _lblColorBlindSection;
 
         private bool _loading;
 
@@ -124,11 +127,9 @@ namespace Spectra.common
 
             var sep = MakeSep(yBase);
 
-            var lblSection = MakeSection(0, yBase + 8);
-            lblSection.Text = "BLUE LIGHT & COLOR";
+            _lblBlueLightSection = MakeSection(0, yBase + 8);
 
-            var lblBlue = MakeLabel(0, yBase + 34);
-            lblBlue.Text = "Blue Light";
+            _lblBlueLightLbl = MakeLabel(0, yBase + 34);
 
             _trackBlueLight = new TrackBar
             {
@@ -157,8 +158,7 @@ namespace Spectra.common
             };
 
             int yBtn = yBase + 74;
-            var lblCb = MakeSection(0, yBtn);
-            lblCb.Text = "COLOR BLIND PRESET";
+            _lblColorBlindSection = MakeSection(0, yBtn);
 
             string[] cbLabels = { "Normal", "Protanopia", "Deuteranopia", "Tritanopia" };
             string[] cbTags   = { "normal", "protan",     "deutan",       "tritan"     };
@@ -186,11 +186,11 @@ namespace Spectra.common
             }
 
             tabDisplay.Controls.Add(sep);
-            tabDisplay.Controls.Add(lblSection);
-            tabDisplay.Controls.Add(lblBlue);
+            tabDisplay.Controls.Add(_lblBlueLightSection);
+            tabDisplay.Controls.Add(_lblBlueLightLbl);
             tabDisplay.Controls.Add(_trackBlueLight);
             tabDisplay.Controls.Add(_labelBlueLightVal);
-            tabDisplay.Controls.Add(lblCb);
+            tabDisplay.Controls.Add(_lblColorBlindSection);
             foreach (var btn in _btnColorBlind) tabDisplay.Controls.Add(btn);
         }
 
@@ -235,7 +235,6 @@ namespace Spectra.common
         private void BuildObsControls()
         {
             _lblObsSection = MakeSection(0, 368);
-            _lblObsSection.Text = "OBS / STREAMING INTEGRATION";
             _sepObs = MakeSep(388);
 
             _chkObsIntegration = new CheckBox
@@ -249,8 +248,7 @@ namespace Spectra.common
                 new SettingsController().SetVibranceSetting("obsEnabled", _chkObsIntegration.Checked ? "true" : "false");
             };
 
-            _lblObsLevel = MakeLabel(0, 428);
-            _lblObsLevel.Text = "Streaming vibrance";
+            _lblObsLevelLbl = MakeLabel(0, 428);
             _numObsLevel = new NumericUpDown
             {
                 Location = new Point(160, 424), Size = new Size(80, 24), Font = new Font("Segoe UI", 9f),
@@ -265,14 +263,13 @@ namespace Spectra.common
             tabBehavior.Controls.Add(_lblObsSection);
             tabBehavior.Controls.Add(_sepObs);
             tabBehavior.Controls.Add(_chkObsIntegration);
-            tabBehavior.Controls.Add(_lblObsLevel);
+            tabBehavior.Controls.Add(_lblObsLevelLbl);
             tabBehavior.Controls.Add(_numObsLevel);
         }
 
         private void BuildTransitionControls()
         {
             _lblTransitionSection = MakeSection(0, 464);
-            _lblTransitionSection.Text = "VIBRANCE TRANSITION";
             _sepTransition = MakeSep(484);
 
             _chkTransition = new CheckBox
@@ -288,8 +285,7 @@ namespace Spectra.common
                 _proxy?.SetTransitionEnabled(_chkTransition.Checked);
             };
 
-            _lblTransitionDuration = MakeLabel(0, 524);
-            _lblTransitionDuration.Text = "Duration (ms)";
+            _lblTransitionDurationLbl = MakeLabel(0, 524);
             _numTransitionDuration = new NumericUpDown
             {
                 Location = new Point(120, 520), Size = new Size(80, 24), Font = new Font("Segoe UI", 9f),
@@ -307,7 +303,7 @@ namespace Spectra.common
             tabBehavior.Controls.Add(_lblTransitionSection);
             tabBehavior.Controls.Add(_sepTransition);
             tabBehavior.Controls.Add(_chkTransition);
-            tabBehavior.Controls.Add(_lblTransitionDuration);
+            tabBehavior.Controls.Add(_lblTransitionDurationLbl);
             tabBehavior.Controls.Add(_numTransitionDuration);
         }
 
@@ -385,10 +381,8 @@ namespace Spectra.common
             _chkObsIntegration.Checked = sc.GetSetting("obsEnabled", "false") == "true";
             int obsLvl = Clamp(ParseInt(sc.GetSetting("obsLevel", _maxLevel.ToString()), _maxLevel), _minLevel, _maxLevel);
             _numObsLevel.Value = obsLvl;
-            _chkObsIntegration.Text = "Enable OBS/Streaming integration";
 
             _chkTransition.Checked  = sc.GetSetting("transitionEnabled", "true") == "true";
-            _chkTransition.Text     = "Smooth vibrance transitions";
             int transDur = Clamp(ParseInt(sc.GetSetting("transitionDuration", "300"), 300), 50, 2000);
             _numTransitionDuration.Value = transDur;
 
@@ -477,6 +471,23 @@ namespace Spectra.common
             lblDataNote.Text       = LocalizationManager.Get("DataNote");
             btnOpenLog.Text        = LocalizationManager.Get("OpenLogFolder");
             btnResetAll.Text       = LocalizationManager.Get("ResetAll");
+
+            if (_lblObsSection         != null) _lblObsSection.Text         = LocalizationManager.Get("ObsSection");
+            if (_chkObsIntegration     != null) _chkObsIntegration.Text     = LocalizationManager.Get("ObsEnable");
+            if (_lblObsLevelLbl        != null) _lblObsLevelLbl.Text         = LocalizationManager.Get("ObsVibrance");
+            if (_lblTransitionSection  != null) _lblTransitionSection.Text   = LocalizationManager.Get("TransitionSection");
+            if (_chkTransition         != null) _chkTransition.Text          = LocalizationManager.Get("TransitionEnable");
+            if (_lblTransitionDurationLbl != null) _lblTransitionDurationLbl.Text = LocalizationManager.Get("TransitionDuration");
+            if (_lblBlueLightSection   != null) _lblBlueLightSection.Text    = LocalizationManager.Get("BlueLightSection");
+            if (_lblBlueLightLbl       != null) _lblBlueLightLbl.Text        = LocalizationManager.Get("BlueLightLabel");
+            if (_lblColorBlindSection  != null) _lblColorBlindSection.Text   = LocalizationManager.Get("ColorBlindSection");
+            if (_btnColorBlind != null && _btnColorBlind.Length == 4)
+            {
+                _btnColorBlind[0].Text = LocalizationManager.Get("CbNormal");
+                _btnColorBlind[1].Text = LocalizationManager.Get("CbProtanopia");
+                _btnColorBlind[2].Text = LocalizationManager.Get("CbDeuteranopia");
+                _btnColorBlind[3].Text = LocalizationManager.Get("CbTritanopia");
+            }
 
             lblAboutDesc.Text    = LocalizationManager.Get("AboutDesc");
             lblSupportTitle.Text = LocalizationManager.Get("AboutSupport");

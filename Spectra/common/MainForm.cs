@@ -261,6 +261,7 @@ namespace Spectra.common
             btnBrowse.Text             = LocalizationManager.Get("BrowseRunning");
             btnDetectGame.Text         = LocalizationManager.Get("DetectGame");
             btnRemove.Text             = LocalizationManager.Get("Remove");
+            btnTemplates.Text          = LocalizationManager.Get("Templates");
 
             btnPresetDef.Text  = LocalizationManager.Get("PresetDefault");
             btnPresetLow.Text  = LocalizationManager.Get("PresetLow");
@@ -513,10 +514,9 @@ namespace Spectra.common
             foreach (var t in ProfileTemplates.All)
             {
                 var tmpl = t;
-                var item = new ToolStripMenuItem(string.Format("{0}  —  {1}%", tmpl.Name, tmpl.Percent))
-                {
-                    Tag = tmpl
-                };
+                var item = new ToolStripMenuItem(
+                    string.Format("{0}  —  {1}%", tmpl.GetLocalizedName(), tmpl.Percent))
+                { Tag = tmpl };
                 item.Click += (s2, e2) => ApplyTemplate(tmpl);
                 menu.Items.Add(item);
             }
@@ -538,7 +538,7 @@ namespace Spectra.common
                 if (!_gamingMode) _proxy?.SetApplicationSettings(BuildEffectiveProfiles());
                 ForceSaveSettings();
                 MessageBox.Show(
-                    string.Format("Template '{0}' applied to {1} profile(s).", template.Name, listProfiles.SelectedItems.Count),
+                    string.Format("Template '{0}' applied to {1} profile(s).", template.GetLocalizedName(), listProfiles.SelectedItems.Count),
                     AppName, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
@@ -561,21 +561,21 @@ namespace Spectra.common
 
             var menu = new ContextMenuStrip();
 
-            var editItem = new ToolStripMenuItem("Edit Profile");
+            var editItem = new ToolStripMenuItem(LocalizationManager.Get("EditProfile"));
             editItem.Click += (s, e2) => listProfiles_DoubleClick(this, EventArgs.Empty);
             menu.Items.Add(editItem);
 
-            var templatesMenu = new ToolStripMenuItem("Apply Template");
+            var templatesMenu = new ToolStripMenuItem(LocalizationManager.Get("TemplateApply"));
             foreach (var t in ProfileTemplates.All)
             {
                 var tmpl = t;
-                var sub = new ToolStripMenuItem(tmpl.Name);
+                var sub = new ToolStripMenuItem(tmpl.GetLocalizedName());
                 sub.Click += (s, e2) => ApplyTemplate(tmpl);
                 templatesMenu.DropDownItems.Add(sub);
             }
             menu.Items.Add(templatesMenu);
 
-            var setVibrance = new ToolStripMenuItem("Set Vibrance for Selected...");
+            var setVibrance = new ToolStripMenuItem(LocalizationManager.Get("BatchSetVibrance"));
             setVibrance.Click += (s, e2) => BatchSetVibrance();
             menu.Items.Add(setVibrance);
 
@@ -604,7 +604,7 @@ namespace Spectra.common
                 form.Icon            = IconFactory.GetAppIcon(16);
                 form.BackColor       = ThemeManager.Surface;
 
-                var lbl = new Label { Text = "Vibrance level:", Location = new Point(16, 16), AutoSize = true,
+                var lbl = new Label { Text = LocalizationManager.Get("VibLevelLabel"), Location = new Point(16, 16), AutoSize = true,
                     Font = new Font("Segoe UI", 9f), ForeColor = ThemeManager.Text };
                 var num = new NumericUpDown { Location = new Point(130, 12), Size = new Size(80, 24),
                     Minimum = _minLevel, Maximum = _maxLevel, Value = _defaultIngameLevel,

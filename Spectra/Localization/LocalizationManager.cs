@@ -137,6 +137,40 @@ namespace Spectra.Localization
             ["OpenLogFolderShort"]= new[]{"Open logs","Günlükleri aç","Открыть журналы","Logs öffnen","Ouvrir les logs","Logs openen"},
             ["SysInfo"]          = new[]{"System Information","Sistem Bilgisi","Системная информация","Systeminformationen","Informations système","Systeeminformatie"},
 
+            // OBS / Streaming Integration (Settings > Behavior)
+            ["ObsSection"]          = new[]{"OBS / STREAMING INTEGRATION","OBS / YAYIN ENTEGRASYONU","OBS / ИНТЕГРАЦИЯ СТРИМИНГА","OBS / STREAMING","OBS / INTÉGRATION STREAMING","OBS / STREAMING-INTEGRATIE"},
+            ["ObsEnable"]           = new[]{"Enable OBS/Streaming integration","OBS/Yayın entegrasyonunu etkinleştir","Включить интеграцию OBS/стриминга","OBS/Streaming-Integration aktivieren","Activer l'intégration OBS/streaming","OBS/streaming-integratie inschakelen"},
+            ["ObsVibrance"]         = new[]{"Streaming vibrance","Yayın canlılığı","Яркость при стриминге","Streaming-Vibrance","Vibrance en streaming","Streaming kleurintensiteit"},
+
+            // Vibrance Transition (Settings > Behavior)
+            ["TransitionSection"]   = new[]{"VIBRANCE TRANSITION","GEÇİŞ ANİMASYONU","АНИМАЦИЯ ПЕРЕХОДА","VIBRANCE-ÜBERGANG","TRANSITION DE VIBRANCE","OVERGANGSANIMATIE"},
+            ["TransitionEnable"]    = new[]{"Smooth vibrance transitions","Yumuşak canlılık geçişleri","Плавные переходы яркости","Sanfte Vibrance-Übergänge","Transitions douces de vibrance","Vloeiende kleurovergangers"},
+            ["TransitionDuration"]  = new[]{"Duration (ms)","Süre (ms)","Длительность (мс)","Dauer (ms)","Durée (ms)","Duur (ms)"},
+
+            // Blue Light & Color Blind (Settings > Display)
+            ["BlueLightSection"]    = new[]{"BLUE LIGHT & COLOR","MAVİ IŞIK VE RENK","СИНИЙ СВЕТ И ЦВЕТ","BLAULICHT & FARBE","LUMIÈRE BLEUE & COULEUR","BLAUW LICHT & KLEUR"},
+            ["BlueLightLabel"]      = new[]{"Blue Light","Mavi Işık","Синий свет","Blaulicht","Lumière bleue","Blauw licht"},
+            ["ColorBlindSection"]   = new[]{"COLOR BLIND PRESET","RENK KÖRLÜĞÜ PREAYARı","ПРЕСЕТ ДЛЯ ДАЛЬТОНИКОВ","FARBENBLINDHEITS-PRESET","PRÉRÉGLAGE DALTONIEN","KLEURBLINDHEIDS-PRESET"},
+            ["CbNormal"]            = new[]{"Normal","Normal","Норм.","Normal","Normal","Normaal"},
+            ["CbProtanopia"]        = new[]{"Protanopia","Protanopi","Протанопия","Protanopie","Protanopie","Protanopie"},
+            ["CbDeuteranopia"]      = new[]{"Deuteranopia","Deuteranopi","Дейтеранопия","Deuteranopie","Deutéranopie","Deuteranopie"},
+            ["CbTritanopia"]        = new[]{"Tritanopia","Tritanopi","Тританопия","Tritanopie","Tritanopie","Tritanopie"},
+
+            // Profile Templates (Main form)
+            ["Templates"]           = new[]{"Templates","Şablonlar","Шаблоны","Vorlagen","Modèles","Sjablonen"},
+            ["TemplateApply"]       = new[]{"Apply Template","Şablon Uygula","Применить шаблон","Vorlage anwenden","Appliquer un modèle","Sjabloon toepassen"},
+            ["EditProfile"]         = new[]{"Edit Profile","Profili Düzenle","Редактировать профиль","Profil bearbeiten","Modifier le profil","Profiel bewerken"},
+            ["BatchSetVibrance"]    = new[]{"Set Vibrance for Selected...","Seçilenlere Canlılık Uygula...","Установить яркость для выбранных...","Vibrance für Ausgewählte setzen...","Définir la vibrance pour la sélection...","Kleur instellen voor geselecteerde..."},
+            ["VibLevelLabel"]       = new[]{"Vibrance level:","Canlılık seviyesi:","Уровень яркости:","Vibrance-Stufe:","Niveau de vibrance:","Kleurintensiteit:"},
+
+            // Template names
+            ["TplCompetitiveFps"]   = new[]{"Competitive FPS","Rekabetçi FPS","Соревновательный FPS","Kompetitives FPS","FPS compétitif","Competitieve FPS"},
+            ["TplCasualFps"]        = new[]{"Casual FPS","Hafif FPS","Казуальный FPS","Gelegentliches FPS","FPS casual","Casual FPS"},
+            ["TplStrategy"]         = new[]{"Strategy / MOBA","Strateji / MOBA","Стратегия / MOBA","Strategie / MOBA","Stratégie / MOBA","Strategie / MOBA"},
+            ["TplRpg"]              = new[]{"RPG / Adventure","RPG / Macera","РПГ / Приключения","RPG / Abenteuer","RPG / Aventure","RPG / Avontuur"},
+            ["TplMovie"]            = new[]{"Movie / Video","Film / Video","Фильм / Видео","Film / Video","Film / Vidéo","Film / Video"},
+            ["TplOffice"]           = new[]{"Office / Productivity","Ofis / Verimlilik","Офис / Работа","Büro / Produktivität","Bureau / Productivité","Kantoor / Productiviteit"},
+
             // Common buttons
             ["Apply"]            = new[]{"Apply","Uygula","Применить","Anwenden","Appliquer","Toepassen"},
             ["Cancel"]           = new[]{"Cancel","İptal","Отмена","Abbrechen","Annuler","Annuleren"},
