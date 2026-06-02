@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/version-2.3.0-1E6EB4?style=for-the-badge" alt="Version">
+<img src="https://img.shields.io/badge/version-2.4.0-1E6EB4?style=for-the-badge" alt="Version">
 <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows" alt="Platform">
 <img src="https://img.shields.io/badge/GPU-NVIDIA%20%7C%20AMD-76B900?style=for-the-badge" alt="GPU Support">
 <img src="https://img.shields.io/badge/.NET%20Framework-4.8-512BD4?style=for-the-badge" alt=".NET 4.8">
@@ -93,6 +93,14 @@ dotnet build Spectra/Spectra.csproj --configuration Release
 Output: `Spectra/bin/x86/Release/Spectra.exe`
 
 ### Changelog
+
+#### v2.4.0 — Deep Audit Release (15 bugs across 9 files)
+- **RegistryController (3 fixes):** `NullReferenceException` when `OpenSubKey` returns null (affected startup on some systems); registry key handle leak in `IsProgramRegistered`; `GetValue().ToString()` NPE — all rewritten with `using(RegistryKey)` blocks
+- **MainForm (5 fixes):** `ExtractAssociatedIcon` null crash in add/detect profile paths; `SelectedItems` collection mutation during `foreach` removal; case-sensitive file path comparison for profile duplicate check; `resetOnExit` setting now honoured on close; gaming mode comment corrected
+- **GameSettingsForm:** `LanguageChanged` lambda event never unsubscribed → memory leak + post-close crash; replaced with named method and `OnFormClosed` unsubscribe
+- **SettingsForm (3 fixes):** `chkAutostart` changes had zero effect (missing handler); `chkResetOnExit` was completely dead UI; duplicate event subscriptions removed
+- **WinEventHook:** Removed two unnecessary Win32 calls (`GetWindowTextLength` + `GetWindowTextA`) fired on every focus event but never read; exception logging restored original stack trace; dead `Process`/`WindowText` fields removed from event args
+- **NvidiaDynamicVibranceProxy:** Removed `HandleDvc()` and `SetSleepInterval()` dead methods
 
 #### v2.3.0 — Comprehensive Bug Fix Release (15 bugs)
 - **SettingsController (5 fixes):** One corrupt INI value no longer wipes all settings; INI and XML read independently so a missing profile XML doesn't lose vibrance/hotkey settings; `XmlWriter` and `XmlReader` wrapped in `using` to eliminate file-handle leaks; dead `WriteState` check removed
@@ -285,7 +293,7 @@ Spectra is een professionele vibrance-beheertool voor Windows. Het gebruikt NVID
 
 <div align="center">
 
-**Spectra v2.3.0** — Professional Digital Vibrance, Brightness & Contrast Control  
+**Spectra v2.4.0** — Professional Digital Vibrance, Brightness & Contrast Control  
 [Discord](https://discord.gg/CdpuNUGPDe) · [GitHub](https://github.com/X1NPAR1/Spectra) · [Releases](https://github.com/X1NPAR1/Spectra/releases)
 
 </div>
