@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Windows.Forms;
 using Spectra.AMD.vendor;
 using Spectra.common;
@@ -29,11 +28,12 @@ namespace Spectra.AMD
         private WinEventHook _hook;
         private Screen _gameScreen;
 
-        // Polling backup — tracks which profile (if any) is currently active
+        // Per-monitor desktop saturation levels tracked for correct multi-monitor restoration.
+        private readonly Dictionary<string, int> _monitorDesktopLevels = new Dictionary<string, int>();
+
         private volatile string _lastProfileApplied;
         private System.Threading.Timer _pollTimer;
 
-        // AMD neutral saturation (no extra colour, driver default)
         private const int AmdNeutralSaturation = 100;
 
         public AmdDynamicVibranceProxy(
@@ -59,8 +59,6 @@ namespace Spectra.AMD
                     _hook = WinEventHook.GetInstance();
                     _hook.WinEventHookHandler += OnWinEventHook;
 
-                    // 500 ms polling timer as a reliable fallback for events
-                    // WinEventHook may miss (launchers, fullscreen transitions…)
                     _pollTimer = new System.Threading.Timer(_ => PollAndApply(), null, 1000, 500);
                 }
             }
@@ -74,14 +72,27 @@ namespace Spectra.AMD
             }
         }
 
-        // ── Profile matching ─────────────────────────────────────────────────
-        // Uses the executable filename as the primary key (always reliable) and
-        // the profile display-name as a fallback for manually-renamed entries.
+        // ── Profile matching ──────────────────────────────────────────────────
         private static bool MatchesProfile(ApplicationSetting s, string processName)
             => string.Equals(Path.GetFileNameWithoutExtension(s.FileName), processName, StringComparison.OrdinalIgnoreCase)
             || string.Equals(s.Name, processName, StringComparison.OrdinalIgnoreCase);
 
-        // ── Polling backup ───────────────────────────────────────────────────
+        // ── Desktop restore ───────────────────────────────────────────────────
+        // Restores each monitor to its saved desktop saturation level.
+        private void RestoreDesktopVibrance()
+        {
+            if (_monitorDesktopLevels.Count > 0)
+            {
+                foreach (var kvp in _monitorDesktopLevels)
+                    _amdAdapter.SetSaturationOnDisplay(kvp.Value, kvp.Key);
+            }
+            else
+            {
+                ApplyVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
+            }
+        }
+
+        // ── Polling backup ────────────────────────────────────────────────────
         private void PollAndApply()
         {
             if (!_vibranceInfo.isInitialized) return;
@@ -108,13 +119,13 @@ namespace Spectra.AMD
                 {
                     if (_lastProfileApplied == null) return;
                     _lastProfileApplied = null;
-                    ApplyVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
+                    RestoreDesktopVibrance();
                 }
             }
             catch { }
         }
 
-        // ── WinEvent handler ─────────────────────────────────────────────────
+        // ── WinEvent handler ──────────────────────────────────────────────────
         private void OnWinEventHook(object sender, WinEventHookEventArgs e)
         {
             var match = _applicationSettings?.FirstOrDefault(x => MatchesProfile(x, e.ProcessName));
@@ -125,7 +136,6 @@ namespace Spectra.AMD
 
                 Screen screen = Screen.FromHandle(e.Handle);
 
-                // Optional resolution change
                 if (!_vibranceInfo.neverChangeResolution
                     && match.IsResolutionChangeNeeded
                     && IsResolutionChangeNeeded(screen, match.ResolutionSettings)
@@ -136,14 +146,15 @@ namespace Spectra.AMD
                     ResolutionHelper.ChangeResolutionEx(match.ResolutionSettings, screen.DeviceName);
                 }
 
-                // Apply ingame vibrance directly — no pre-reset, no ForegroundWindow gate
                 ApplyVibranceToTarget(match.IngameLevel);
             }
             else
             {
+                // Only restore when leaving a game profile — leave desktop vibrance untouched
+                // during normal program switching so the user's setting is preserved.
+                if (_lastProfileApplied == null) return;
                 _lastProfileApplied = null;
 
-                // Restore previous resolution if the game had changed it
                 if (!_vibranceInfo.neverChangeResolution && _gameScreen != null)
                 {
                     Screen current = Screen.FromHandle(e.Handle);
@@ -155,8 +166,7 @@ namespace Spectra.AMD
                     }
                 }
 
-                // Always restore — no GetForegroundWindow gate that could silently skip restore
-                ApplyVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
+                RestoreDesktopVibrance();
             }
         }
 
@@ -165,11 +175,11 @@ namespace Spectra.AMD
             && ResolutionHelper.GetCurrentResolutionSettings(out Devmode mode, screen.DeviceName)
             && !settings.Equals(mode);
 
-        // ── IVibranceProxy ───────────────────────────────────────────────────
+        // ── IVibranceProxy ────────────────────────────────────────────────────
         public void SetApplicationSettings(List<ApplicationSetting> refApplicationSettings)
         {
             _applicationSettings = refApplicationSettings;
-            _lastProfileApplied  = null; // re-evaluate on next event/poll
+            _lastProfileApplied  = null;
         }
 
         public void SetShouldRun(bool shouldRun)         { _vibranceInfo.shouldRun = shouldRun; }
@@ -180,8 +190,28 @@ namespace Spectra.AMD
         public void SetVibranceWindowsLevel(int level)
         {
             _vibranceInfo.userVibranceSettingDefault = level;
+            _monitorDesktopLevels.Clear();
             if (_vibranceInfo.isInitialized)
                 ApplyVibranceToTarget(level);
+        }
+
+        // Records the desktop saturation for this monitor so RestoreDesktopVibrance
+        // returns each display to the user's chosen level after a game session.
+        public void SetVibranceForMonitor(string deviceName, int level)
+        {
+            if (string.IsNullOrEmpty(deviceName)) return;
+
+            _monitorDesktopLevels[deviceName] = level;
+
+            // Keep userVibranceSettingDefault updated (used by tray presets, schedule, etc.)
+            Screen primary = Screen.PrimaryScreen;
+            if (primary != null && string.Equals(deviceName, primary.DeviceName, StringComparison.OrdinalIgnoreCase))
+                _vibranceInfo.userVibranceSettingDefault = level;
+            else if (_vibranceInfo.userVibranceSettingDefault == 0 || _vibranceInfo.userVibranceSettingDefault == AmdNeutralSaturation)
+                _vibranceInfo.userVibranceSettingDefault = level;
+
+            if (_vibranceInfo.isInitialized)
+                _amdAdapter.SetSaturationOnDisplay(level, deviceName);
         }
 
         public void SetAffectPrimaryMonitorOnly(bool primary)
@@ -200,12 +230,6 @@ namespace Spectra.AMD
                 ApplyVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
         }
 
-        public void SetVibranceForMonitor(string deviceName, int level)
-        {
-            if (_vibranceInfo.isInitialized && !string.IsNullOrEmpty(deviceName))
-                _amdAdapter.SetSaturationOnDisplay(level, deviceName);
-        }
-
         public VibranceInfo GetVibranceInfo() => _vibranceInfo;
 
         public bool UnloadLibraryEx()
@@ -221,8 +245,7 @@ namespace Spectra.AMD
             _amdAdapter.SetSaturationOnAllDisplays(_vibranceInfo.userVibranceSettingDefault);
         }
 
-        // Applies a vibrance level to the user-selected monitor target.
-        // Non-target monitors are reset to the neutral ADL saturation (100).
+        // Applies a single saturation level to the configured monitor target.
         private void ApplyVibranceToTarget(int level)
         {
             string target = _vibranceInfo.targetMonitorDeviceName;

@@ -130,7 +130,7 @@ namespace Spectra.common
             labelAppName.Location  = new Point(70, 10);
             labelAppName.AutoSize  = true;
 
-            labelVersion.Text      = "v2.2.1";
+            labelVersion.Text      = "v2.2.3";
             labelVersion.Font      = new Font("Segoe UI", 7.5f);
             labelVersion.ForeColor = Color.FromArgb(180, 215, 255);
             labelVersion.BackColor = Color.Transparent;
@@ -285,10 +285,18 @@ namespace Spectra.common
             btnResetDisplay.Cursor    = Cursors.Hand;
             btnResetDisplay.Click    += btnResetDisplay_Click;
 
+            var sepBrightContrast = new Panel
+            {
+                Location  = new Point(12, 60),
+                Size      = new Size(428, 1),
+                BackColor = ThemeManager.Border
+            };
+
             panelDisplay.Controls.Add(labelSectionDisplay);
             panelDisplay.Controls.Add(labelBrightness);
             panelDisplay.Controls.Add(trackBrightness);
             panelDisplay.Controls.Add(labelBrightnessVal);
+            panelDisplay.Controls.Add(sepBrightContrast);
             panelDisplay.Controls.Add(labelContrast);
             panelDisplay.Controls.Add(trackContrast);
             panelDisplay.Controls.Add(labelContrastVal);

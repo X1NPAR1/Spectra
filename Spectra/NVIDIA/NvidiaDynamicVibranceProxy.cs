@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 using System.Windows.Forms;
 using Spectra.common;
 
@@ -46,10 +45,6 @@ namespace Spectra.NVIDIA
             CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Auto)]
         static extern bool setDVCLevel([In] int defaultHandle, [In] int level);
 
-        [DllImport("vibranceDLL.dll", EntryPoint = "?isWindowActive@vibrance@vibranceDLL@@QAE_NPAPAUHWND__@@@Z",
-            CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Auto)]
-        static extern bool isWindowActive(ref IntPtr hwnd);
-
         [DllImport("vibranceDLL.dll", EntryPoint = "?getGpuSystemType@vibrance@vibranceDLL@@QAEHPAH@Z",
             CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Auto)]
         static extern NvSystemType getGpuSystemType(int gpuHandle);
@@ -82,8 +77,12 @@ namespace Spectra.NVIDIA
         private WinEventHook _hook;
         private static Screen _gameScreen;
 
-        // Polling backup: tracks the process name whose profile was last applied.
-        // null = desktop mode (no active profile), non-null = game process name.
+        // Per-monitor desktop vibrance levels set by the user.
+        // Populated by SetVibranceForMonitor (multi-monitor) and cleared by SetVibranceWindowsLevel (single-level).
+        // Restored when a game loses focus so each monitor returns to the user's chosen level.
+        private static readonly Dictionary<string, int> _monitorDesktopLevels = new Dictionary<string, int>();
+
+        // null = desktop mode (no profile active), non-null = process name of active profile.
         private static volatile string _lastProfileApplied;
         private static System.Threading.Timer _pollTimer;
 
@@ -105,8 +104,7 @@ namespace Spectra.NVIDIA
                     _hook = WinEventHook.GetInstance();
                     _hook.WinEventHookHandler += OnWinEventHook;
 
-                    // 500 ms polling timer as a reliable fallback for events that
-                    // WinEventHook may miss (launchers, fullscreen transitions, etc.)
+                    // 500ms polling backup — catches launches/alt-tabs that WinEventHook misses
                     _pollTimer = new System.Threading.Timer(_ => PollAndApply(), null, 1000, 500);
                 }
             }
@@ -158,13 +156,32 @@ namespace Spectra.NVIDIA
         }
 
         // ── Profile matching ─────────────────────────────────────────────────
-        // Matches by executable filename first (always reliable), then by the
-        // profile display-name as a fallback so manually-named profiles still work.
         private static bool MatchesProfile(ApplicationSetting s, string processName)
             => string.Equals(Path.GetFileNameWithoutExtension(s.FileName), processName, StringComparison.OrdinalIgnoreCase)
             || string.Equals(s.Name, processName, StringComparison.OrdinalIgnoreCase);
 
-        // ── Polling backup ───────────────────────────────────────────────────
+        // ── Desktop restore ───────────────────────────────────────────────────
+        // Restores each monitor to its saved desktop vibrance level.
+        // In single-monitor mode (or when SetVibranceWindowsLevel was used), falls
+        // back to userVibranceSettingDefault applied to the configured target.
+        private static void RestoreDesktopVibrance()
+        {
+            if (_monitorDesktopLevels.Count > 0)
+            {
+                foreach (var kvp in _monitorDesktopLevels)
+                {
+                    int h = getAssociatedNvidiaDisplayHandle(kvp.Key, kvp.Key.Length);
+                    if (h == -1) h = _vibranceInfo.defaultHandle;
+                    if (h != -1) setDVCLevel(h, kvp.Value);
+                }
+            }
+            else
+            {
+                ApplyDesktopVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
+            }
+        }
+
+        // ── Polling backup ────────────────────────────────────────────────────
         private static void PollAndApply()
         {
             if (!_vibranceInfo.isInitialized) return;
@@ -183,24 +200,23 @@ namespace Spectra.NVIDIA
 
                 if (match != null)
                 {
-                    // Avoid redundant DLL calls — only push when profile changes
                     if (_lastProfileApplied == processName) return;
                     _lastProfileApplied = processName;
-
                     int handle = GetBestDisplayHandle(hwnd);
                     setDVCLevel(handle, match.IngameLevel);
                 }
                 else
                 {
+                    // Only restore when transitioning OUT of a profile — not on every desktop focus event
                     if (_lastProfileApplied == null) return;
                     _lastProfileApplied = null;
-                    ApplyDesktopVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
+                    RestoreDesktopVibrance();
                 }
             }
             catch { }
         }
 
-        // ── WinEvent handler ─────────────────────────────────────────────────
+        // ── WinEvent handler ──────────────────────────────────────────────────
         private static void OnWinEventHook(object sender, WinEventHookEventArgs e)
         {
             var match = _applicationSettings?.FirstOrDefault(x => MatchesProfile(x, e.ProcessName));
@@ -211,7 +227,6 @@ namespace Spectra.NVIDIA
 
                 Screen screen = Screen.FromHandle(e.Handle);
 
-                // Optional resolution change
                 if (!_vibranceInfo.neverChangeResolution
                     && match.IsResolutionChangeNeeded
                     && IsResolutionChangeNeeded(screen, match.ResolutionSettings)
@@ -222,16 +237,20 @@ namespace Spectra.NVIDIA
                     ResolutionHelper.ChangeResolutionEx(match.ResolutionSettings, screen.DeviceName);
                 }
 
-                // Apply ingame vibrance — always, no equalsDVCLevel skip that could silently fail
                 int handle = GetBestDisplayHandle(e.Handle);
                 _vibranceInfo.defaultHandle = handle;
                 setDVCLevel(handle, match.IngameLevel);
             }
             else
             {
+                // Only restore when transitioning OUT of a game profile.
+                // If no profile was ever active (_lastProfileApplied == null) we are in normal
+                // desktop usage — do NOT touch the vibrance so switching between programs has
+                // no effect on the user's chosen desktop vibrance level.
+                if (_lastProfileApplied == null) return;
                 _lastProfileApplied = null;
 
-                // Restore previous resolution if the game had changed it
+                // Restore resolution if the game had changed it
                 if (!_vibranceInfo.neverChangeResolution && _gameScreen != null)
                 {
                     Screen current = Screen.FromHandle(e.Handle);
@@ -243,14 +262,12 @@ namespace Spectra.NVIDIA
                     }
                 }
 
-                // Always restore desktop vibrance when focus leaves a profiled game —
-                // no isWindowActive gate so launchers, overlays, etc. all trigger restore.
-                ApplyDesktopVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
+                RestoreDesktopVibrance();
             }
         }
 
-        // Returns the NVIDIA display handle for the screen containing hWnd, falling
-        // back to the stored defaultHandle so vibrance is ALWAYS applied.
+        // Returns the NVIDIA display handle for the screen containing hWnd,
+        // falling back to defaultHandle so vibrance is always applied.
         private static int GetBestDisplayHandle(IntPtr hWnd)
         {
             if (hWnd != IntPtr.Zero)
@@ -267,11 +284,9 @@ namespace Spectra.NVIDIA
         }
 
         private static bool IsResolutionChangeNeeded(Screen screen, ResolutionModeWrapper settings)
-        {
-            return settings != null
-                && ResolutionHelper.GetCurrentResolutionSettings(out Devmode mode, screen.DeviceName)
-                && !settings.Equals(mode);
-        }
+            => settings != null
+            && ResolutionHelper.GetCurrentResolutionSettings(out Devmode mode, screen.DeviceName)
+            && !settings.Equals(mode);
 
         private void EnumerateDisplayHandles()
         {
@@ -285,25 +300,49 @@ namespace Spectra.NVIDIA
             }
         }
 
-        // ── IVibranceProxy ───────────────────────────────────────────────────
+        // ── IVibranceProxy ────────────────────────────────────────────────────
         public void SetApplicationSettings(List<ApplicationSetting> refApplicationSettings)
         {
             _applicationSettings = refApplicationSettings;
-            _lastProfileApplied  = null; // re-evaluate on next event/poll
+            _lastProfileApplied  = null;
         }
 
-        public void SetShouldRun(bool shouldRun)              { _vibranceInfo.shouldRun = shouldRun; }
-        public void SetNeverSwitchResolution(bool never)      { _vibranceInfo.neverChangeResolution = never; }
-        public void SetVibranceIngameLevel(int level)         { _vibranceInfo.userVibranceSettingActive = level; }
-        public void SetSleepInterval(int interval)            { _vibranceInfo.sleepInterval = interval; }
-        public void HandleDvc()                               { }
-        public GraphicsAdapter GraphicsAdapter { get; }       = GraphicsAdapter.Nvidia;
+        public void SetShouldRun(bool shouldRun)         { _vibranceInfo.shouldRun = shouldRun; }
+        public void SetNeverSwitchResolution(bool never) { _vibranceInfo.neverChangeResolution = never; }
+        public void SetVibranceIngameLevel(int level)    { _vibranceInfo.userVibranceSettingActive = level; }
+        public void HandleDvc()                          { }
+        public void SetSleepInterval(int interval)       { _vibranceInfo.sleepInterval = interval; }
+        public GraphicsAdapter GraphicsAdapter { get; }  = GraphicsAdapter.Nvidia;
 
         public void SetVibranceWindowsLevel(int level)
         {
             _vibranceInfo.userVibranceSettingDefault = level;
+            _monitorDesktopLevels.Clear(); // single-level mode: clear per-monitor overrides
             if (_vibranceInfo.isInitialized)
                 ApplyDesktopVibranceToTarget(level);
+        }
+
+        // Applies a level to a specific monitor and records it so RestoreDesktopVibrance
+        // can bring that exact level back after a game session.
+        public void SetVibranceForMonitor(string deviceName, int level)
+        {
+            if (string.IsNullOrEmpty(deviceName)) return;
+
+            // Track per-monitor desktop level for accurate restoration
+            _monitorDesktopLevels[deviceName] = level;
+
+            // Keep userVibranceSettingDefault in sync with the primary monitor so single-level
+            // fallbacks (e.g. tray presets) use a sensible value.
+            Screen primary = Screen.PrimaryScreen;
+            if (primary != null && string.Equals(deviceName, primary.DeviceName, StringComparison.OrdinalIgnoreCase))
+                _vibranceInfo.userVibranceSettingDefault = level;
+            else if (_vibranceInfo.userVibranceSettingDefault == NvapiDefaultLevel)
+                _vibranceInfo.userVibranceSettingDefault = level;
+
+            if (!_vibranceInfo.isInitialized) return;
+            int h = getAssociatedNvidiaDisplayHandle(deviceName, deviceName.Length);
+            if (h == -1) h = _vibranceInfo.defaultHandle;
+            if (h != -1) setDVCLevel(h, level);
         }
 
         public void SetAffectPrimaryMonitorOnly(bool primary)
@@ -322,13 +361,6 @@ namespace Spectra.NVIDIA
                 ApplyDesktopVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
         }
 
-        public void SetVibranceForMonitor(string deviceName, int level)
-        {
-            if (!_vibranceInfo.isInitialized || string.IsNullOrEmpty(deviceName)) return;
-            int h = getAssociatedNvidiaDisplayHandle(deviceName, deviceName.Length);
-            if (h != -1) setDVCLevel(h, level);
-        }
-
         public VibranceInfo GetVibranceInfo() => _vibranceInfo;
 
         public bool UnloadLibraryEx()
@@ -341,18 +373,17 @@ namespace Spectra.NVIDIA
 
         public void HandleDvcExit()
         {
-            ApplyDesktopVibranceToTarget(_vibranceInfo.userVibranceSettingDefault);
+            RestoreDesktopVibrance();
         }
 
-        // Applies desktop vibrance to the selected monitor target only; resets
-        // any other displays to the neutral DVC level (0) so only the target saturates.
+        // Applies a single vibrance level to the configured monitor target.
+        // Used for single-level operations (presets, schedule, tray menu).
         private static void ApplyDesktopVibranceToTarget(int level)
         {
             string target = _vibranceInfo.targetMonitorDeviceName;
 
             if (target == null)
             {
-                // All monitors
                 _vibranceInfo.displayHandles?.ForEach(h => setDVCLevel(h, level));
                 return;
             }
