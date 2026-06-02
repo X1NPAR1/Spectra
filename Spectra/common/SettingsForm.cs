@@ -136,19 +136,40 @@ namespace Spectra.common
             var sc = new SettingsController();
 
             chkAutostart.Checked     = new RegistryController().IsProgramRegistered("Spectra");
-            chkMinToTray.Checked     = sc.GetSetting("minimizeToTray", "false") == "true";
-            chkNotifications.Checked = sc.GetSetting("showNotifications", "true") == "true";
+            chkMinToTray.Checked     = sc.GetSetting("minimizeToTray",    "false") == "true";
+            chkNotifications.Checked = sc.GetSetting("showNotifications", "true")  == "true";
+            chkResetOnExit.Checked   = sc.GetSetting("resetOnExit",       "false") == "true";
             numDelay.Value           = Clamp(ParseInt(sc.GetSetting("applyDelay", "500"), 500), (int)numDelay.Minimum, (int)numDelay.Maximum);
+
+            // Wire up checkboxes that save immediately on change.
+            // Autostart requires registry access; others write to INI.
+            // Handlers are added after setting initial values so they don't fire during load.
+            chkAutostart.CheckedChanged += (s, e) =>
+            {
+                if (_loading) return;
+                var reg  = new RegistryController();
+                string p = $"\"{System.Windows.Forms.Application.ExecutablePath}\" -minimized";
+                if (chkAutostart.Checked)
+                {
+                    if (!reg.IsProgramRegistered("Spectra") || !reg.IsStartupPathUnchanged("Spectra", p))
+                        reg.RegisterProgram("Spectra", p);
+                }
+                else
+                {
+                    reg.UnregisterProgram("Spectra");
+                }
+            };
+
+            chkMinToTray.CheckedChanged     += (s, e) => sc.SetVibranceSetting("minimizeToTray",    chkMinToTray.Checked     ? "true" : "false");
+            chkNotifications.CheckedChanged += (s, e) => sc.SetVibranceSetting("showNotifications", chkNotifications.Checked ? "true" : "false");
+            chkResetOnExit.CheckedChanged   += (s, e) => sc.SetVibranceSetting("resetOnExit",       chkResetOnExit.Checked   ? "true" : "false");
+            numDelay.ValueChanged           += (s, e) => sc.SetVibranceSetting("applyDelay", ((int)numDelay.Value).ToString());
 
             _chkSchedule.Checked   = sc.GetSetting("scheduleEnabled", "false") == "true";
             _numDayLevel.Value     = Clamp(ParseInt(sc.GetSetting("scheduleDayLevel", _maxLevel.ToString()), _maxLevel), _minLevel, _maxLevel);
             _numNightLevel.Value   = Clamp(ParseInt(sc.GetSetting("scheduleNightLevel", _minLevel.ToString()), _minLevel), _minLevel, _maxLevel);
             _dtDayStart.Value      = TimeToday(sc.GetSetting("scheduleDayStart", "08:00"), 8);
             _dtNightStart.Value    = TimeToday(sc.GetSetting("scheduleNightStart", "20:00"), 20);
-
-            chkMinToTray.CheckedChanged     += (s, e) => sc.SetVibranceSetting("minimizeToTray", chkMinToTray.Checked ? "true" : "false");
-            chkNotifications.CheckedChanged += (s, e) => sc.SetVibranceSetting("showNotifications", chkNotifications.Checked ? "true" : "false");
-            numDelay.ValueChanged           += (s, e) => sc.SetVibranceSetting("applyDelay", ((int)numDelay.Value).ToString());
 
             _loading = false;
         }

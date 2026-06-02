@@ -305,8 +305,6 @@ namespace Spectra.NVIDIA
         public void SetShouldRun(bool shouldRun)         { _vibranceInfo.shouldRun = shouldRun; }
         public void SetNeverSwitchResolution(bool never) { _vibranceInfo.neverChangeResolution = never; }
         public void SetVibranceIngameLevel(int level)    { _vibranceInfo.userVibranceSettingActive = level; }
-        public void HandleDvc()                          { }
-        public void SetSleepInterval(int interval)       { _vibranceInfo.sleepInterval = interval; }
         public GraphicsAdapter GraphicsAdapter { get; }  = GraphicsAdapter.Nvidia;
 
         public void SetVibranceWindowsLevel(int level)

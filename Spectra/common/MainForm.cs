@@ -507,7 +507,8 @@ namespace Spectra.common
         private void btnGamingMode_Click(object sender, EventArgs e)
         {
             _gamingMode = !_gamingMode;
-            // When gaming mode is OFF we suppress profiles by passing an empty list to the proxy.
+            // When gaming mode is ON, pass an empty list so all game profiles are suspended.
+            // When OFF, restore the full profile list.
             _proxy?.SetApplicationSettings(_gamingMode ? new List<ApplicationSetting>() : _profiles);
             UpdateGamingModeButton();
         }
@@ -667,8 +668,12 @@ namespace Spectra.common
                 if (dlg.ShowDialog() != DialogResult.OK) return;
                 if (!File.Exists(dlg.FileName)) return;
                 if (_profiles.Any(p => p.FileName.Equals(dlg.FileName, StringComparison.OrdinalIgnoreCase))) return;
-                AddProfileIntern(new ProcessExplorerEntry(dlg.FileName,
-                    Icon.ExtractAssociatedIcon(dlg.FileName),
+
+                // ExtractAssociatedIcon can return null for certain executable types.
+                var icon = Icon.ExtractAssociatedIcon(dlg.FileName);
+                if (icon == null) return;
+
+                AddProfileIntern(new ProcessExplorerEntry(dlg.FileName, icon,
                     Path.GetFileNameWithoutExtension(dlg.FileName)));
             }
         }
@@ -690,16 +695,24 @@ namespace Spectra.common
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-            AddProfileIntern(new ProcessExplorerEntry(exe,
-                Icon.ExtractAssociatedIcon(exe), Path.GetFileNameWithoutExtension(exe)));
+            var icon = Icon.ExtractAssociatedIcon(exe);
+            if (icon == null) return;
+            AddProfileIntern(new ProcessExplorerEntry(exe, icon, Path.GetFileNameWithoutExtension(exe)));
         }
 
         private void btnRemove_Click(object sender, EventArgs e)
         {
-            foreach (ListViewItem item in listProfiles.SelectedItems)
+            // Snapshot SelectedItems before modifying — iterating a live selection while
+            // removing items causes InvalidOperationException or missed entries.
+            var toRemove = new ListViewItem[listProfiles.SelectedItems.Count];
+            listProfiles.SelectedItems.CopyTo(toRemove, 0);
+
+            // Sort descending by index so that removing item N doesn't shift the
+            // ImageIndex of later items before we process them.
+            Array.Sort(toRemove, (a, b) => b.Index.CompareTo(a.Index));
+
+            foreach (var item in toRemove)
             {
-                for (int i = item.Index + 1; i < listProfiles.Items.Count; i++)
-                    listProfiles.Items[i].ImageIndex--;
                 var s = _profiles.FirstOrDefault(
                     p => p.FileName.Equals(item.Tag?.ToString(), StringComparison.OrdinalIgnoreCase));
                 if (s != null) _profiles.Remove(s);
@@ -712,7 +725,8 @@ namespace Spectra.common
         {
             if (listProfiles.SelectedItems.Count == 0) return;
             var sel      = listProfiles.SelectedItems[0];
-            var existing = _profiles.FirstOrDefault(p => p.FileName == sel.Tag?.ToString());
+            var existing = _profiles.FirstOrDefault(p =>
+                p.FileName.Equals(sel.Tag?.ToString(), StringComparison.OrdinalIgnoreCase));
 
             using (var dlg = new GameSettingsForm(_proxy, _minLevel, _maxLevel, _defaultIngameLevel,
                 sel, existing, _primaryResolutions, _resolveLevelLabel))
@@ -924,7 +938,22 @@ namespace Spectra.common
                 if (_proxy?.GetVibranceInfo().isInitialized == true)
                 {
                     DisplayGammaController.Reset();
-                    _proxy.HandleDvcExit();
+
+                    bool resetOnExit = new SettingsController().GetSetting("resetOnExit", "false")
+                        .Equals("true", StringComparison.OrdinalIgnoreCase);
+
+                    if (resetOnExit)
+                    {
+                        // Restore the GPU-neutral level (0 for NVIDIA, 100 for AMD)
+                        // so no extra vibrance is left after the app closes.
+                        _proxy.SetVibranceWindowsLevel(_defaultWindowsLevel);
+                    }
+                    else
+                    {
+                        // Restore the user's chosen desktop vibrance level.
+                        _proxy.HandleDvcExit();
+                    }
+
                     _proxy.SetShouldRun(false);
                     _proxy.UnloadLibraryEx();
                 }

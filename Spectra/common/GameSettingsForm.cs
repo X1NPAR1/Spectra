@@ -44,9 +44,17 @@ namespace Spectra.common
             }
 
             ApplyTheme();
-            LocalizationManager.LanguageChanged += (s, e) => ApplyLocalization();
+            LocalizationManager.LanguageChanged += OnLanguageChanged;
 
             Icon = IconFactory.GetAppIcon(16);
+        }
+
+        private void OnLanguageChanged(object sender, EventArgs e) => ApplyLocalization();
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            LocalizationManager.LanguageChanged -= OnLanguageChanged;
+            base.OnFormClosed(e);
         }
 
         private void ApplyTheme()
