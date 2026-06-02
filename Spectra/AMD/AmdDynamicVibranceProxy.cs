@@ -14,13 +14,11 @@ namespace Spectra.AMD
 {
     public class AmdDynamicVibranceProxy : IVibranceProxy
     {
-        #region Win32
         [DllImport("user32.dll")]
         private static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
-        #endregion
 
         private readonly IAmdAdapter _amdAdapter;
         private List<ApplicationSetting> _applicationSettings;
@@ -29,16 +27,10 @@ namespace Spectra.AMD
         private WinEventHook _hook;
         private Screen _gameScreen;
 
-        // ConcurrentDictionary for thread-safe access from UI thread (SetVibranceForMonitor)
-        // and the timer thread pool (PollAndApply / RestoreDesktopVibrance).
         private readonly ConcurrentDictionary<string, int> _monitorDesktopLevels
             = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-        // Tracks whether userVibranceSettingDefault has been explicitly initialised.
-        // Avoids treating AMD value 0 (completely desaturated, which IS a valid user choice)
-        // as "uninitialised" — the previous == 0 check was a type-checking bug.
         private bool _defaultLevelSet;
-
         private volatile string _lastProfileApplied;
         private System.Threading.Timer _pollTimer;
 
@@ -66,9 +58,6 @@ namespace Spectra.AMD
                 {
                     _hook = WinEventHook.GetInstance();
                     _hook.WinEventHookHandler += OnWinEventHook;
-
-                    // Start polling immediately (0ms) — games already focused when Spectra
-                    // launches are detected on the first tick, not after a 1 s blind spot.
                     _pollTimer = new System.Threading.Timer(_ => PollAndApply(), null, 0, 500);
                 }
             }
@@ -82,12 +71,10 @@ namespace Spectra.AMD
             }
         }
 
-        // ── Profile matching ──────────────────────────────────────────────────
         private static bool MatchesProfile(ApplicationSetting s, string processName)
             => string.Equals(Path.GetFileNameWithoutExtension(s.FileName), processName, StringComparison.OrdinalIgnoreCase)
             || string.Equals(s.Name, processName, StringComparison.OrdinalIgnoreCase);
 
-        // ── Desktop restore ───────────────────────────────────────────────────
         private void RestoreDesktopVibrance()
         {
             if (!_monitorDesktopLevels.IsEmpty)
@@ -101,7 +88,6 @@ namespace Spectra.AMD
             }
         }
 
-        // ── Polling backup ────────────────────────────────────────────────────
         private void PollAndApply()
         {
             if (!_vibranceInfo.isInitialized) return;
@@ -133,7 +119,6 @@ namespace Spectra.AMD
             catch { }
         }
 
-        // ── WinEvent handler ──────────────────────────────────────────────────
         private void OnWinEventHook(object sender, WinEventHookEventArgs e)
         {
             var match = _applicationSettings?.FirstOrDefault(x => MatchesProfile(x, e.ProcessName));
@@ -157,8 +142,6 @@ namespace Spectra.AMD
             }
             else
             {
-                // Guard: only restore when leaving a game profile.
-                // Normal program switching must NOT change the user's desktop vibrance.
                 if (_lastProfileApplied == null) return;
                 _lastProfileApplied = null;
 
@@ -182,7 +165,6 @@ namespace Spectra.AMD
             && ResolutionHelper.GetCurrentResolutionSettings(out Devmode mode, screen.DeviceName)
             && !settings.Equals(mode);
 
-        // ── IVibranceProxy ────────────────────────────────────────────────────
         public void SetApplicationSettings(List<ApplicationSetting> refApplicationSettings)
         {
             _applicationSettings = refApplicationSettings;
@@ -203,11 +185,6 @@ namespace Spectra.AMD
                 ApplyVibranceToTarget(level);
         }
 
-        // Records the per-monitor desktop saturation level for post-game restoration.
-        // Primary monitor level takes priority for the single-level fallback;
-        // any monitor is used when the default hasn't been set yet.
-        // Uses a dedicated _defaultLevelSet flag — AMD saturation 0 is a valid value
-        // so checking == 0 or == AmdNeutralSaturation was incorrect.
         public void SetVibranceForMonitor(string deviceName, int level)
         {
             if (string.IsNullOrEmpty(deviceName)) return;

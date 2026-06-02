@@ -78,14 +78,10 @@ namespace Spectra.NVIDIA
         private WinEventHook _hook;
         private static Screen _gameScreen;
 
-        // ConcurrentDictionary for thread-safe access from UI thread (SetVibranceForMonitor)
-        // and the timer thread pool (PollAndApply / RestoreDesktopVibrance).
         private static readonly ConcurrentDictionary<string, int> _monitorDesktopLevels
             = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
         private static bool _defaultLevelSet;
-
-        // null = desktop (no active game profile), non-null = active game process name.
         private static volatile string _lastProfileApplied;
         private static System.Threading.Timer _pollTimer;
 
@@ -107,9 +103,6 @@ namespace Spectra.NVIDIA
                 {
                     _hook = WinEventHook.GetInstance();
                     _hook.WinEventHookHandler += OnWinEventHook;
-
-                    // Start polling immediately (0ms) so a game that is already in focus
-                    // when Spectra launches is detected on the very first tick.
                     _pollTimer = new System.Threading.Timer(_ => PollAndApply(), null, 0, 500);
                 }
             }
@@ -156,17 +149,10 @@ namespace Spectra.NVIDIA
             _vibranceInfo.isInitialized = true;
         }
 
-        // ── Profile matching ──────────────────────────────────────────────────
-        // Primary key: executable filename (always reliable).
-        // Fallback: profile display-name (for manually renamed entries).
         private static bool MatchesProfile(ApplicationSetting s, string processName)
             => string.Equals(Path.GetFileNameWithoutExtension(s.FileName), processName, StringComparison.OrdinalIgnoreCase)
             || string.Equals(s.Name, processName, StringComparison.OrdinalIgnoreCase);
 
-        // ── Desktop restore ───────────────────────────────────────────────────
-        // Restores each monitor to its individual user-chosen desktop level.
-        // Falls back to the single userVibranceSettingDefault when per-monitor
-        // data isn't available (single-monitor mode or SetVibranceWindowsLevel path).
         private static void RestoreDesktopVibrance()
         {
             if (!_monitorDesktopLevels.IsEmpty)
@@ -184,7 +170,6 @@ namespace Spectra.NVIDIA
             }
         }
 
-        // ── Polling backup ────────────────────────────────────────────────────
         private static void PollAndApply()
         {
             if (!_vibranceInfo.isInitialized) return;
@@ -217,7 +202,6 @@ namespace Spectra.NVIDIA
             catch { }
         }
 
-        // ── WinEvent handler ──────────────────────────────────────────────────
         private static void OnWinEventHook(object sender, WinEventHookEventArgs e)
         {
             var match = _applicationSettings?.FirstOrDefault(x => MatchesProfile(x, e.ProcessName));
@@ -243,8 +227,6 @@ namespace Spectra.NVIDIA
             }
             else
             {
-                // Guard: only restore when transitioning OUT of a game profile.
-                // Normal program switching (browser, taskbar…) must NOT affect desktop vibrance.
                 if (_lastProfileApplied == null) return;
                 _lastProfileApplied = null;
 
@@ -295,7 +277,6 @@ namespace Spectra.NVIDIA
             }
         }
 
-        // ── IVibranceProxy ────────────────────────────────────────────────────
         public void SetApplicationSettings(List<ApplicationSetting> refApplicationSettings)
         {
             _applicationSettings = refApplicationSettings;
@@ -316,9 +297,6 @@ namespace Spectra.NVIDIA
                 ApplyDesktopVibranceToTarget(level);
         }
 
-        // Records the per-monitor desktop level for accurate post-game restoration.
-        // Also keeps userVibranceSettingDefault in sync with the primary monitor so that
-        // tray presets and the schedule apply a sensible single-level fallback.
         public void SetVibranceForMonitor(string deviceName, int level)
         {
             if (string.IsNullOrEmpty(deviceName)) return;
@@ -369,7 +347,6 @@ namespace Spectra.NVIDIA
 
         public void HandleDvcExit() => RestoreDesktopVibrance();
 
-        // Applies a single level to the configured monitor target (used by presets, schedule).
         private static void ApplyDesktopVibranceToTarget(int level)
         {
             string target = _vibranceInfo.targetMonitorDeviceName;

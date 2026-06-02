@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -19,7 +19,6 @@ namespace Spectra.common
         private readonly int _minLevel;
         private readonly int _maxLevel;
 
-        // Runtime-added controls (Schedule)
         private CheckBox      _chkSchedule;
         private NumericUpDown _numDayLevel, _numNightLevel;
         private DateTimePicker _dtDayStart, _dtNightStart;
@@ -41,7 +40,6 @@ namespace Spectra.common
 
             Icon = IconFactory.GetAppIcon(16);
 
-            // Monitor dropdown
             cboMonitorTarget.Items.Add(LocalizationManager.Get("MonitorAll"));
             cboMonitorTarget.Items.Add(LocalizationManager.Get("MonitorPrimary"));
             foreach (Screen s in Screen.AllScreens)
@@ -66,7 +64,6 @@ namespace Spectra.common
             ApplyLocalization();
         }
 
-        // ── Runtime control construction ──────────────────────────────────
         private void BuildScheduleControls()
         {
             _lblScheduleSection = MakeSection(0, 224);
@@ -129,7 +126,6 @@ namespace Spectra.common
             if (!IsDisposed && IsHandleCreated) Invoke((Action)ApplyLocalization);
         }
 
-        // ── Load / save behavior settings ─────────────────────────────────
         private void LoadSettings()
         {
             _loading = true;
@@ -141,9 +137,6 @@ namespace Spectra.common
             chkResetOnExit.Checked   = sc.GetSetting("resetOnExit",       "false") == "true";
             numDelay.Value           = Clamp(ParseInt(sc.GetSetting("applyDelay", "500"), 500), (int)numDelay.Minimum, (int)numDelay.Maximum);
 
-            // Wire up checkboxes that save immediately on change.
-            // Autostart requires registry access; others write to INI.
-            // Handlers are added after setting initial values so they don't fire during load.
             chkAutostart.CheckedChanged += (s, e) =>
             {
                 if (_loading) return;
@@ -206,7 +199,6 @@ namespace Spectra.common
                 lbProfiles.Items.Add($"  {p.Name}   —   Level: {p.IngameLevel}");
         }
 
-        // ── Localization ──────────────────────────────────────────────────
         private void ApplyLocalization()
         {
             Text = LocalizationManager.Get("SettingsTitle");
@@ -262,7 +254,6 @@ namespace Spectra.common
             btnClose.Text        = LocalizationManager.Get("OK");
         }
 
-        // ── Owner-draw tabs ───────────────────────────────────────────────
         private void tabControl_DrawItem(object sender, DrawItemEventArgs e)
         {
             var tab = tabControl.TabPages[e.Index];
@@ -308,7 +299,6 @@ namespace Spectra.common
                 _proxy.SetTargetMonitorDeviceName(cboMonitorTarget.Items[idx].ToString());
         }
 
-        // ── Profile import / export ───────────────────────────────────────
         private void btnExport_Click(object sender, EventArgs e)
         {
             using (var dlg = new SaveFileDialog { Filter = "JSON files (*.json)|*.json", FileName = "spectra-profiles.json" })

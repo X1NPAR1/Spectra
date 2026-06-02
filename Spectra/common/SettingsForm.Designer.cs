@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 using Spectra.UI;
 
@@ -25,7 +25,7 @@ namespace Spectra.common
             tabData     = new TabPage();
             tabAbout    = new TabPage();
 
-            // ── Behavior tab ──────────────────────────────────────────────
+            // â”€â”€ Behavior tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             lblStartupSection  = new Label();
             sepStartup         = new Panel();
             chkAutostart       = new CheckBox();
@@ -37,7 +37,7 @@ namespace Spectra.common
             numDelay           = new NumericUpDown();
             lblDelayMs         = new Label();
 
-            // ── Display tab ───────────────────────────────────────────────
+            // â”€â”€ Display tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             lblMonitorSection  = new Label();
             sepMonitor         = new Panel();
             lblMonitorTarget   = new Label();
@@ -47,7 +47,7 @@ namespace Spectra.common
             chkResetOnExit     = new CheckBox();
             chkNeverResize     = new CheckBox();
 
-            // ── Data tab ──────────────────────────────────────────────────
+            // â”€â”€ Data tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             lblProfileSection      = new Label();
             sepProfile             = new Panel();
             lblProfileCount        = new Label();
@@ -64,7 +64,7 @@ namespace Spectra.common
             btnResetAll            = new Button();
             btnOpenLog             = new Button();
 
-            // ── About tab ─────────────────────────────────────────────────
+            // â”€â”€ About tab â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             panelLogo       = new Panel();
             lblAboutName    = new Label();
             lblAboutVersion = new Label();
@@ -86,8 +86,8 @@ namespace Spectra.common
             tabControl.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numDelay).BeginInit();
 
-            // ── FORM ─────────────────────────────────────────────────────
-            // 540px wide: tabs get 520px → each tab content 488px (16px padding each side)
+            // â”€â”€ FORM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // 540px wide: tabs get 520px â†’ each tab content 488px (16px padding each side)
             // Accommodates all translations without any text clipping.
             AutoScaleDimensions = new SizeF(6f, 13f);
             AutoScaleMode       = AutoScaleMode.Font;
@@ -96,15 +96,15 @@ namespace Spectra.common
             MaximizeBox         = false;
             StartPosition       = FormStartPosition.CenterParent;
             BackColor           = ThemeManager.Bg;
-            Text                = "Spectra — Settings";
+            Text                = "Spectra â€” Settings";
             Name                = "SettingsForm";
 
-            // ── HEADER ───────────────────────────────────────────────────
+            // â”€â”€ HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             panelHeader.Location = new Point(0, 0);
             panelHeader.Size     = new Size(540, 52);
             panelHeader.Paint   += panelHeader_Paint;
 
-            lblSettingsTitle.Text      = "⚙  SETTINGS";
+            lblSettingsTitle.Text      = "âš™  SETTINGS";
             lblSettingsTitle.Font      = new Font("Segoe UI", 14f, FontStyle.Bold);
             lblSettingsTitle.ForeColor = Color.White;
             lblSettingsTitle.BackColor = Color.Transparent;
@@ -112,12 +112,12 @@ namespace Spectra.common
             lblSettingsTitle.AutoSize  = true;
             panelHeader.Controls.Add(lblSettingsTitle);
 
-            // ── TAB CONTROL ──────────────────────────────────────────────
-            // 520px wide, 4 tabs → ItemSize.Width = 520/4 = 130px (fits all language tab labels)
+            // â”€â”€ TAB CONTROL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // 520px wide, 4 tabs â†’ ItemSize.Width = 520/4 = 130px (fits all language tab labels)
             tabControl.Location  = new Point(10, 58);
             tabControl.Size      = new Size(520, 448);
             tabControl.DrawMode  = TabDrawMode.OwnerDrawFixed;
-            // 4 tabs × 129 = 516 < 520 → no overflow scroll arrows appear
+            // 4 tabs Ã— 129 = 516 < 520 â†’ no overflow scroll arrows appear
             tabControl.ItemSize  = new Size(129, 30);
             tabControl.SizeMode  = TabSizeMode.Fixed;
             tabControl.DrawItem += tabControl_DrawItem;
@@ -135,8 +135,8 @@ namespace Spectra.common
             tabData.Text     = "Profiles";
             tabAbout.Text    = "About";
 
-            // ── BEHAVIOR TAB ─────────────────────────────────────────────
-            // Content width = 520 - 2×16 = 488px. Checkboxes span full 488px so no text clips.
+            // â”€â”€ BEHAVIOR TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // Content width = 520 - 2Ã—16 = 488px. Checkboxes span full 488px so no text clips.
             lblStartupSection.Text      = "STARTUP & BEHAVIOR";
             lblStartupSection.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
             lblStartupSection.ForeColor = ThemeManager.Accent;
@@ -217,8 +217,8 @@ namespace Spectra.common
             tabBehavior.Controls.Add(numDelay);
             tabBehavior.Controls.Add(lblDelayMs);
 
-            // ── DISPLAY TAB ───────────────────────────────────────────────
-            // Monitor section: label stacked above full-width combo —
+            // â”€â”€ DISPLAY TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // Monitor section: label stacked above full-width combo â€”
             // avoids any overlap regardless of translation length.
             lblMonitorSection.Text      = "MONITOR TARGET";
             lblMonitorSection.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
@@ -238,7 +238,7 @@ namespace Spectra.common
             lblMonitorTarget.Location  = new Point(0, 30);
             lblMonitorTarget.AutoSize  = true;
 
-            // Full-width combo — stacked under its label, no side-by-side gap
+            // Full-width combo â€” stacked under its label, no side-by-side gap
             cboMonitorTarget.Location      = new Point(0, 50);
             cboMonitorTarget.Size          = new Size(488, 24);
             cboMonitorTarget.DropDownStyle = ComboBoxStyle.DropDownList;
@@ -281,9 +281,9 @@ namespace Spectra.common
             tabDisplay.Controls.Add(chkNeverResize);
             tabDisplay.Controls.Add(chkResetOnExit);
 
-            // ── DATA TAB ──────────────────────────────────────────────────
+            // â”€â”€ DATA TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             // Layout strategy: buttons in two-column grid (239px each, 10px gap).
-            // "Clear all profiles" spans full width on its own row — always readable in any language.
+            // "Clear all profiles" spans full width on its own row â€” always readable in any language.
             // "Open log folder" and "Reset all settings" also side-by-side on equal columns.
             const int ColW = 239;  // (488 - 10gap) / 2
             const int ColR = 249;  // ColW + 10
@@ -336,7 +336,7 @@ namespace Spectra.common
             btnImport.Cursor    = Cursors.Hand;
             btnImport.Click    += btnImport_Click;
 
-            // Row 2: Clear all profiles — full width, danger
+            // Row 2: Clear all profiles â€” full width, danger
             btnClearProfiles.Text      = "Clear all profiles";
             btnClearProfiles.Font      = new Font("Segoe UI", 9f);
             btnClearProfiles.ForeColor = ThemeManager.Danger;
@@ -348,7 +348,7 @@ namespace Spectra.common
             btnClearProfiles.Cursor    = Cursors.Hand;
             btnClearProfiles.Click    += btnClearProfiles_Click;
 
-            // ── Saved profiles list ────────────────────────────────────────
+            // â”€â”€ Saved profiles list â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             lblSavedProfilesHeader.Text      = "SAVED PROFILES";
             lblSavedProfilesHeader.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
             lblSavedProfilesHeader.ForeColor = ThemeManager.Accent;
@@ -368,7 +368,7 @@ namespace Spectra.common
             lbProfiles.BorderStyle = BorderStyle.FixedSingle;
             lbProfiles.SelectionMode = SelectionMode.None;
 
-            // ── DATA & DIAGNOSTICS — Y shifted down to make room for profile list ──
+            // â”€â”€ DATA & DIAGNOSTICS â€” Y shifted down to make room for profile list â”€â”€
             lblDataSection.Text      = "DATA & DIAGNOSTICS";
             lblDataSection.Font      = new Font("Segoe UI", 8f, FontStyle.Bold);
             lblDataSection.ForeColor = ThemeManager.Accent;
@@ -426,7 +426,7 @@ namespace Spectra.common
             tabData.Controls.Add(btnOpenLog);
             tabData.Controls.Add(btnResetAll);
 
-            // ── ABOUT TAB ─────────────────────────────────────────────────
+            // â”€â”€ ABOUT TAB â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             panelLogo.Location = new Point(0, 0);
             panelLogo.Size     = new Size(64, 64);
             panelLogo.Paint   += panelLogo_Paint;
@@ -439,7 +439,7 @@ namespace Spectra.common
             lblAboutName.Location  = new Point(80, 2);
             lblAboutName.AutoSize  = true;
 
-            lblAboutVersion.Text      = "v2.4.0";
+            lblAboutVersion.Text      = "v2.4.4";
             lblAboutVersion.Font      = new Font("Segoe UI", 9f);
             lblAboutVersion.ForeColor = ThemeManager.TextSub;
             lblAboutVersion.BackColor = Color.Transparent;
@@ -464,14 +464,14 @@ namespace Spectra.common
             lblSupportTitle.Location  = new Point(0, 86);
             lblSupportTitle.AutoSize  = true;
 
-            lblGpuLine1.Text      = "✓  NVIDIA — Digital Vibrance Control (NVAPI)";
+            lblGpuLine1.Text      = "âœ“  NVIDIA â€” Digital Vibrance Control (NVAPI)";
             lblGpuLine1.Font      = new Font("Segoe UI", 9f);
             lblGpuLine1.ForeColor = ThemeManager.Text;
             lblGpuLine1.BackColor = Color.Transparent;
             lblGpuLine1.Location  = new Point(0, 108);
             lblGpuLine1.AutoSize  = true;
 
-            lblGpuLine2.Text      = "✓  AMD — Saturation Control (ADL 32/64-bit)";
+            lblGpuLine2.Text      = "âœ“  AMD â€” Saturation Control (ADL 32/64-bit)";
             lblGpuLine2.Font      = new Font("Segoe UI", 9f);
             lblGpuLine2.ForeColor = ThemeManager.Text;
             lblGpuLine2.BackColor = Color.Transparent;
@@ -496,7 +496,7 @@ namespace Spectra.common
             lblSysInfo.Location  = new Point(0, 188);
             lblSysInfo.AutoSize  = true;
 
-            btnGitHub.Text      = "★  View on GitHub";
+            btnGitHub.Text      = "â˜…  View on GitHub";
             btnGitHub.Font      = new Font("Segoe UI", 9f);
             btnGitHub.ForeColor = Color.White;
             btnGitHub.BackColor = ThemeManager.Accent;
@@ -532,7 +532,7 @@ namespace Spectra.common
             tabAbout.Controls.Add(btnGitHub);
             tabAbout.Controls.Add(btnOpenLogShort);
 
-            // ── CLOSE BUTTON ──────────────────────────────────────────────
+            // â”€â”€ CLOSE BUTTON â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             // X = 540 - 10 margin - 104 button width = 426
             btnClose.Text      = "OK";
             btnClose.Font      = new Font("Segoe UI", 9.5f, FontStyle.Bold);
@@ -555,7 +555,7 @@ namespace Spectra.common
             ResumeLayout(false);
         }
 
-        // ── Fields ────────────────────────────────────────────────────────
+        // â”€â”€ Fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         private Panel  panelHeader;
         private Label  lblSettingsTitle;
         private TabControl tabControl;
@@ -599,3 +599,4 @@ namespace Spectra.common
         private Button btnClose;
     }
 }
+

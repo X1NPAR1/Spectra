@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -32,7 +32,7 @@ namespace Spectra.common
             Text = LocalizationManager.Get("ProcessExplorer");
 
             ApplyTheme();
-            
+
             backgroundWorker.WorkerReportsProgress = true;
             backgroundWorker.RunWorkerAsync();
         }
@@ -40,9 +40,9 @@ namespace Spectra.common
         private void ApplyTheme()
         {
             if (InvokeRequired) { Invoke((Action)ApplyTheme); return; }
-            BackColor         = ThemeManager.Bg;
-            listView.BackColor= ThemeManager.Surface;
-            listView.ForeColor= ThemeManager.Text;
+            BackColor          = ThemeManager.Bg;
+            listView.BackColor = ThemeManager.Surface;
+            listView.ForeColor = ThemeManager.Text;
             btnReload.BackColor = ThemeManager.Surface2;
             btnReload.ForeColor = ThemeManager.Text;
             btnReload.FlatAppearance.BorderColor = ThemeManager.Border;
@@ -60,8 +60,6 @@ namespace Spectra.common
 
         private void EnumerateProcesses()
         {
-            // Cache current PID outside the loop — creating a new Process object per
-            // iteration via GetCurrentProcess() is an unnecessary allocation and P/Invoke.
             int selfPid = Process.GetCurrentProcess().Id;
             int count = 0;
 
@@ -73,8 +71,6 @@ namespace Spectra.common
                     string path = GetProcessPath(p);
                     if (string.IsNullOrEmpty(path) || !File.Exists(path)) continue;
 
-                    // ExtractAssociatedIcon can return null for certain file types;
-                    // skip those entries rather than passing null into the ImageList.
                     var icon = Icon.ExtractAssociatedIcon(path);
                     if (icon == null) continue;
 
@@ -115,4 +111,3 @@ namespace Spectra.common
         }
     }
 }
-

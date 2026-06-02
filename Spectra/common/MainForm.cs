@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -16,7 +16,6 @@ namespace Spectra.common
 {
     public partial class MainForm : Form
     {
-        // ── Proxy / config ────────────────────────────────────────────────
         private readonly int _defaultWindowsLevel;
         private readonly int _minLevel;
         private readonly int _maxLevel;
@@ -28,7 +27,6 @@ namespace Spectra.common
         private readonly List<ResolutionModeWrapper> _primaryResolutions;
         private readonly Dictionary<string, Tuple<ResolutionModeWrapper, List<ResolutionModeWrapper>>> _resolutionMap;
 
-        // ── State ─────────────────────────────────────────────────────────
         private bool _allowVisible    = true;
         private bool _vibranceEnabled = true;
         private HotkeyManager _hotkey;
@@ -37,15 +35,13 @@ namespace Spectra.common
 
         private int _presetDef, _presetLow, _presetHigh, _presetMax;
 
-        // ── Per-monitor vibrance ──────────────────────────────────────────
         private readonly List<string> _monitorDevices = new List<string>();
         private readonly Dictionary<string, TrackBar> _monitorSliders     = new Dictionary<string, TrackBar>();
         private readonly Dictionary<string, Label>    _monitorValueLabels = new Dictionary<string, Label>();
         private readonly Dictionary<string, int>      _monitorLevels      = new Dictionary<string, int>();
 
-        // ── New v2.1 features ─────────────────────────────────────────────
         private ScheduleManager _schedule;
-        private bool _gamingMode;                 // true = profiles temporarily disabled
+        private bool _gamingMode;
         private bool _minimizeToTray;
         private bool _showNotifications;
         private bool _startedMinimized;
@@ -105,10 +101,8 @@ namespace Spectra.common
 
             ApplyLocalization();
             ApplyTheme();
-            backgroundWorker.RunWorkerAsync();
         }
 
-        // ── Per-monitor slider construction ───────────────────────────────
         private void BuildMonitorSliders()
         {
             _monitorDevices.Clear();
@@ -172,7 +166,6 @@ namespace Spectra.common
             panelMonitorSliders.Size = new Size(424, Math.Max(36, y));
         }
 
-        // Repositions cards vertically so the form grows with the monitor count.
         private void LayoutCards()
         {
             int sliderArea = panelMonitorSliders.Height;
@@ -207,7 +200,6 @@ namespace Spectra.common
 
             if (_vibranceEnabled)
             {
-                // Single-monitor systems use the global path; multi-monitor targets the device.
                 if (_monitorDevices.Count <= 1) _proxy?.SetVibranceWindowsLevel(level);
                 else _proxy?.SetVibranceForMonitor(device, level);
             }
@@ -217,7 +209,6 @@ namespace Spectra.common
             _monitorDevices.Count > 0 && _monitorLevels.TryGetValue(_monitorDevices[0], out var v)
                 ? v : _defaultWindowsLevel;
 
-        // ── Visibility ────────────────────────────────────────────────────
         protected override void SetVisibleCore(bool value)
         {
             if (!_allowVisible) { value = false; if (!IsHandleCreated) CreateHandle(); }
@@ -244,7 +235,6 @@ namespace Spectra.common
         public HotkeyManager GetHotkeyManager() => _hotkey;
         public List<ApplicationSetting> GetProfiles() => _profiles;
 
-        // ── Localization ──────────────────────────────────────────────────
         private void ApplyLocalization()
         {
             if (IsDisposed) return;
@@ -290,7 +280,6 @@ namespace Spectra.common
             UpdateGamingModeButton();
         }
 
-        // ── Theme ─────────────────────────────────────────────────────────
         private void ApplyTheme()
         {
             if (IsDisposed) return;
@@ -333,7 +322,6 @@ namespace Spectra.common
             Invalidate(true);
         }
 
-        // ── Painting ──────────────────────────────────────────────────────
         private void panelHeader_Paint(object sender, PaintEventArgs e)
         {
             var g    = e.Graphics;
@@ -357,7 +345,6 @@ namespace Spectra.common
             using (var pen = new Pen(ThemeManager.Border, 1)) g.DrawRectangle(pen, 0, 0, p.Width - 1, p.Height - 1);
         }
 
-        // ── Form events ───────────────────────────────────────────────────
         private void MainForm_Load(object sender, EventArgs e)
         {
             SetControlsEnabled(false);
@@ -365,6 +352,7 @@ namespace Spectra.common
             comboLanguage.Items.AddRange(LocalizationManager.LanguageNames);
             comboLanguage.SelectedIndex = (int)LocalizationManager.Current;
             comboLanguage.SelectedIndexChanged += comboLanguage_SelectedIndexChanged;
+            backgroundWorker.RunWorkerAsync();
         }
 
         private void MainForm_Shown(object sender, EventArgs e)
@@ -377,7 +365,6 @@ namespace Spectra.common
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // Minimize to tray instead of exiting when the user closes the window.
             if (_minimizeToTray && e.CloseReason == CloseReason.UserClosing)
             {
                 e.Cancel = true;
@@ -398,13 +385,11 @@ namespace Spectra.common
             if (WindowState == FormWindowState.Minimized) Hide();
         }
 
-        // ── Workers ───────────────────────────────────────────────────────
         private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
             int level = _defaultWindowsLevel;
             bool pOnly = false, nResize = false;
 
-            while (!IsHandleCreated) Thread.Sleep(200);
             Invoke((MethodInvoker)(() => ReadSettings(out level, out pOnly, out nResize)));
 
             if (_proxy.GetVibranceInfo().isInitialized)
@@ -415,7 +400,6 @@ namespace Spectra.common
                 _proxy.SetShouldRun(true);
                 _proxy.SetAffectPrimaryMonitorOnly(pOnly);
                 _proxy.SetNeverSwitchResolution(nResize);
-                // Apply each monitor's restored level
                 Invoke((MethodInvoker)(() =>
                 {
                     foreach (var device in _monitorDevices)
@@ -440,7 +424,6 @@ namespace Spectra.common
 
         private void settingsWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e) { }
 
-        // ── Presets ───────────────────────────────────────────────────────
         private void btnPreset_Click(object sender, EventArgs e)
         {
             var btn = (Button)sender;
@@ -476,7 +459,6 @@ namespace Spectra.common
             }
         }
 
-        // ── Brightness / Contrast ─────────────────────────────────────────
         private void trackBrightness_Scroll(object sender, EventArgs e)
         {
             DisplayGammaController.SetBrightness(trackBrightness.Value);
@@ -503,12 +485,9 @@ namespace Spectra.common
             sc.SetVibranceSetting("contrast",   DisplayGammaController.Neutral.ToString());
         }
 
-        // ── Gaming mode (temporarily disable all game profiles) ───────────
         private void btnGamingMode_Click(object sender, EventArgs e)
         {
             _gamingMode = !_gamingMode;
-            // When gaming mode is ON, pass an empty list so all game profiles are suspended.
-            // When OFF, restore the full profile list.
             _proxy?.SetApplicationSettings(_gamingMode ? new List<ApplicationSetting>() : _profiles);
             UpdateGamingModeButton();
         }
@@ -520,7 +499,6 @@ namespace Spectra.common
             btnGamingMode.Text      = "🎮";
         }
 
-        // ── Schedule ──────────────────────────────────────────────────────
         private void OnScheduleApply(int level)
         {
             if (IsDisposed) return;
@@ -528,7 +506,6 @@ namespace Spectra.common
             ApplyPresetToAll(level);
         }
 
-        // ── Checkboxes ────────────────────────────────────────────────────
         private void chkAutostart_CheckedChanged(object sender, EventArgs e)
         {
             var reg  = new RegistryController();
@@ -556,17 +533,14 @@ namespace Spectra.common
         private void comboLanguage_SelectedIndexChanged(object sender, EventArgs e)
             => LocalizationManager.SetLanguage((Language)comboLanguage.SelectedIndex);
 
-        // ── Settings dialog ───────────────────────────────────────────────
         private void btnOpenSettings_Click(object sender, EventArgs e)
         {
             using (var dlg = new SettingsForm(this, _proxy, _minLevel, _maxLevel,
                 _defaultWindowsLevel, PrimaryLevel, _resolveLevelLabel))
                 dlg.ShowDialog();
-            // Re-read behavior/schedule settings the dialog may have changed.
             LoadBehaviorSettings();
         }
 
-        // ── Hotkey ────────────────────────────────────────────────────────
         private void btnHotkey_Click(object sender, EventArgs e)
         {
             if (_capturingHotkey) return;
@@ -622,7 +596,6 @@ namespace Spectra.common
 
         private void btnToggleVibrance_Click(object sender, EventArgs e) => OnHotkeyToggle(sender, e);
 
-        // ── Tray ─────────────────────────────────────────────────────────
         private void notifyIcon_MouseClick(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left) ShowMainWindow();
@@ -660,7 +633,6 @@ namespace Spectra.common
             Activate();
         }
 
-        // ── Profile management ────────────────────────────────────────────
         private void btnAdd_Click(object sender, EventArgs e)
         {
             using (var dlg = new OpenFileDialog { Filter = "Executable Files (*.exe)|*.exe" })
@@ -669,7 +641,6 @@ namespace Spectra.common
                 if (!File.Exists(dlg.FileName)) return;
                 if (_profiles.Any(p => p.FileName.Equals(dlg.FileName, StringComparison.OrdinalIgnoreCase))) return;
 
-                // ExtractAssociatedIcon can return null for certain executable types.
                 var icon = Icon.ExtractAssociatedIcon(dlg.FileName);
                 if (icon == null) return;
 
@@ -702,13 +673,9 @@ namespace Spectra.common
 
         private void btnRemove_Click(object sender, EventArgs e)
         {
-            // Snapshot SelectedItems before modifying — iterating a live selection while
-            // removing items causes InvalidOperationException or missed entries.
             var toRemove = new ListViewItem[listProfiles.SelectedItems.Count];
             listProfiles.SelectedItems.CopyTo(toRemove, 0);
 
-            // Sort descending by index so that removing item N doesn't shift the
-            // ImageIndex of later items before we process them.
             Array.Sort(toRemove, (a, b) => b.Index.CompareTo(a.Index));
 
             foreach (var item in toRemove)
@@ -754,6 +721,7 @@ namespace Spectra.common
         {
             EnsureProfileList();
             if (!File.Exists(entry.Path)) return;
+            if (entry.Icon == null) return;
             if (_profiles.Any(p => p.FileName.Equals(entry.Path, StringComparison.OrdinalIgnoreCase))) return;
 
             listProfiles.LargeImageList.Images.Add(entry.Icon);
@@ -797,7 +765,6 @@ namespace Spectra.common
                 (IntPtr)(int)(((ushort)lp) | (uint)(tp << 16)));
         }
 
-        // ── Settings persistence ──────────────────────────────────────────
         private void ReadSettings(out int level, out bool primaryOnly, out bool neverResize)
         {
             _registry = new RegistryController();
@@ -830,8 +797,6 @@ namespace Spectra.common
                 if (!File.Exists(s.FileName)) { _profiles.Remove(s); continue; }
                 EnsureProfileList();
                 var icon = Icon.ExtractAssociatedIcon(s.FileName);
-                // ExtractAssociatedIcon returns null for some file types. Remove the
-                // profile from both the list and memory so the UI stays consistent.
                 if (icon == null) { _profiles.Remove(s); continue; }
                 listProfiles.LargeImageList.Images.Add(icon);
                 listProfiles.Items.Add(new ListViewItem(s.Name)
@@ -844,7 +809,6 @@ namespace Spectra.common
             LoadBehaviorSettings();
         }
 
-        // Reads the v2.x settings (brightness/contrast, behavior, schedule).
         private void LoadBehaviorSettings()
         {
             var sc = new SettingsController();
@@ -879,7 +843,7 @@ namespace Spectra.common
 
         private void ForceSaveSettings()
         {
-            if (IsDisposed) return; // Form disposed during shutdown — skip
+            if (IsDisposed) return;
             int level = _defaultWindowsLevel;
             bool po   = false, nr = false;
             Keys hk = Keys.F9, hkMods = Keys.None;
@@ -944,13 +908,10 @@ namespace Spectra.common
 
                     if (resetOnExit)
                     {
-                        // Restore the GPU-neutral level (0 for NVIDIA, 100 for AMD)
-                        // so no extra vibrance is left after the app closes.
                         _proxy.SetVibranceWindowsLevel(_defaultWindowsLevel);
                     }
                     else
                     {
-                        // Restore the user's chosen desktop vibrance level.
                         _proxy.HandleDvcExit();
                     }
 

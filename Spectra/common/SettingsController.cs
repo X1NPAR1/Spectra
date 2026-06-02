@@ -19,13 +19,12 @@ namespace Spectra.common
         private static extern bool WritePrivateProfileString(
             string lpAppName, string lpKeyName, string lpString, string lpFileName);
 
-        private const string SzSectionName                   = "Settings";
-        private const string SzKeyNameInactive               = "inactiveValue";
-        private const string SzKeyNameRefreshRate            = "refreshRate";
+        private const string SzSectionName                    = "Settings";
+        private const string SzKeyNameInactive                = "inactiveValue";
         private const string SzKeyNameAffectPrimaryMonitorOnly = "affectPrimaryMonitorOnly";
-        private const string SzKeyNameNeverSwitchResolution  = "neverSwitchResolution";
-        private const string SzKeyNameHotkey                 = "hotkey";
-        private const string SzKeyNameHotkeyModifiers        = "hotkeyModifiers";
+        private const string SzKeyNameNeverSwitchResolution   = "neverSwitchResolution";
+        private const string SzKeyNameHotkey                  = "hotkey";
+        private const string SzKeyNameHotkeyModifiers         = "hotkeyModifiers";
 
         private static readonly string AppDataDir =
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spectra");
@@ -35,7 +34,6 @@ namespace Spectra.common
         private readonly string _fileNameApplicationSettings =
             Path.Combine(AppDataDir, "applicationData.xml");
 
-        // ── Save (INI + XML) ──────────────────────────────────────────────────
         public bool SetVibranceSettings(string windowsLevel, string affectPrimaryMonitorOnly,
             string neverSwitchResolution, List<ApplicationSetting> applicationSettings,
             System.Windows.Forms.Keys hotkey          = System.Windows.Forms.Keys.F9,
@@ -43,17 +41,15 @@ namespace Spectra.common
         {
             if (!PrepareFile()) return false;
 
-            WritePrivateProfileString(SzSectionName, SzKeyNameInactive,               windowsLevel,             _fileName);
+            WritePrivateProfileString(SzSectionName, SzKeyNameInactive,                windowsLevel,             _fileName);
             WritePrivateProfileString(SzSectionName, SzKeyNameAffectPrimaryMonitorOnly, affectPrimaryMonitorOnly, _fileName);
-            WritePrivateProfileString(SzSectionName, SzKeyNameNeverSwitchResolution,  neverSwitchResolution,    _fileName);
-            WritePrivateProfileString(SzSectionName, SzKeyNameHotkey,                 ((int)hotkey).ToString(),          _fileName);
-            WritePrivateProfileString(SzSectionName, SzKeyNameHotkeyModifiers,        ((int)hotkeyModifiers).ToString(), _fileName);
+            WritePrivateProfileString(SzSectionName, SzKeyNameNeverSwitchResolution,   neverSwitchResolution,    _fileName);
+            WritePrivateProfileString(SzSectionName, SzKeyNameHotkey,                  ((int)hotkey).ToString(),          _fileName);
+            WritePrivateProfileString(SzSectionName, SzKeyNameHotkeyModifiers,         ((int)hotkeyModifiers).ToString(), _fileName);
 
             try
             {
                 Directory.CreateDirectory(AppDataDir);
-                // XmlWriter is wrapped in using so the file handle is always released,
-                // even when serialisation throws mid-way.
                 using (var writer = System.Xml.XmlWriter.Create(_fileNameApplicationSettings))
                 {
                     var serializer = new XmlSerializer(typeof(List<ApplicationSetting>));
@@ -78,10 +74,6 @@ namespace Spectra.common
             return ReadIni(szKeyName, szDefault);
         }
 
-        // ── Load (INI + XML) ──────────────────────────────────────────────────
-        // INI and XML are loaded independently. A missing or corrupt XML only
-        // loses the game-profile list; all other settings are preserved from INI.
-        // A missing INI returns safe per-field defaults rather than blanket-resetting.
         public void ReadVibranceSettings(GraphicsAdapter graphicsAdapter,
             out int vibranceWindowsLevel, out bool affectPrimaryMonitorOnly,
             out bool neverSwitchResolution, out List<ApplicationSetting> applicationSettings,
@@ -93,22 +85,17 @@ namespace Spectra.common
             else if (graphicsAdapter == GraphicsAdapter.Amd)
                 { defaultLevel = 100; maxLevel = 300; }
 
-            // Safe defaults
             vibranceWindowsLevel     = defaultLevel;
             affectPrimaryMonitorOnly = false;
             neverSwitchResolution    = false;
             hotkey                   = System.Windows.Forms.Keys.F9;
             hotkeyModifiers          = System.Windows.Forms.Keys.None;
 
-            // ── INI settings (each field parsed independently; one bad value never
-            //    discards the rest — the previous all-or-nothing try/catch was a bug) ──
             if (File.Exists(_fileName))
             {
                 if (int.TryParse(ReadIni(SzKeyNameInactive, defaultLevel.ToString()), out int parsedLevel))
-                {
                     if (parsedLevel >= defaultLevel && parsedLevel <= maxLevel)
                         vibranceWindowsLevel = parsedLevel;
-                }
 
                 affectPrimaryMonitorOnly = ReadIni(SzKeyNameAffectPrimaryMonitorOnly, "false")
                     .Equals("true", StringComparison.OrdinalIgnoreCase);
@@ -121,13 +108,11 @@ namespace Spectra.common
                     hotkeyModifiers = (System.Windows.Forms.Keys)hkModsInt;
             }
 
-            // ── Game profiles XML (failure → empty list, INI data unaffected) ──
             applicationSettings = new List<ApplicationSetting>();
             if (!File.Exists(_fileNameApplicationSettings)) return;
 
             try
             {
-                // XmlReader in using so the file handle is released even on exception.
                 using (var reader = System.Xml.XmlReader.Create(_fileNameApplicationSettings))
                 {
                     var serializer = new XmlSerializer(typeof(List<ApplicationSetting>));
@@ -137,7 +122,6 @@ namespace Spectra.common
             catch { applicationSettings = new List<ApplicationSetting>(); }
         }
 
-        // ── Helpers ───────────────────────────────────────────────────────────
         private string ReadIni(string key, string def)
         {
             var sb = new StringBuilder(1024);

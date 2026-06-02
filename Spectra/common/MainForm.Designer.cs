@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 using Spectra.UI;
 
@@ -102,7 +102,7 @@ namespace Spectra.common
             ((System.ComponentModel.ISupportInitialize)trackBrightness).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackContrast).BeginInit();
 
-            // ── FORM (height is finalised at runtime by LayoutCards) ──────
+            // â”€â”€ FORM (height is finalised at runtime by LayoutCards) â”€â”€â”€â”€â”€â”€
             AutoScaleDimensions = new SizeF(6f, 13f);
             AutoScaleMode       = AutoScaleMode.Font;
             ClientSize          = new Size(480, 760);
@@ -117,7 +117,7 @@ namespace Spectra.common
             FormClosing        += MainForm_FormClosing;
             Resize             += MainForm_Resize;
 
-            // ── HEADER ───────────────────────────────────────────────────
+            // â”€â”€ HEADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             panelHeader.Location = new Point(0, 0);
             panelHeader.Size     = new Size(480, 78);
             panelHeader.BackColor= Color.Transparent;
@@ -130,7 +130,7 @@ namespace Spectra.common
             labelAppName.Location  = new Point(70, 10);
             labelAppName.AutoSize  = true;
 
-            labelVersion.Text      = "v2.4.0";
+            labelVersion.Text      = "v2.4.4";
             labelVersion.Font      = new Font("Segoe UI", 7.5f);
             labelVersion.ForeColor = Color.FromArgb(180, 215, 255);
             labelVersion.BackColor = Color.Transparent;
@@ -145,7 +145,7 @@ namespace Spectra.common
             labelGpuBadge.Location  = new Point(180, 8);
             labelGpuBadge.Size      = new Size(210, 36);
 
-            btnOpenSettings.Text      = "⚙";
+            btnOpenSettings.Text      = "âš™";
             btnOpenSettings.Font      = new Font("Segoe UI", 12f);
             btnOpenSettings.ForeColor = Color.White;
             btnOpenSettings.BackColor = Color.FromArgb(50, 255, 255, 255);
@@ -162,7 +162,7 @@ namespace Spectra.common
             panelHeader.Controls.Add(labelGpuBadge);
             panelHeader.Controls.Add(btnOpenSettings);
 
-            // ── DESKTOP VIBRANCE (size set at runtime) ────────────────────
+            // â”€â”€ DESKTOP VIBRANCE (size set at runtime) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             panelVibrance.Location  = new Point(14, 90);
             panelVibrance.Size      = new Size(452, 120);
             panelVibrance.BackColor = ThemeManager.Surface;
@@ -213,7 +213,7 @@ namespace Spectra.common
             panelVibrance.Controls.Add(panelMonitorSliders);
             panelVibrance.Controls.Add(panelPresets);
 
-            // ── DISPLAY (brightness / contrast) ───────────────────────────
+            // â”€â”€ DISPLAY (brightness / contrast) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             panelDisplay.Location  = new Point(14, 220);
             panelDisplay.Size      = new Size(452, 116);
             panelDisplay.BackColor = ThemeManager.Surface;
@@ -302,7 +302,7 @@ namespace Spectra.common
             panelDisplay.Controls.Add(labelContrastVal);
             panelDisplay.Controls.Add(btnResetDisplay);
 
-            // ── SETTINGS ─────────────────────────────────────────────────
+            // â”€â”€ SETTINGS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             panelSettings.Location  = new Point(14, 346);
             panelSettings.Size      = new Size(452, 152);
             panelSettings.BackColor = ThemeManager.Surface;
@@ -390,7 +390,7 @@ namespace Spectra.common
             panelSettings.Controls.Add(chkNeverResize);
             panelSettings.Controls.Add(panelQuickRow);
 
-            // ── GAME PROFILES ─────────────────────────────────────────────
+            // â”€â”€ GAME PROFILES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             panelProfiles.Location  = new Point(14, 510);
             panelProfiles.Size      = new Size(452, 230);
             panelProfiles.BackColor = ThemeManager.Surface;
@@ -464,7 +464,7 @@ namespace Spectra.common
             panelProfiles.Controls.Add(btnDetectGame);
             panelProfiles.Controls.Add(btnRemove);
 
-            // ── STATUS BAR ────────────────────────────────────────────────
+            // â”€â”€ STATUS BAR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             panelStatus.Location  = new Point(0, 752);
             panelStatus.Size      = new Size(480, 40);
             panelStatus.BackColor = Color.FromArgb(18, 21, 28);
@@ -482,7 +482,7 @@ namespace Spectra.common
             labelGpuInfo.Size      = new Size(130, 16);
             labelGpuInfo.TextAlign = ContentAlignment.MiddleRight;
 
-            btnGamingMode.Text      = "🎮";
+            btnGamingMode.Text      = "ğŸ®";
             btnGamingMode.Font      = new Font("Segoe UI", 9f, FontStyle.Bold);
             btnGamingMode.ForeColor = Color.White;
             btnGamingMode.BackColor = ThemeManager.Accent;
@@ -509,7 +509,7 @@ namespace Spectra.common
             panelStatus.Controls.Add(btnGamingMode);
             panelStatus.Controls.Add(btnToggleVibrance);
 
-            // ── TRAY ──────────────────────────────────────────────────────
+            // â”€â”€ TRAY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             menuOpenSpectra.Text  = "Open Spectra";
             menuOpenSpectra.Font  = new Font("Segoe UI", 9f, FontStyle.Bold);
             menuOpenSpectra.Click += menuOpenSpectra_Click;
@@ -530,7 +530,7 @@ namespace Spectra.common
             menuExit.Text  = "Exit";
             menuExit.Click += exitMenuItem_Click;
 
-            menuGitHub.Text      = "⭐  GitHub";
+            menuGitHub.Text      = "â­  GitHub";
             menuGitHub.Font      = new Font("Segoe UI", 8.5f, FontStyle.Underline);
             menuGitHub.ForeColor = System.Drawing.Color.FromArgb(22, 68, 148);
             menuGitHub.Click    += menuGitHub_Click;
@@ -578,7 +578,7 @@ namespace Spectra.common
             ResumeLayout(false);
         }
 
-        // ── Fields ────────────────────────────────────────────────────────
+        // â”€â”€ Fields â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         private Panel     panelHeader;
         private Label     labelAppName;
         private Label     labelVersion;
@@ -639,3 +639,4 @@ namespace Spectra.common
         private System.ComponentModel.BackgroundWorker settingsWorker;
     }
 }
+

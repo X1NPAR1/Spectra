@@ -9,11 +9,10 @@ namespace Spectra.common
         [DllImport("user32.dll")] private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
         [DllImport("user32.dll")] private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
-        // Win32 modifier flags
-        private const uint MOD_ALT     = 0x0001;
-        private const uint MOD_CONTROL = 0x0002;
-        private const uint MOD_SHIFT   = 0x0004;
-        private const uint MOD_NOREPEAT= 0x4000;
+        private const uint MOD_ALT      = 0x0001;
+        private const uint MOD_CONTROL  = 0x0002;
+        private const uint MOD_SHIFT    = 0x0004;
+        private const uint MOD_NOREPEAT = 0x4000;
 
         public const int WM_HOTKEY = 0x0312;
         private const int HOTKEY_TOGGLE_ID = 9001;
@@ -36,12 +35,9 @@ namespace Spectra.common
         {
             Unregister();
 
-            // Strip modifier bits from key, keep only the base key code
             Keys baseKey = key & ~Keys.Modifiers;
             if (baseKey == Keys.None) return false;
 
-            // For non-function keys without any modifier, auto-add Ctrl to prevent
-            // accidental triggers on non-Latin keyboard layouts (e.g. Russian Cyrillic)
             bool isFunctionKey = baseKey >= Keys.F1 && baseKey <= Keys.F24;
             if (!isFunctionKey && modifiers == Keys.None)
                 modifiers = Keys.Control;
@@ -73,7 +69,6 @@ namespace Spectra.common
                 TogglePressed?.Invoke(this, EventArgs.Empty);
         }
 
-        // Returns a display string like "F9", "Ctrl+A", "Ctrl+Alt+F2"
         public string GetDisplayString()
         {
             string k = _currentKey.ToString();

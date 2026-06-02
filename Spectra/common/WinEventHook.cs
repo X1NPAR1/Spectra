@@ -5,8 +5,6 @@ using System.Windows.Forms;
 
 namespace Spectra.common
 {
-    // Singleton that monitors foreground window changes via Windows accessibility API.
-    // Registered as WINEVENT_OUTOFCONTEXT (async, no DLL injection).
     class WinEventHook
     {
         [DllImport("user32.dll")]
@@ -25,15 +23,13 @@ namespace Spectra.common
             IntPtr hWinEventHook, uint eventType, IntPtr hwnd,
             int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
 
-        private const uint EventSystemForeground  = 0x0003;
-        private const uint WineventOutofcontext   = 0x0000;
+        private const uint EventSystemForeground = 0x0003;
+        private const uint WineventOutofcontext  = 0x0000;
 
         private static WinEventHook _instance;
 
         public event EventHandler<WinEventHookEventArgs> WinEventHookHandler;
 
-        // Keep delegate alive as a field — if only stored as a local/temp variable the
-        // GC can collect it while the unmanaged hook still holds a function pointer to it.
         private readonly WinEventDelegate _procDelegate;
         private readonly IntPtr _hookHandle;
 
@@ -57,20 +53,14 @@ namespace Spectra.common
             try
             {
                 if (!UnhookWinEvent(_hookHandle))
-                    MainForm.Log(new Exception(
-                        $"UnhookWinEvent failed. Handle = {_hookHandle}"));
+                    MainForm.Log(new Exception($"UnhookWinEvent failed. Handle = {_hookHandle}"));
             }
             catch (Exception ex)
             {
-                // Log the original exception with its real stack trace.
                 MainForm.Log(ex);
             }
         }
 
-        // Called by the Windows message loop when the foreground window changes.
-        // Fetches only the process name — previous code also retrieved window text
-        // via two extra Win32 calls (GetWindowTextLength + GetWindowTextA) whose
-        // result was never read by any subscriber.
         private static void WinEventProc(
             IntPtr hWinEventHook, uint eventType, IntPtr hwnd,
             int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
@@ -93,8 +83,8 @@ namespace Spectra.common
                     GetInstance().DispatchEvent(args);
                 }
             }
-            catch (InvalidOperationException) { /* process exited before GetProcessById returned */ }
-            catch (ArgumentException)         { /* pid no longer valid */                           }
+            catch (InvalidOperationException) { }
+            catch (ArgumentException)         { }
         }
 
         private void DispatchEvent(WinEventHookEventArgs e)

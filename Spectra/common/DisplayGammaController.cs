@@ -4,9 +4,6 @@ using System.Windows.Forms;
 
 namespace Spectra.common
 {
-    // GPU-agnostic brightness & contrast via Windows GDI gamma ramps.
-    // Uses CreateDC per monitor so the call works on Windows 10/11 with
-    // hardware-accelerated compositing — GetDC(IntPtr.Zero) is unreliable.
     public static class DisplayGammaController
     {
         [DllImport("gdi32.dll", SetLastError = true)]
@@ -18,7 +15,6 @@ namespace Spectra.common
         [DllImport("gdi32.dll")]
         private static extern bool DeleteDC(IntPtr hdc);
 
-        // Three separate 256-element arrays — matches the Windows RAMP struct layout exactly.
         [StructLayout(LayoutKind.Sequential)]
         private struct RAMP
         {
@@ -56,8 +52,6 @@ namespace Spectra.common
 
         private static void Apply()
         {
-            // brightness: -1.0 .. +1.0 offset  (wider visible range than /100)
-            // contrast:    0.5 .. 1.5 multiplier around the 0.5 midpoint
             double bright   = (_brightness - Neutral) / 50.0;
             double contrast = 1.0 + (_contrast - Neutral) / 100.0;
 
@@ -65,8 +59,6 @@ namespace Spectra.common
 
             foreach (Screen screen in Screen.AllScreens)
             {
-                // CreateDC with the device name (e.g. \\.\DISPLAY1) targets the
-                // specific monitor — required on Win10+ for gamma changes to take effect.
                 IntPtr hdc = CreateDC(null, screen.DeviceName, null, IntPtr.Zero);
                 if (hdc == IntPtr.Zero) continue;
                 try   { SetDeviceGammaRamp(hdc, ref ramp); }

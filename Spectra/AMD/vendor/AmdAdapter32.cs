@@ -24,8 +24,6 @@ namespace Spectra.AMD.vendor
                 Adl.AdlAdapterNumberOfAdaptersGet(ref numberOfAdapters);
             }
 
-            Adl.AdlMainControlCreate(Adl.AdlMainMemoryAlloc, 1);
-
             if (numberOfAdapters > 0)
             {
                 AdlAdapterInfoArray osAdapterInfoData = new AdlAdapterInfoArray();

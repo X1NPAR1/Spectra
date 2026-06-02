@@ -90,7 +90,6 @@ namespace Spectra
                 ((MainForm)mainForm).SetAllowVisible(false);
             }
 
-            // Trim trailing ".0" segments: "1.9.4.0" → "1.9.4"
             string ver = Application.ProductVersion;
             while (ver.EndsWith(".0")) ver = ver.Substring(0, ver.Length - 2);
             mainForm.Text = string.Format("Spectra  [{0}]  v{1}",

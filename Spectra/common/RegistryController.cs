@@ -7,13 +7,6 @@ namespace Spectra.common
     {
         private const string RunKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
 
-        // Every method opens the key inside a using block so:
-        //   1. The handle is always closed, even on exception paths.
-        //   2. We never dereference a null key — a null check gates each operation.
-        // The previous implementation stored the key as a field and called
-        // _startupKey.Close() in a finally block; when OpenSubKey returned null,
-        // the finally triggered NullReferenceException.
-
         public bool RegisterProgram(string appName, string pathToExe)
         {
             try
@@ -35,7 +28,6 @@ namespace Spectra.common
                 using (var key = Registry.CurrentUser.OpenSubKey(RunKey, writable: true))
                 {
                     if (key == null) return false;
-                    // throwOnMissingValue: false — silently succeeds when the value is absent
                     key.DeleteValue(appName, throwOnMissingValue: false);
                     return true;
                 }
