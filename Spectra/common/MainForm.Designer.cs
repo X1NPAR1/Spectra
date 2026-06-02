@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Windows.Forms;
 using Spectra.UI;
 
@@ -130,7 +130,7 @@ namespace Spectra.common
             labelAppName.Location  = new Point(70, 10);
             labelAppName.AutoSize  = true;
 
-            labelVersion.Text      = "v2.4.4";
+            labelVersion.Text      = "v2.4.4.1";
             labelVersion.Font      = new Font("Segoe UI", 7.5f);
             labelVersion.ForeColor = Color.FromArgb(180, 215, 255);
             labelVersion.BackColor = Color.Transparent;
@@ -145,7 +145,7 @@ namespace Spectra.common
             labelGpuBadge.Location  = new Point(180, 8);
             labelGpuBadge.Size      = new Size(210, 36);
 
-            btnOpenSettings.Text      = "âš™";
+            btnOpenSettings.Text      = "⚙";
             btnOpenSettings.Font      = new Font("Segoe UI", 12f);
             btnOpenSettings.ForeColor = Color.White;
             btnOpenSettings.BackColor = Color.FromArgb(50, 255, 255, 255);
@@ -530,7 +530,7 @@ namespace Spectra.common
             menuExit.Text  = "Exit";
             menuExit.Click += exitMenuItem_Click;
 
-            menuGitHub.Text      = "â­  GitHub";
+            menuGitHub.Text      = "⭐  GitHub";
             menuGitHub.Font      = new Font("Segoe UI", 8.5f, FontStyle.Underline);
             menuGitHub.ForeColor = System.Drawing.Color.FromArgb(22, 68, 148);
             menuGitHub.Click    += menuGitHub_Click;
