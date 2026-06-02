@@ -35,8 +35,11 @@ namespace Spectra.common
         const string SzKeyNameHotkey = "hotkey";
         const string SzKeyNameHotkeyModifiers = "hotkeyModifiers";
 
-        private string _fileName = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).ToString() + "\\vibranceGUI\\vibranceGUI.ini";
-        private string _fileNameApplicationSettings = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).ToString() + "\\vibranceGUI\\applicationData.xml";
+        private static readonly string AppDataDir =
+            System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Spectra");
+
+        private string _fileName                = System.IO.Path.Combine(AppDataDir, "Spectra.ini");
+        private string _fileNameApplicationSettings = System.IO.Path.Combine(AppDataDir, "applicationData.xml");
 
 
         public bool SetVibranceSettings(string windowsLevel, string affectPrimaryMonitorOnly, string neverSwitchResolution,
@@ -99,15 +102,32 @@ namespace Spectra.common
         {
             if (!IsFileExisting(_fileName))
             {
-                StreamWriter sw = new StreamWriter(_fileName);
-                sw.Close();
-                if (!IsFileExisting(_fileName))
+                try
                 {
-                    return false;
+                    Directory.CreateDirectory(AppDataDir);
+                    MigrateFromLegacy();
+                    File.WriteAllText(_fileName, "");
                 }
+                catch { return false; }
+                if (!IsFileExisting(_fileName)) return false;
             }
-
             return true;
+        }
+
+        // Migrates settings from the old vibranceGUI folder if they exist and
+        // the new location is empty (first run after upgrade to v2.2+).
+        private void MigrateFromLegacy()
+        {
+            string legacyDir = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "vibranceGUI");
+            string legacyIni = System.IO.Path.Combine(legacyDir, "vibranceGUI.ini");
+            string legacyXml = System.IO.Path.Combine(legacyDir, "applicationData.xml");
+
+            if (File.Exists(legacyIni) && !IsFileExisting(_fileName))
+                File.Copy(legacyIni, _fileName, overwrite: false);
+
+            if (File.Exists(legacyXml) && !IsFileExisting(_fileNameApplicationSettings))
+                File.Copy(legacyXml, _fileNameApplicationSettings, overwrite: false);
         }
 
         public void ReadVibranceSettings(GraphicsAdapter graphicsAdapter,

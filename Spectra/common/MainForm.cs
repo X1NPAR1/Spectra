@@ -291,17 +291,9 @@ namespace Spectra.common
         }
 
         // ── Theme ─────────────────────────────────────────────────────────
-        private void btnTheme_Click(object sender, EventArgs e)
-        {
-            ThemeManager.ToggleTheme();
-            new SettingsController().SetVibranceSetting("theme", ThemeManager.IsDark ? "dark" : "light");
-            ApplyTheme();
-        }
-
         private void ApplyTheme()
         {
             if (IsDisposed) return;
-            btnTheme.Text = ThemeManager.IsDark ? "☀" : "🌙";
 
             BackColor = ThemeManager.Bg;
             foreach (var panel in new[] { panelVibrance, panelDisplay, panelSettings, panelProfiles })
@@ -309,7 +301,7 @@ namespace Spectra.common
                 panel.BackColor = ThemeManager.Surface;
                 panel.Invalidate();
             }
-            panelStatus.BackColor = ThemeManager.IsDark ? Color.FromArgb(18, 21, 28) : Color.FromArgb(210, 222, 238);
+            panelStatus.BackColor = Color.FromArgb(18, 21, 28);
 
             foreach (var l in new[] { labelSectionVibrance, labelSectionDisplay, labelSectionSettings, labelSectionProfiles })
                 l.ForeColor = ThemeManager.Accent;
@@ -836,13 +828,10 @@ namespace Spectra.common
             LoadBehaviorSettings();
         }
 
-        // Reads the v2.x settings (theme, brightness/contrast, behavior, schedule).
+        // Reads the v2.x settings (brightness/contrast, behavior, schedule).
         private void LoadBehaviorSettings()
         {
             var sc = new SettingsController();
-
-            bool dark = sc.GetSetting("theme", "light") == "dark";
-            if (dark != ThemeManager.IsDark) { ThemeManager.SetDarkMode(dark); ApplyTheme(); }
 
             int brightness = ParseInt(sc.GetSetting("brightness", "50"), 50);
             int contrast   = ParseInt(sc.GetSetting("contrast",   "50"), 50);

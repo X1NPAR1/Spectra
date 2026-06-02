@@ -19,12 +19,12 @@ namespace Spectra.common
         private readonly int _minLevel;
         private readonly int _maxLevel;
 
-        // Runtime-added controls (Schedule + Appearance)
-        private CheckBox      _chkSchedule, _chkDarkMode;
+        // Runtime-added controls (Schedule)
+        private CheckBox      _chkSchedule;
         private NumericUpDown _numDayLevel, _numNightLevel;
         private DateTimePicker _dtDayStart, _dtNightStart;
-        private Label _lblScheduleSection, _lblDayLevel, _lblNightLevel, _lblDayStart, _lblNightStart, _lblAppearanceSection;
-        private Panel _sepSchedule, _sepAppearance;
+        private Label _lblScheduleSection, _lblDayLevel, _lblNightLevel, _lblDayStart, _lblNightStart;
+        private Panel _sepSchedule;
 
         private bool _loading;
 
@@ -59,7 +59,6 @@ namespace Spectra.common
                 Environment.Version, Environment.OSVersion.Version);
 
             BuildScheduleControls();
-            BuildAppearanceControls();
             LoadSettings();
             UpdateProfileList();
 
@@ -105,23 +104,6 @@ namespace Spectra.common
             tabBehavior.Controls.Add(_dtNightStart);
         }
 
-        private void BuildAppearanceControls()
-        {
-            _lblAppearanceSection = MakeSection(0, 200);
-            _sepAppearance        = MakeSep(220);
-            _chkDarkMode = new CheckBox { Location = new Point(0, 230), Size = new Size(488, 22),
-                Font = new Font("Segoe UI", 9f), ForeColor = ThemeManager.Text, BackColor = Color.Transparent };
-            _chkDarkMode.CheckedChanged += (s, e) =>
-            {
-                if (_loading) return;
-                ThemeManager.SetDarkMode(_chkDarkMode.Checked);
-                new SettingsController().SetVibranceSetting("theme", _chkDarkMode.Checked ? "dark" : "light");
-            };
-            tabDisplay.Controls.Add(_lblAppearanceSection);
-            tabDisplay.Controls.Add(_sepAppearance);
-            tabDisplay.Controls.Add(_chkDarkMode);
-        }
-
         private Label MakeSection(int x, int y) => new Label {
             Location = new Point(x, y), AutoSize = true,
             Font = new Font("Segoe UI", 8f, FontStyle.Bold), ForeColor = ThemeManager.Accent, BackColor = Color.Transparent };
@@ -157,8 +139,6 @@ namespace Spectra.common
             chkMinToTray.Checked     = sc.GetSetting("minimizeToTray", "false") == "true";
             chkNotifications.Checked = sc.GetSetting("showNotifications", "true") == "true";
             numDelay.Value           = Clamp(ParseInt(sc.GetSetting("applyDelay", "500"), 500), (int)numDelay.Minimum, (int)numDelay.Maximum);
-
-            _chkDarkMode.Checked = ThemeManager.IsDark;
 
             _chkSchedule.Checked   = sc.GetSetting("scheduleEnabled", "false") == "true";
             _numDayLevel.Value     = Clamp(ParseInt(sc.GetSetting("scheduleDayLevel", _maxLevel.ToString()), _maxLevel), _minLevel, _maxLevel);
@@ -234,8 +214,6 @@ namespace Spectra.common
             lblResSection.Text     = LocalizationManager.Get("ResolutionSection");
             chkNeverResize.Text    = LocalizationManager.Get("NeverResize");
             chkResetOnExit.Text    = LocalizationManager.Get("ResetOnExit");
-            _lblAppearanceSection.Text = LocalizationManager.Get("ThemeSection");
-            _chkDarkMode.Text      = LocalizationManager.Get("DarkMode");
 
             if (cboMonitorTarget.Items.Count >= 2)
             {
@@ -271,7 +249,7 @@ namespace Spectra.common
             var g = e.Graphics;
             g.SmoothingMode     = SmoothingMode.AntiAlias;
             g.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
-            using (var bg = new SolidBrush(selected ? ThemeManager.Surface : Color.FromArgb(230, 232, 244)))
+            using (var bg = new SolidBrush(selected ? ThemeManager.Surface : ThemeManager.Surface2))
                 g.FillRectangle(bg, e.Bounds);
             if (selected)
                 using (var pen = new Pen(ThemeManager.Accent, 2))

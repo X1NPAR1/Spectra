@@ -23,7 +23,6 @@ namespace Spectra.common
             labelAppName    = new Label();
             labelVersion    = new Label();
             labelGpuBadge   = new Label();
-            btnTheme        = new Button();
             btnOpenSettings = new Button();
 
             // Vibrance section (per-monitor sliders are built at runtime)
@@ -131,7 +130,7 @@ namespace Spectra.common
             labelAppName.Location  = new Point(70, 10);
             labelAppName.AutoSize  = true;
 
-            labelVersion.Text      = "v2.1.0";
+            labelVersion.Text      = "v2.1.1";
             labelVersion.Font      = new Font("Segoe UI", 7.5f);
             labelVersion.ForeColor = Color.FromArgb(180, 215, 255);
             labelVersion.BackColor = Color.Transparent;
@@ -145,18 +144,6 @@ namespace Spectra.common
             labelGpuBadge.TextAlign = ContentAlignment.MiddleRight;
             labelGpuBadge.Location  = new Point(180, 8);
             labelGpuBadge.Size      = new Size(210, 36);
-
-            btnTheme.Text      = "🌙";
-            btnTheme.Font      = new Font("Segoe UI", 11f);
-            btnTheme.ForeColor = Color.White;
-            btnTheme.BackColor = Color.FromArgb(50, 255, 255, 255);
-            btnTheme.FlatStyle = FlatStyle.Flat;
-            btnTheme.FlatAppearance.BorderSize         = 0;
-            btnTheme.FlatAppearance.MouseOverBackColor = Color.FromArgb(80, 255, 255, 255);
-            btnTheme.Location  = new Point(398, 8);
-            btnTheme.Size      = new Size(36, 36);
-            btnTheme.Cursor    = Cursors.Hand;
-            btnTheme.Click    += btnTheme_Click;
 
             btnOpenSettings.Text      = "⚙";
             btnOpenSettings.Font      = new Font("Segoe UI", 12f);
@@ -173,7 +160,6 @@ namespace Spectra.common
             panelHeader.Controls.Add(labelAppName);
             panelHeader.Controls.Add(labelVersion);
             panelHeader.Controls.Add(labelGpuBadge);
-            panelHeader.Controls.Add(btnTheme);
             panelHeader.Controls.Add(btnOpenSettings);
 
             // ── DESKTOP VIBRANCE (size set at runtime) ────────────────────
@@ -473,7 +459,7 @@ namespace Spectra.common
             // ── STATUS BAR ────────────────────────────────────────────────
             panelStatus.Location  = new Point(0, 752);
             panelStatus.Size      = new Size(480, 40);
-            panelStatus.BackColor = Color.FromArgb(210, 222, 238);
+            panelStatus.BackColor = Color.FromArgb(18, 21, 28);
 
             labelStatus.Text      = "Initializing...";
             labelStatus.Font      = new Font("Segoe UI", 9f);
@@ -589,7 +575,6 @@ namespace Spectra.common
         private Label     labelAppName;
         private Label     labelVersion;
         private Label     labelGpuBadge;
-        private Button    btnTheme;
         private Button    btnOpenSettings;
 
         private Panel     panelVibrance;
