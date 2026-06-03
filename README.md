@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://img.shields.io/badge/version-2.4.4-1E6EB4?style=for-the-badge" alt="Version">
+<img src="https://img.shields.io/badge/version-2.5.2-1E6EB4?style=for-the-badge" alt="Version">
 <img src="https://img.shields.io/badge/platform-Windows%2010%2F11-0078D4?style=for-the-badge&logo=windows" alt="Platform">
 <img src="https://img.shields.io/badge/GPU-NVIDIA%20%7C%20AMD-76B900?style=for-the-badge" alt="GPU Support">
 <img src="https://img.shields.io/badge/.NET%20Framework-4.8-512BD4?style=for-the-badge" alt=".NET 4.8">
@@ -300,7 +300,7 @@ Spectra is een professionele vibrance-beheertool voor Windows. Het gebruikt NVID
 
 <div align="center">
 
-**Spectra v2.4.4** — Professional Digital Vibrance, Brightness & Contrast Control  
+**Spectra v2.5.2** — Professional Digital Vibrance, Brightness & Contrast Control  
 [Discord](https://discord.gg/CdpuNUGPDe) · [GitHub](https://github.com/X1NPAR1/Spectra) · [Releases](https://github.com/X1NPAR1/Spectra/releases)
 
 </div>
