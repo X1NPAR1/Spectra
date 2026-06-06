@@ -1076,14 +1076,7 @@ namespace Spectra.common
                     bool resetOnExit = new SettingsController().GetSetting("resetOnExit", "false")
                         .Equals("true", StringComparison.OrdinalIgnoreCase);
 
-                    if (resetOnExit)
-                    {
-                        _proxy.SetVibranceWindowsLevel(_defaultWindowsLevel);
-                    }
-                    else
-                    {
-                        _proxy.HandleDvcExit();
-                    }
+                    _proxy.SetVibranceWindowsLevel(resetOnExit ? _defaultWindowsLevel : _maxLevel);
 
                     _proxy.SetShouldRun(false);
                     _proxy.UnloadLibraryEx();

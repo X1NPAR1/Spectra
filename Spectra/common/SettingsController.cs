@@ -85,7 +85,7 @@ namespace Spectra.common
             else if (graphicsAdapter == GraphicsAdapter.Amd)
                 { defaultLevel = 100; maxLevel = 300; }
 
-            vibranceWindowsLevel     = defaultLevel;
+            vibranceWindowsLevel     = maxLevel;
             affectPrimaryMonitorOnly = false;
             neverSwitchResolution    = false;
             hotkey                   = System.Windows.Forms.Keys.F9;
@@ -93,7 +93,7 @@ namespace Spectra.common
 
             if (File.Exists(_fileName))
             {
-                if (int.TryParse(ReadIni(SzKeyNameInactive, defaultLevel.ToString()), out int parsedLevel))
+                if (int.TryParse(ReadIni(SzKeyNameInactive, maxLevel.ToString()), out int parsedLevel))
                     if (parsedLevel >= defaultLevel && parsedLevel <= maxLevel)
                         vibranceWindowsLevel = parsedLevel;
 
